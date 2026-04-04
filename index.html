@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Tally</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tally">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f2">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwOCIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjEyNCIgeT0iMTM3IiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiMyYzI0MTgiLz48cmVjdCB4PSIyMDQiIHk9IjEzNyIgd2lkdGg9IjY0IiBoZWlnaHQ9IjIzOCIgcng9IjEwIiBmaWxsPSIjMmMyNDE4Ii8+PHJlY3QgeD0iMjg4IiB5PSIyMTEiIHdpZHRoPSIxMDAiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjZTY3ZTIyIi8+PHJlY3QgeD0iMjg4IiB5PSIyNzEiIHdpZHRoPSI3NiIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9IiMyN2FlNjAiIG9wYWNpdHk9IjAuOCIvPjxyZWN0IHg9IjI4OCIgeT0iMzMxIiB3aWR0aD0iNTIiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjMjdhZTYwIiBvcGFjaXR5PSIwLjUiLz48L3N2Zz4K">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f2; --card: #ffffff; --text: #2c2418; --text-mid: #6b5e50;
+  --text-muted: #9e9486; --text-light: #c4b9ab; --border: #ede8e1;
+  --accent: #e67e22; --accent-light: #fef4e8; --accent-border: #f0dcc0;
+  --red: #c0392b; --green: #1e8449; --green-btn: #27ae60;
+  --shadow-sm: 0 1px 3px rgba(44,36,24,0.05);
+  --shadow-md: 0 4px 20px rgba(44,36,24,0.08); --radius: 16px; --radius-sm: 10px;
+  --font: 'DM Sans', sans-serif; --font-display: 'Sora', sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;max-width:480px;margin:0 auto;padding:calc(20px + var(--safe-top)) 18px calc(24px + var(--safe-bottom));-webkit-font-smoothing:antialiased}
+button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:var(--font)}
+
+.toast{position:fixed;top:calc(16px + var(--safe-top));left:50%;transform:translateX(-50%) translateY(-100px);background:var(--text);color:#fff;padding:11px 26px;border-radius:100px;font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-md);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+.view{display:none;animation:fadeIn .3s ease}.view.active{display:block}
+.page-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.back-btn{background:none;border:none;font-size:28px;color:var(--text);padding:6px 2px;line-height:1;font-weight:600}
+.page-title{font-family:var(--font-display);font-size:22px;color:var(--text);flex:1}
+
+.home-header{margin-bottom:28px}
+.home-logo{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.home-logo-icon{font-size:28px;color:var(--accent)}
+.home-logo-text{font-family:var(--font-display);font-size:38px;color:var(--text)}
+.home-tagline{font-size:11px;color:var(--text-muted);letter-spacing:0.5px;margin-top:-2px;margin-bottom:4px}
+.home-sub{font-size:12px;color:var(--text-muted);letter-spacing:1.8px;text-transform:uppercase;font-weight:500;line-height:1.6}
+
+.pending-banner{background:linear-gradient(135deg,var(--accent-light),#fdf2e3);border:1.5px solid var(--accent-border);border-radius:var(--radius);padding:18px;margin-bottom:24px}
+.pending-title{font-size:13px;font-weight:700;color:#8b6914;margin-bottom:12px}
+.pending-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--accent-border)}
+.pending-item:first-of-type{border-top:none}
+.pending-name{font-size:14px;font-weight:600;color:#8b6914}
+.pending-btns{display:flex;gap:6px}
+.pending-yes,.pending-no{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;transition:transform .15s ease}
+.pending-yes{border:none;background:var(--accent);color:#fff}
+.pending-no{border:1px solid var(--accent-border);background:transparent;color:#8b6914}
+.pending-yes:active,.pending-no:active{transform:scale(.95)}
+
+.timers-banner{background:linear-gradient(135deg,#eef8f2,#e8f5ed);border:1.5px solid #c8e6d0;border-radius:var(--radius);padding:18px;margin-bottom:24px}
+.timers-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:12px}
+.timer-home-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #c8e6d0;cursor:pointer}
+.timer-home-item:first-of-type{border-top:none}
+.timer-home-name{font-size:14px;font-weight:600;color:var(--green)}
+.timer-home-elapsed{font-size:14px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+
+.group-section{margin-bottom:20px}
+.group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 0;cursor:pointer;user-select:none}
+.group-header-left{display:flex;align-items:center;gap:8px}
+.group-chevron{font-size:14px;color:var(--text-light);transition:transform .2s ease;display:inline-block}
+.group-chevron.open{transform:rotate(90deg)}
+.group-name{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:700}
+.group-count{font-size:11px;color:var(--text-light);font-weight:500}
+.group-total{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.group-total.owe{color:var(--red)}.group-total.credit{color:var(--green)}.group-total.zero{color:var(--text-light)}
+.group-items{overflow:hidden;transition:max-height .3s ease}
+.group-edit-btn{background:none;border:none;font-size:16px;color:var(--text-light);padding:2px 6px;line-height:1}
+
+.ungrouped-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700;margin-bottom:14px;padding-top:8px}
+
+.project-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s ease}
+.project-card:active{transform:scale(.98)}
+.project-card.has-timer{border-color:#a3d9b1}
+.project-info{flex:1}.project-name{font-size:15px;font-weight:700;color:var(--text)}
+.project-meta{font-size:12px;color:var(--text-muted);margin-top:2px}
+.project-timer-badge{font-size:11px;color:var(--green);font-weight:600;margin-top:3px}
+.project-balance{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.bal-owe{color:var(--red)}.bal-credit{color:var(--green)}.bal-zero{color:var(--text-light)}
+.project-arrow{color:var(--text-light);font-size:18px;margin-left:12px}
+
+.home-actions{display:flex;gap:8px;margin-top:12px}
+.add-project-btn,.add-group-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;padding:14px 8px;border-radius:var(--radius);border:2px dashed var(--border);background:transparent;color:var(--text-muted);font-weight:600;font-size:13px;transition:border-color .2s ease,color .2s ease}
+.add-project-btn:active,.add-group-btn:active{border-color:var(--accent);color:var(--accent)}
+.btn-sub{font-size:10px;font-weight:400;color:var(--text-light);letter-spacing:0}
+.empty-home{text-align:center;padding:60px 20px;color:var(--text-light);font-size:14px;line-height:1.7}
+
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:8px}
+.form-input,.form-select{width:100%;padding:14px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:15px;background:var(--card);color:var(--text);outline:none;transition:border-color .2s ease;appearance:none;-webkit-appearance:none}
+.form-input:focus,.form-select:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text-light)}
+.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239e9486' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+.form-hint{font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.4}
+
+/* Direction toggle */
+.dir-toggle{display:flex;gap:0;border-radius:var(--radius-sm);border:1.5px solid var(--border);overflow:hidden}
+.dir-option{flex:1;padding:14px 12px;border:none;background:var(--card);font-size:14px;font-weight:600;color:var(--text-mid);text-align:center;transition:all .15s ease}
+.dir-option.selected{background:var(--accent);color:#fff}
+.dir-option:first-child{border-right:1px solid var(--border)}
+
+.new-group-row{display:flex;gap:8px;margin-top:8px;animation:slideDown .25s ease}
+.new-group-input{flex:1;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:14px;background:var(--card);color:var(--text);outline:none}
+.new-group-input:focus{border-color:var(--accent)}
+.new-group-input::placeholder{color:var(--text-light)}
+.new-group-save{padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px}
+
+.days-grid{display:flex;gap:6px;flex-wrap:wrap}
+.day-chip{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);font-size:13px;font-weight:600;color:var(--text-mid);transition:all .15s ease;min-width:44px;text-align:center}
+.day-chip.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.day-chip:active{transform:scale(.95)}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--card)}
+.toggle-text{font-size:14px;font-weight:600;color:var(--text)}
+.toggle-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.toggle-switch{width:48px;height:28px;border-radius:14px;border:none;background:var(--border);position:relative;cursor:pointer;transition:background .2s ease;flex-shrink:0;padding:0}
+.toggle-switch.on{background:var(--accent)}
+.toggle-knob{width:22px;height:22px;border-radius:11px;background:#fff;position:absolute;top:3px;left:3px;transition:left .2s ease;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.toggle-switch.on .toggle-knob{left:23px}
+
+.form-submit{width:100%;padding:16px;border-radius:12px;border:none;background:var(--text);color:#fff;font-weight:700;font-size:15px;margin-top:8px;transition:transform .15s ease}
+.form-submit:active{transform:scale(.97)}
+
+.detail-type{font-size:12px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.detail-dir-badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:700;letter-spacing:.5px;margin-left:8px;vertical-align:middle}
+.badge-pay{background:var(--red);color:#fff;opacity:.15;background:rgba(192,57,43,.12);color:var(--red)}
+.badge-earn{background:rgba(30,132,73,.12);color:var(--green)}
+
+.timer-widget{background:var(--card);border-radius:20px;padding:28px 20px;margin:16px 0 22px;border:1px solid var(--border);box-shadow:var(--shadow-sm);text-align:center}
+.timer-widget.running{border-color:#a3d9b1;background:linear-gradient(180deg,#f6fcf8,#fff)}
+.timer-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:600;margin-bottom:8px}
+.timer-display{font-size:48px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-2px;color:var(--text);line-height:1;margin-bottom:6px}
+.timer-widget.running .timer-display{color:var(--green)}
+.timer-cost{font-size:14px;color:var(--text-muted);font-weight:500;margin-bottom:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer-cost strong{color:var(--text);font-weight:700}
+.timer-btns{display:flex;gap:10px;justify-content:center}
+.timer-start{padding:14px 36px;border-radius:12px;border:none;background:var(--green-btn);color:#fff;font-weight:700;font-size:14px;transition:transform .15s ease}
+.timer-start:active{transform:scale(.97)}
+.timer-end{padding:14px 36px;border-radius:12px;border:none;background:var(--red);color:#fff;font-weight:700;font-size:14px;transition:transform .15s ease}
+.timer-end:active{transform:scale(.97)}
+.timer-cancel{padding:14px 24px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--text-mid);font-weight:600;font-size:14px;transition:transform .15s ease}
+.timer-cancel:active{transform:scale(.97)}
+.timer-or{font-size:12px;color:var(--text-light);margin:12px 0 4px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+
+.balance-card{display:flex;flex-direction:column;align-items:center;background:var(--card);border-radius:22px;padding:32px 20px;margin-bottom:22px;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.balance-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:600;margin-bottom:6px}
+.balance-amount{font-size:52px;font-weight:800;letter-spacing:-3px;font-variant-numeric:tabular-nums;line-height:1}
+.balance-owe{color:var(--red)}.balance-credit{color:var(--green)}.balance-zero{color:var(--text-light)}
+
+.detail-actions{display:flex;gap:10px;margin-bottom:14px}
+.detail-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 0;border-radius:12px;font-weight:600;font-size:13px;transition:transform .15s ease}
+.detail-btn:active{transform:scale(.97)}
+.btn-add-session{border:1.5px solid var(--border);background:var(--card);color:var(--text)}
+.btn-add-payment{border:none;background:var(--green-btn);color:#fff}
+.btn-icon{font-size:15px;font-weight:700}
+
+.input-row{display:flex;gap:10px;margin-bottom:20px;animation:slideDown .25s ease}
+.input-field{flex:1;padding:13px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:16px;outline:none;background:var(--card);color:var(--text);transition:border-color .2s ease}
+.input-field:focus{border-color:var(--accent)}.input-field::placeholder{color:var(--text-light)}
+.input-confirm{padding:13px 22px;border-radius:var(--radius-sm);border:none;background:var(--text);color:#fff;font-weight:600;font-size:13px;transition:transform .15s ease}
+.input-confirm:active{transform:scale(.97)}
+
+.note-field{width:100%;padding:10px 16px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;outline:none;background:var(--card);color:var(--text);margin-bottom:10px;transition:border-color .2s ease}
+.note-field:focus{border-color:var(--accent)}.note-field::placeholder{color:var(--text-light)}
+
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:8px}
+.history-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700}
+.edit-project-btn{background:none;border:none;font-size:12px;color:var(--accent);font-weight:600;padding:4px 0}
+
+.history-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
+.row-left{display:flex;align-items:center;gap:12px}
+.row-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-charge{background:var(--red)}.dot-charge-earn{background:var(--green)}.dot-payment{background:var(--green)}.dot-payment-earn{background:var(--accent)}.dot-skipped{background:var(--text-light)}
+.row-note{display:block;font-size:14px;font-weight:600;color:var(--text)}
+.row-date{display:block;font-size:13px;color:var(--text-mid);margin-top:2px}
+.row-amt{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.amt-charge{color:var(--red)}.amt-charge-earn{color:var(--green)}.amt-payment{color:var(--green)}.amt-payment-earn{color:var(--accent)}.amt-skipped{color:var(--text-light)}
+.empty-history{text-align:center;color:var(--text-light);font-size:14px;padding:36px 0;line-height:1.7}
+
+.overlay{position:fixed;inset:0;background:rgba(44,36,24,.3);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);animation:fadeIn .2s ease;padding:20px}
+.dialog{background:var(--card);border-radius:20px;padding:26px;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(44,36,24,.2);text-align:center}
+.dialog-title{font-family:var(--font-display);font-size:19px;margin-bottom:8px}
+.dialog-text{font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5}
+.dialog-btns{display:flex;gap:10px}
+.dialog-cancel,.dialog-confirm{flex:1;padding:12px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;transition:transform .15s ease}
+.dialog-cancel{border:1.5px solid var(--border);background:var(--card);color:var(--text)}
+.dialog-confirm{border:none;background:var(--red);color:#fff}
+.dialog-cancel:active,.dialog-confirm:active{transform:scale(.97)}
+.dialog-input{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:15px;background:var(--bg);color:var(--text);outline:none;margin-bottom:16px;text-align:left;font-family:var(--font);box-sizing:border-box;min-width:0}
+.dialog-input:focus{border-color:var(--accent)}
+.dialog-actions-col{display:flex;flex-direction:column;gap:8px}
+.dialog-btn-save{width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--text);color:#fff;font-weight:600;font-size:14px}
+.dialog-btn-delete{width:100%;padding:13px;border-radius:var(--radius-sm);border:1.5px solid var(--red);background:transparent;color:var(--red);font-weight:600;font-size:14px}
+.dialog-btn-cancel{width:100%;padding:13px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--card);color:var(--text-mid);font-weight:600;font-size:14px}
+
+.settle-section{margin-bottom:12px}
+.settle-block{background:var(--card);border-radius:var(--radius);padding:0;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border)}
+.settle-header{padding:16px 18px;font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.settle-header-pay{background:linear-gradient(135deg,#fde8e8,#fdd);color:var(--red);border-bottom:2px solid #f5c4c4}
+.settle-header-receive{background:linear-gradient(135deg,#e8f5ed,#dff5e6);color:var(--green);border-bottom:2px solid #b8dfca}
+.settle-header-even{background:var(--bg);color:var(--text-muted);border-bottom:1px solid var(--border);font-size:16px}
+.settle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border)}
+.settle-row:last-child{border-bottom:none}
+.settle-name{font-size:15px;font-weight:600}
+.settle-amt{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.settle-owes{color:var(--red)}.settle-gets{color:var(--green)}.settle-even{color:var(--text-light);font-size:14px;font-weight:600}
+.person-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
+.person-bar-name{font-size:13px;font-weight:600;flex:1}
+.person-bar-paid{font-size:12px;color:var(--text-muted)}
+.person-bar-bal{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 1.5s ease infinite}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div id="overlay"></div>
+
+<!-- HOME -->
+<div class="view active" id="homeView">
+  <div class="home-header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="home-logo"><svg width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg><span class="home-logo-text">Tally</span></div>
+        <p class="home-tagline">The simple balance tracker</p>
+        <p class="home-sub" style="font-weight:700">Track balances<br>across all your activities</p>
+      </div>
+      <button onclick="openSettings()" style="background:none;border:none;font-size:20px;color:var(--text-light);padding:6px;margin-top:2px">⚙</button>
+    </div>
+  </div>
+  <div id="timersBanner"></div>
+  <div id="pendingBanner"></div>
+  <div id="projectsList"></div>
+</div>
+
+<!-- FORM -->
+<div class="view" id="formView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="formTitle">New Activity</span>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Name</label>
+    <input class="form-input" id="fName" placeholder="e.g. Pilates, Math Tutor, Guitar…">
+  </div>
+  <div id="fDirSection">
+  <div class="form-group">
+    <label class="form-label">I am…</label>
+    <div class="dir-toggle" id="fDirToggle">
+      <button class="dir-option selected" onclick="setDirection('pay')">Paying for this</button>
+      <button class="dir-option" onclick="setDirection('earn')">Earning from this</button>
+    </div>
+    <p class="form-hint" id="fDirHint">Track what you owe someone (e.g. tutor, trainer, contractor)</p>
+  </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Category <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <select class="form-select" id="fGroup" onchange="onGroupSelectChange()"><option value="">No category</option></select>
+    <div id="newGroupRow"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Billing Type</label>
+    <select class="form-select" id="fType" onchange="onTypeChange()">
+      <option value="fixed">Fixed per session</option>
+      <option value="hourly">Hourly rate</option>
+      <option value="daily">Daily rate</option>
+      <option value="customrate">Custom rate</option>
+    </select>
+    <p class="form-hint" id="fTypeHint">Same price every time — one tap to log</p>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Currency</label>
+    <select class="form-select" id="fCurrency" onchange="onTypeChange()">
+      <option value="">No currency</option>
+      <option value="$">$ — USD</option>
+      <option value="€">€ — EUR</option>
+      <option value="£">£ — GBP</option>
+      <option value="AED">AED — Dirham</option>
+      <option value="SAR">SAR — Riyal</option>
+      <option value="CA$">CA$ — CAD</option>
+      <option value="A$">A$ — AUD</option>
+      <option value="¥">¥ — JPY / CNY</option>
+      <option value="CHF">CHF — Swiss Franc</option>
+      <option value="₹">₹ — INR</option>
+      <option value="₺">₺ — TRY</option>
+      <option value="R$">R$ — BRL</option>
+      <option value="kr">kr — SEK / NOK / DKK</option>
+      <option value="zł">zł — PLN</option>
+      <option value="₱">₱ — PHP</option>
+      <option value="฿">฿ — THB</option>
+      <option value="RM">RM — MYR</option>
+      <option value="S$">S$ — SGD</option>
+      <option value="R">R — ZAR</option>
+      <option value="KSh">KSh — KES</option>
+      <option value="₦">₦ — NGN</option>
+    </select>
+  </div>
+  <div class="form-group" id="fRateGroup">
+    <label class="form-label" id="fRateLabel">Rate per Session ($)</label>
+    <input class="form-input" id="fRate" type="number" inputmode="decimal" placeholder="e.g. 15">
+  </div>
+  <div class="form-group" id="fCustomRateGroup" style="display:none">
+    <label class="form-label" id="fCustomRateLabel">Rate ($)</label>
+    <input class="form-input" id="fCustomRateAmt" type="number" inputmode="decimal" placeholder="e.g. 50">
+    <label class="form-label" style="margin-top:14px">Per every</label>
+    <div style="display:flex;gap:10px;align-items:center">
+      <input class="form-input" id="fCustomRateMin" type="number" inputmode="decimal" placeholder="e.g. 45" style="flex:1">
+      <select class="form-select" id="fCustomRateUnit" style="width:auto;min-width:110px"><option value="min">minutes</option><option value="hr">hours</option></select>
+    </div>
+  </div>
+  <div id="fInvoiceSection">
+  <div class="form-group">
+    <label class="form-label">Invoicing <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <div class="toggle-row">
+      <div><div class="toggle-text">Enable Invoicing</div><div class="toggle-sub">Generate invoices from session history</div></div>
+      <button class="toggle-switch" id="fInvoiceToggle" onclick="toggleInvoiceSetting()"><div class="toggle-knob"></div></button>
+    </div>
+  </div>
+  <div id="fInvoiceFields" style="display:none">
+    <div class="form-group">
+      <label class="form-label">Client Name</label>
+      <input class="form-input" id="fClientName" placeholder="e.g. Sarah Johnson">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client Email <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input class="form-input" id="fClientEmail" type="email" placeholder="e.g. sarah@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client Address <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input class="form-input" id="fClientAddress" placeholder="e.g. 456 Oak Ave, City">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Invoice Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <textarea class="form-input" id="fInvoiceNotes" rows="3" style="resize:vertical;min-height:60px;font-size:14px" placeholder="e.g. Payment due within 15 days&#10;Late fee: 2% per month"></textarea>
+      <p class="form-hint">Specific to this client — shown at the bottom of their invoices.</p>
+    </div>
+  </div>
+  </div>
+  <div id="fDaysSection">
+  <div class="form-group">
+    <label class="form-label">Scheduled Days <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <div class="days-grid" id="fDays"></div>
+    <p class="form-hint">If this activity has set days, select them. The app will prompt you on those days.</p>
+  </div>
+  </div>
+  <button class="form-submit" id="formSubmitBtn" onclick="saveProject()">Create Activity</button>
+</div>
+
+<!-- GROUP ACTIVITY FORM -->
+<div class="view" id="groupFormView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="groupFormTitle">New Group Activity</span>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Name</label>
+    <input class="form-input" id="gfName" placeholder="e.g. Dinner Party, NYE Trip, Ski Weekend…">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Category <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <select class="form-select" id="gfGroup" onchange="onGfGroupSelectChange()"><option value="">No category</option></select>
+    <div id="gfNewGroupRow"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Currency</label>
+    <select class="form-select" id="gfCurrency">
+      <option value="">No currency</option>
+      <option value="$" selected>$ — USD</option>
+      <option value="€">€ — EUR</option>
+      <option value="£">£ — GBP</option>
+      <option value="AED">AED — Dirham</option>
+      <option value="SAR">SAR — Riyal</option>
+      <option value="CA$">CA$ — CAD</option>
+      <option value="A$">A$ — AUD</option>
+      <option value="¥">¥ — JPY / CNY</option>
+      <option value="CHF">CHF — Swiss Franc</option>
+      <option value="₹">₹ — INR</option>
+      <option value="₺">₺ — TRY</option>
+      <option value="R$">R$ — BRL</option>
+      <option value="kr">kr — SEK / NOK / DKK</option>
+      <option value="zł">zł — PLN</option>
+      <option value="₱">₱ — PHP</option>
+      <option value="฿">฿ — THB</option>
+      <option value="RM">RM — MYR</option>
+      <option value="S$">S$ — SGD</option>
+      <option value="R">R — ZAR</option>
+      <option value="KSh">KSh — KES</option>
+      <option value="₦">₦ — NGN</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Participants</label>
+    <div id="gfParticipantsList"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="form-input" id="gfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addGfParticipant()}">
+      <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addGfParticipant()">Add</button>
+    </div>
+    <p class="form-hint">Add everyone involved — including yourself</p>
+  </div>
+  <button class="form-submit" id="groupFormSubmitBtn" onclick="saveGroupActivity()">Create Group Activity</button>
+</div>
+
+<!-- PROJECT DETAIL -->
+<div class="view" id="projectDetailView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="projDetailTitle">—</span>
+    <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
+  </div>
+  <div id="projBudgetSummary"></div>
+  <div id="projBudgetEditBtn"></div>
+  <div id="projCostBreakdown"></div>
+  <div id="projActions"></div>
+  <div id="projExpenseInput"></div>
+  <div class="history-header">
+    <span class="history-title">History</span>
+    <div style="display:flex;gap:12px">
+      <button class="edit-project-btn" onclick="showShareSummary()">Share</button>
+      <button class="edit-project-btn" onclick="showExportDialog()">Export</button>
+      <button class="edit-project-btn" style="color:var(--red)" onclick="showClearAllConfirm()">Clear All</button>
+    </div>
+  </div>
+  <div id="projHistory"></div>
+</div>
+
+<!-- DETAIL -->
+<div class="view" id="detailView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="detailTitle">—</span>
+    <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
+    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Archive</button>
+  </div>
+  <p class="detail-type" id="detailType"></p>
+  <div class="balance-card" style="margin-top:16px">
+    <span class="balance-label" id="dBalLabel">All settled</span>
+    <span class="balance-amount balance-zero" id="dBalAmt">$0</span>
+  </div>
+  <div class="detail-actions">
+    <button class="detail-btn btn-add-session" onclick="showAddCharge()">
+      <span class="btn-icon">＋</span> <span id="dAddLabel">Add Session</span>
+    </button>
+    <button class="detail-btn btn-add-payment" onclick="showPayInput()">
+      <span class="btn-icon">$</span> <span id="dPayLabel">I Paid</span>
+    </button>
+  </div>
+  <div id="chargeInput"></div>
+  <div id="payInput"></div>
+  <div id="timerWidget"></div>
+  <div class="history-header">
+    <span class="history-title">History</span>
+    <div style="display:flex;gap:12px">
+      <button class="edit-project-btn" onclick="showActivityShareSummary()">Share</button>
+      <button class="edit-project-btn" onclick="showExportDialog()">Export</button>
+      <button class="edit-project-btn" style="color:var(--red)" onclick="showClearAllConfirm()">Clear All</button>
+    </div>
+  </div>
+  <div id="detailHistory"></div>
+</div>
+
+<!-- GROUP DETAIL -->
+<div class="view" id="groupDetailView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="groupDetailTitle">—</span>
+    <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
+    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Archive</button>
+  </div>
+  <div id="groupSummary"></div>
+  <div style="display:flex;gap:10px;margin:16px 0">
+    <button class="detail-btn btn-add-session" style="flex:1" onclick="showGroupExpenseInput()">
+      <span class="btn-icon">＋</span> Add Expense
+    </button>
+    <button class="detail-btn" style="flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text)" onclick="showGroupPaymentInput()">
+      <span class="btn-icon">↔</span> Record Payment
+    </button>
+  </div>
+  <div style="margin-bottom:10px">
+    <button class="detail-btn btn-add-payment" style="width:100%" onclick="showSettleConfirm()">
+      <span class="btn-icon">✓</span> Settle & Reset
+    </button>
+  </div>
+  <div id="groupExpenseInput"></div>
+  <div class="history-header">
+    <span class="history-title">Expenses</span>
+    <button class="edit-project-btn" onclick="showGroupShareSummary()">Share</button>
+  </div>
+  <div id="groupHistory"></div>
+</div>
+
+<!-- PROJECT FORM -->
+<div class="view" id="projectFormView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="projectFormTitle">New Project</span>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Name</label>
+    <input class="form-input" id="pfName" placeholder="e.g. Kitchen Renovation, Paris Trip, Party…">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Who is involved?</label>
+    <div class="dir-toggle" id="pfModeToggle">
+      <button class="dir-option selected" onclick="setPfMode('solo')">Just me</button>
+      <button class="dir-option" onclick="setPfMode('group')">With others</button>
+    </div>
+  </div>
+  <div id="pfDirSection">
+  <div class="form-group">
+    <label class="form-label">I am…</label>
+    <div class="dir-toggle" id="pfDirToggle">
+      <button class="dir-option selected" onclick="setPfDirection('pay')">Paying for this</button>
+      <button class="dir-option" onclick="setPfDirection('earn')">Earning from this</button>
+    </div>
+  </div>
+  </div>
+  <div id="pfParticipantsSection" style="display:none">
+    <div class="form-group">
+      <label class="form-label">Participants</label>
+      <div id="pfParticipantsList"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input class="form-input" id="pfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addPfParticipant()}">
+        <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addPfParticipant()">Add</button>
+      </div>
+      <p class="form-hint">Add everyone involved — including yourself</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Category <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <select class="form-select" id="pfGroup" onchange="onPfGroupSelectChange()"><option value="">No category</option></select>
+    <div id="pfNewGroupRow"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Currency</label>
+    <select class="form-select" id="pfCurrency">
+      <option value="">No currency</option>
+      <option value="$" selected>$ — USD</option>
+      <option value="€">€ — EUR</option>
+      <option value="£">£ — GBP</option>
+      <option value="AED">AED — Dirham</option>
+      <option value="SAR">SAR — Riyal</option>
+      <option value="CA$">CA$ — CAD</option>
+      <option value="A$">A$ — AUD</option>
+      <option value="¥">¥ — JPY / CNY</option>
+      <option value="CHF">CHF — Swiss Franc</option>
+      <option value="₹">₹ — INR</option>
+      <option value="₺">₺ — TRY</option>
+      <option value="R$">R$ — BRL</option>
+      <option value="kr">kr — SEK / NOK / DKK</option>
+      <option value="zł">zł — PLN</option>
+      <option value="₱">₱ — PHP</option>
+      <option value="฿">฿ — THB</option>
+      <option value="RM">RM — MYR</option>
+      <option value="S$">S$ — SGD</option>
+      <option value="R">R — ZAR</option>
+      <option value="KSh">KSh — KES</option>
+      <option value="₦">₦ — NGN</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Budget <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input class="form-input" id="pfBudget" type="number" inputmode="decimal" placeholder="e.g. 6900">
+    <p class="form-hint">Total budget for the project. Leave empty if unknown.</p>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Cost Items <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <div id="pfCostItems"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="form-input" id="pfNewItemName" placeholder="Item name…" style="flex:1">
+      <input class="form-input" id="pfNewItemAmt" type="number" inputmode="decimal" placeholder="Amount" style="width:90px">
+      <button style="padding:12px 14px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addPfCostItem()">Add</button>
+    </div>
+    <p class="form-hint">Break down the budget into items (e.g. Carpenter, Electrician, Materials)</p>
+  </div>
+  <button class="form-submit" id="projectFormSubmitBtn" onclick="saveProjectForm()">Create Project</button>
+</div>
+
+<!-- LENDING CIRCLE FORM -->
+<div class="view" id="lendingFormView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="lendingFormTitle">New Lending Circle</span>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Name</label>
+    <input class="form-input" id="lfName" placeholder="e.g. Siblings, Roommates, Office…">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Category <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <select class="form-select" id="lfGroup" onchange="onLfGroupSelectChange()"><option value="">No category</option></select>
+    <div id="lfNewGroupRow"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Currency</label>
+    <select class="form-select" id="lfCurrency">
+      <option value="">No currency</option>
+      <option value="$" selected>$ — USD</option>
+      <option value="€">€ — EUR</option>
+      <option value="£">£ — GBP</option>
+      <option value="AED">AED — Dirham</option>
+      <option value="SAR">SAR — Riyal</option>
+      <option value="CA$">CA$ — CAD</option>
+      <option value="A$">A$ — AUD</option>
+      <option value="¥">¥ — JPY / CNY</option>
+      <option value="CHF">CHF — Swiss Franc</option>
+      <option value="₹">₹ — INR</option>
+      <option value="₺">₺ — TRY</option>
+      <option value="R$">R$ — BRL</option>
+      <option value="kr">kr — SEK / NOK / DKK</option>
+      <option value="zł">zł — PLN</option>
+      <option value="₱">₱ — PHP</option>
+      <option value="฿">฿ — THB</option>
+      <option value="RM">RM — MYR</option>
+      <option value="S$">S$ — SGD</option>
+      <option value="R">R — ZAR</option>
+      <option value="KSh">KSh — KES</option>
+      <option value="₦">₦ — NGN</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">People</label>
+    <div id="lfParticipantsList"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="form-input" id="lfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addLfParticipant()}">
+      <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addLfParticipant()">Add</button>
+    </div>
+    <p class="form-hint">Add everyone involved — including yourself</p>
+  </div>
+  <button class="form-submit" id="lendingFormSubmitBtn" onclick="saveLendingCircle()">Create Lending Circle</button>
+</div>
+
+<!-- LENDING CIRCLE DETAIL -->
+<div class="view" id="lendingDetailView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title" id="lendingDetailTitle">—</span>
+    <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
+    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Archive</button>
+  </div>
+  <div id="lendingSummary"></div>
+  <div style="display:flex;gap:10px;margin:16px 0">
+    <button class="detail-btn btn-add-session" style="flex:1" onclick="showLendingTransInput()">
+      <span class="btn-icon">＋</span> Add Transaction
+    </button>
+    <button class="detail-btn btn-add-payment" style="flex:1" onclick="showLendingSettleConfirm()">
+      <span class="btn-icon">✓</span> Settle & Reset
+    </button>
+  </div>
+  <div id="lendingTransInput"></div>
+  <div class="history-header">
+    <span class="history-title">Transactions</span>
+    <button class="edit-project-btn" onclick="showLendingShareSummary()">Share</button>
+  </div>
+  <div id="lendingHistory"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="view" id="settingsView">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="page-title">Settings</span>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Your Name / Business Name</label>
+    <input class="form-input" id="sName" placeholder="e.g. John Smith or Smith Tutoring LLC">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Email <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional, shown on invoices)</span></label>
+    <input class="form-input" id="sEmail" type="email" placeholder="e.g. john@example.com">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Phone <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input class="form-input" id="sPhone" type="tel" placeholder="e.g. +1 555 123 4567">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Address <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input class="form-input" id="sAddress" placeholder="e.g. 123 Main St, City">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Additional Invoice Info <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <textarea class="form-input" id="sInvoiceInfo" rows="4" style="resize:vertical;min-height:80px;font-size:14px" placeholder="Anything else to show on invoices, e.g.&#10;Tax ID: 123456789&#10;Bank: IBAN XX1234...&#10;Payment Terms: Net 30 days"></textarea>
+    <p class="form-hint">This appears on every invoice you generate. Add tax numbers, bank details, payment terms — whatever your business needs.</p>
+  </div>
+  <button class="form-submit" onclick="saveSettings()">Save Settings</button>
+  <div style="margin-top:32px">
+    <div class="form-label">Archived Activities</div>
+    <div id="archivedList"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY='ledger-app-data',TIMER_KEY='ledger-timers',SETTINGS_KEY='ledger-settings';
+const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+let projects=[],groups=[],timers={},collapsedGroups={};
+let settings={name:'',email:'',phone:'',address:'',invoiceInfo:''};
+let currentProjectId=null,editingProjectId=null,selectedDays=[];
+let invoiceEnabled=false,formDirection='pay',chargeOpen=false,payOpen=false,tickInterval=null;
+let navStack=[];
+
+function load(){
+  try{const r=localStorage.getItem(STORAGE_KEY);if(r){const d=JSON.parse(r);projects=d.projects||d||[];groups=d.groups||[];collapsedGroups=d.collapsedGroups||{};if(Array.isArray(d))groups=[]}}catch(e){projects=[];groups=[]}
+  try{const r=localStorage.getItem(TIMER_KEY);if(r)timers=JSON.parse(r)||{}}catch(e){timers={}}
+  try{const r=localStorage.getItem(SETTINGS_KEY);if(r)settings=JSON.parse(r)||settings}catch(e){}
+}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({projects,groups,collapsedGroups}))}catch(e){}}
+function saveTimers(){try{localStorage.setItem(TIMER_KEY,JSON.stringify(timers))}catch(e){}}
+function getProject(id){return projects.find(p=>p.id===id)}
+function getGroup(id){return groups.find(g=>g.id===id)}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function cur(p){return p.currency||'$'}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function formatDate(iso){return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function formatElapsed(ms,html){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;const hm=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');const ss=String(sec).padStart(2,'0');if(html)return hm+'<span style="font-size:0.5em;opacity:0.6">:'+ss+'</span>';return hm+':'+ss}
+function formatHours(ms){return Math.round((ms/(1000*60*60))*100)/100}
+function rd2(n){return Math.round(n*100)/100}
+
+// Direction-aware helpers
+function isPay(p){return p.direction!=='earn'}
+function balLabel(p){
+  const bal=p.balance||0;
+  if(p.type==='project'){return bal===0?'No expenses':'Total Spent'}
+  if(bal===0)return'All settled';
+  if(isPay(p))return bal>0?'You owe':'Credit (paid ahead)';
+  return bal>0?'They owe you':'Overpaid';
+}
+function balColorClass(p){
+  const bal=p.balance||0;
+  if(p.type==='project')return bal===0?'balance-zero':'balance-owe';
+  if(bal===0)return'balance-zero';
+  if(isPay(p))return bal>0?'balance-owe':'balance-credit';
+  return bal>0?'balance-credit':'balance-owe';
+}
+function cardBalClass(p){
+  const bal=p.balance||0;
+  if(p.type==='project')return bal===0?'bal-zero':'bal-owe';
+  if(bal===0)return'bal-zero';
+  if(isPay(p))return bal>0?'bal-owe':'bal-credit';
+  return bal>0?'bal-credit':'bal-owe';
+}
+
+function showView(id){const cur=document.querySelector('.view.active');if(cur&&cur.id!==id)navStack.push(cur.id);document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function goBack(){chargeOpen=false;payOpen=false;stopTick();if(navStack.length>0){const prev=navStack.pop();document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(prev).classList.add('active');if(prev==='homeView'){renderHome();startHomeTick()}else if(prev==='groupDetailView'){renderGroupDetail()}else if(prev==='lendingDetailView'){renderLendingDetail()}else if(prev==='projectDetailView'){renderProjectDetail()}else if(prev==='detailView'){renderDetail();const p=getProject(currentProjectId);if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[currentProjectId])startTick()}}else{goHome()}}
+function goHome(){chargeOpen=false;payOpen=false;stopTick();navStack=[];document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('homeView').classList.add('active');renderHome();startHomeTick()}
+
+function startTick(){stopTick();tickInterval=setInterval(()=>{const p=getProject(currentProjectId);if(p&&timers[p.id])updateTimerDisplay(p)},1000)}
+function startHomeTick(){stopTick();if(Object.keys(timers).length>0)tickInterval=setInterval(renderTimersBanner,1000)}
+function stopTick(){if(tickInterval){clearInterval(tickInterval);tickInterval=null}}
+
+// ===== HOME =====
+function renderHome(){renderTimersBanner();renderPending();renderProjects()}
+
+function renderTimersBanner(){
+  const el=document.getElementById('timersBanner');
+  const active=Object.keys(timers).filter(id=>getProject(id));
+  if(!active.length){el.innerHTML='';return}
+  const now=Date.now();
+  el.innerHTML=`<div class="timers-banner"><div class="timers-title"><span class="pulse-dot"></span> Active Timers</div>${active.map(id=>{const p=getProject(id);return`<div class="timer-home-item" onclick="openProject('${id}')"><span class="timer-home-name">${esc(p.name)}</span><span class="timer-home-elapsed">${formatElapsed(now-timers[id])} ›</span></div>`}).join('')}</div>`;
+}
+
+function renderPending(){
+  const el=document.getElementById('pendingBanner');
+  const today=new Date(),dow=today.getDay(),todayStr=today.toISOString().split('T')[0];
+  const pending=projects.filter(p=>{
+    if(!p.days||!p.days.includes(dow))return false;
+    return!(p.history||[]).some(h=>h.date.split('T')[0]===todayStr&&(h.type==='charge'||h.type==='skipped'));
+  });
+  if(!pending.length){el.innerHTML='';return}
+  el.innerHTML=`<div class="pending-banner"><div class="pending-title">Today is ${DAY_FULL[dow]} — you have pending sessions</div>${pending.map(p=>
+    `<div class="pending-item"><span class="pending-name">${esc(p.name)}</span><div class="pending-btns"><button class="pending-yes" onclick="quickLog('${p.id}')">Yes ${p.type==='fixed'?'('+(!isPay(p)?'+':'')+' '+cur(p)+p.rate+')':''}</button><button class="pending-no" onclick="quickSkip('${p.id}')">Skip</button></div></div>`
+  ).join('')}</div>`;
+}
+
+function quickLog(id){
+  const p=getProject(id);if(!p)return;
+  if(p.type==='fixed'||p.type==='daily'){
+    p.balance=(p.balance||0)+p.rate;p.history=p.history||[];
+    p.history.unshift({type:'charge',amount:p.rate,date:new Date().toISOString(),note:DAY_FULL[new Date().getDay()]+' session'});
+    save();renderHome();showToast(cur(p)+p.rate+' added to '+p.name);
+  }else{openProject(id);showAddCharge()}
+}
+function quickSkip(id){
+  const p=getProject(id);if(!p)return;p.history=p.history||[];
+  p.history.unshift({type:'skipped',amount:0,date:new Date().toISOString(),note:DAY_FULL[new Date().getDay()]+' skipped'});
+  save();renderHome();showToast(`${p.name} skipped`);
+}
+
+function getLastActivityDate(p){
+  const hist=p.history||[];
+  if(!hist.length)return p.createdAt||'';
+  return hist[0].date||'';
+}
+function sortByRecent(arr){
+  return arr.slice().sort((a,b)=>{
+    const da=getLastActivityDate(a),db=getLastActivityDate(b);
+    if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;
+    return new Date(db)-new Date(da);
+  });
+}
+
+function renderProjects(){
+  const el=document.getElementById('projectsList');
+  const active=projects.filter(p=>!p.archived);
+  const archivedCount=projects.filter(p=>p.archived).length;
+  if(!active.length&&!groups.length){
+    el.innerHTML=`<div class="empty-home">No activities yet.<br>Add your first one to start tracking.</div><div class="home-actions"><button class="add-project-btn" onclick="openNewProject()">＋ Activity<span class="btn-sub">ongoing sessions<br>pilates, tutor, guitar…</span></button><button class="add-project-btn" onclick="openNewProjectForm()">＋ Project<span class="btn-sub">renovation, trip, party…</span></button><button class="add-project-btn" onclick="openNewLendingCircle()">＋ Lending Circle<span class="btn-sub">between family &amp; friends</span></button></div><div class="home-actions" style="margin-top:0"><button class="add-group-btn" onclick="openNewGroup()">◫ Category</button></div>${archivedCount?`<p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-muted)">${archivedCount} archived · <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">View in Settings</button></p>`:''}`;return;
+  }
+  let html='';
+  groups.forEach(g=>{
+    const gp=sortByRecent(active.filter(p=>p.groupId===g.id));
+    const collapsed=!!collapsedGroups[g.id];
+    const currencies=[...new Set(gp.map(p=>cur(p)))];
+    const sameCur=currencies.length===1&&currencies[0]!=='';
+    let totalHtml='';
+    if(sameCur){const totalBal=gp.reduce((s,p)=>s+(p.balance||0),0);const abs=Math.round(Math.abs(totalBal)),cls=totalBal>0?'owe':totalBal<0?'credit':'zero';totalHtml=`<span class="group-total ${cls}">${currencies[0]}${abs}</span>`}
+    html+=`<div class="group-section"><div class="group-header" onclick="toggleGroup('${g.id}')"><div class="group-header-left"><span class="group-chevron ${collapsed?'':'open'}">›</span><span class="group-name">${esc(g.name)}</span><span class="group-count">(${gp.length})</span></div><div style="display:flex;align-items:center;gap:8px">${totalHtml}<button class="group-edit-btn" onclick="event.stopPropagation();editGroup('${g.id}')">⋯</button></div></div><div class="group-items" style="${collapsed?'max-height:0;overflow:hidden':''}">${gp.map(p=>renderProjectCard(p)).join('')}</div></div>`;
+  });
+  const ungrouped=sortByRecent(active.filter(p=>!p.groupId||!getGroup(p.groupId)));
+  if(ungrouped.length){
+    html+=`<div class="ungrouped-label">${groups.length?'Other Activities':'Your Activities'}</div>`;
+    html+=ungrouped.map(p=>renderProjectCard(p)).join('');
+  }
+  html+=`<div class="home-actions"><button class="add-project-btn" onclick="openNewProject()">＋ Activity<span class="btn-sub">ongoing sessions<br>pilates, tutor, guitar…</span></button><button class="add-project-btn" onclick="openNewProjectForm()">＋ Project<span class="btn-sub">renovation, trip, party…</span></button><button class="add-project-btn" onclick="openNewLendingCircle()">＋ Lending Circle<span class="btn-sub">between family &amp; friends</span></button></div><div class="home-actions" style="margin-top:0"><button class="add-group-btn" onclick="openNewGroup()">◫ Category</button></div>`;
+  if(archivedCount)html+=`<p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-muted)">${archivedCount} archived · <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">View in Settings</button></p>`;
+  el.innerHTML=html;
+}
+
+function renderProjectCard(p){
+  const bal=p.balance||0,abs=Math.round(Math.abs(bal)),cls=cardBalClass(p);
+  const typePrefix=p.type==='fixed'||p.type==='daily'||p.type==='hourly'||p.type==='customrate'?'Activity · ':p.type==='project'?(p.participants&&p.participants.length?'Group Project · ':'Project'):p.type==='group'?(p.participants&&p.participants.length?'Group Project · ':'Project'):'Lending · ';
+  const tl=p.type==='fixed'?`${cur(p)}${p.rate}/session`:p.type==='daily'?`${cur(p)}${p.rate}/day`:p.type==='hourly'?`${cur(p)}${p.rate}/hr`:p.type==='customrate'?`${cur(p)}${p.customRateAmt}/${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='group'?`${(p.participants||[]).length} people`:p.type==='lending'?`Lending · ${(p.participants||[]).length} people`:'';
+  const dir='';
+  const ht=!!timers[p.id],tb=ht?'<div class="project-timer-badge"><span class="pulse-dot"></span>Timer running</div>':'';
+  const dirLabel=(p.type==='project'||p.type==='group'||p.type==='lending')?'':(' · '+(isPay(p)?'I pay':'I earn'));
+  return`<div class="project-card ${ht?'has-timer':''}" onclick="openProject('${p.id}')"><div class="project-info"><div class="project-name">${dir}${esc(p.name)}</div><div class="project-meta">${typePrefix}${tl}${dirLabel}</div>${tb}</div><span class="project-balance ${cls}">${cur(p)}${abs}</span><span class="project-arrow">›</span></div>`;
+}
+
+function toggleGroup(gid){collapsedGroups[gid]=!collapsedGroups[gid];save();renderProjects()}
+
+// ===== GROUPS =====
+function openNewGroup(){
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()"><p class="dialog-title">New Category</p><input class="dialog-input" id="newGroupName" placeholder="e.g. Kids, Consulting, Leisure…" autofocus><div class="dialog-actions-col"><button class="dialog-btn-save" onclick="saveNewGroup()">Create Category</button><button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button></div></div></div>`;
+  setTimeout(()=>{const i=document.getElementById('newGroupName');if(i)i.focus()},100);
+}
+function saveNewGroup(){const name=document.getElementById('newGroupName').value.trim();if(!name){showToast('Please enter a name');return}groups.push({id:genId(),name});save();closeOverlay();renderHome();showToast('Category created')}
+function editGroup(gid){
+  const g=getGroup(gid);if(!g)return;
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()"><p class="dialog-title">Edit Category</p><input class="dialog-input" id="editGroupName" value="${esc(g.name)}"><div class="dialog-actions-col"><button class="dialog-btn-save" onclick="saveEditGroup('${gid}')">Save</button><button class="dialog-btn-delete" onclick="deleteGroup('${gid}')">Delete Category</button><button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button></div></div></div>`;
+  setTimeout(()=>{const i=document.getElementById('editGroupName');if(i){i.focus();i.select()}},100);
+}
+function saveEditGroup(gid){const g=getGroup(gid);if(!g)return;const name=document.getElementById('editGroupName').value.trim();if(!name){showToast('Please enter a name');return}g.name=name;save();closeOverlay();renderHome();showToast('Category renamed')}
+function deleteGroup(gid){projects.forEach(p=>{if(p.groupId===gid)p.groupId=null});groups=groups.filter(g=>g.id!==gid);delete collapsedGroups[gid];save();closeOverlay();renderHome();showToast('Category deleted')}
+
+// ===== FORM =====
+function setDirection(dir){
+  formDirection=dir;
+  const btns=document.getElementById('fDirToggle').children;
+  btns[0].className='dir-option'+(dir==='pay'?' selected':'');
+  btns[1].className='dir-option'+(dir==='earn'?' selected':'');
+  document.getElementById('fDirHint').textContent=dir==='pay'?'Track what you owe someone (e.g. tutor, trainer, contractor)':'Track what someone owes you (e.g. your tutoring clients)';
+  document.getElementById('fInvoiceSection').style.display=dir==='earn'?'':'none';
+  if(dir==='pay'){invoiceEnabled=false;updateInvoiceToggle()}
+}
+function populateGroupSelect(selectedGroupId){
+  const sel=document.getElementById('fGroup');
+  sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
+  document.getElementById('newGroupRow').innerHTML='';
+}
+function onGroupSelectChange(){
+  const sel=document.getElementById('fGroup');
+  if(sel.value==='__new__'){
+    document.getElementById('newGroupRow').innerHTML=`<div class="new-group-row"><input class="new-group-input" id="inlineGroupName" placeholder="Category name…"><button class="new-group-save" onclick="saveInlineGroup()">Add</button></div>`;
+    setTimeout(()=>{const i=document.getElementById('inlineGroupName');if(i)i.focus()},50);
+  }else{document.getElementById('newGroupRow').innerHTML=''}
+}
+function saveInlineGroup(){const name=document.getElementById('inlineGroupName').value.trim();if(!name){showToast('Please enter a name');return}const g={id:genId(),name};groups.push(g);save();populateGroupSelect(g.id);showToast('Category created')}
+
+// ===== PROJECT FORM =====
+let editingProjId=null;
+let pfCostItemsList=[];
+let pfParticipants=[];
+let pfMode='solo';
+let pfDirection='pay';
+
+function setPfMode(mode){
+  pfMode=mode;
+  document.querySelectorAll('#pfModeToggle .dir-option').forEach((b,i)=>{b.classList.toggle('selected',i===(mode==='solo'?0:1))});
+  document.getElementById('pfParticipantsSection').style.display=mode==='group'?'':'none';
+  document.getElementById('pfDirSection').style.display=mode==='solo'?'':'none';
+  if(mode==='group'){pfDirection='pay'}
+}
+function setPfDirection(dir){
+  pfDirection=dir;
+  document.querySelectorAll('#pfDirToggle .dir-option').forEach((b,i)=>{b.classList.toggle('selected',i===(dir==='pay'?0:1))});
+}
+function renderPfParticipants(){
+  const el=document.getElementById('pfParticipantsList');
+  if(!pfParticipants.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:4px 0">No participants added yet</p>';return}
+  el.innerHTML=pfParticipants.map((name,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(name)}</span><button onclick="removePfParticipant(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
+}
+function addPfParticipant(){
+  const inp=document.getElementById('pfNewParticipant');
+  const name=inp.value.trim();
+  if(!name){showToast('Please enter a name');return}
+  if(pfParticipants.includes(name)){showToast('Already added');return}
+  pfParticipants.push(name);inp.value='';renderPfParticipants();inp.focus();
+}
+function removePfParticipant(i){pfParticipants.splice(i,1);renderPfParticipants()}
+function renderPfCostItems(){
+  const el=document.getElementById('pfCostItems');
+  if(!pfCostItemsList.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:4px 0">No cost items</p>';return}
+  el.innerHTML=pfCostItemsList.map((item,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(item.name)}</span><span style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--text-mid)">${item.amount}</span><button onclick="removePfCostItem(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></span></div>`).join('');
+}
+function addPfCostItem(){
+  const name=document.getElementById('pfNewItemName').value.trim();
+  const amt=parseFloat(document.getElementById('pfNewItemAmt').value)||0;
+  if(!name){showToast('Enter item name');return}
+  if(amt<=0){showToast('Enter amount');return}
+  pfCostItemsList.push({name,amount:amt});
+  document.getElementById('pfNewItemName').value='';document.getElementById('pfNewItemAmt').value='';
+  renderPfCostItems();document.getElementById('pfNewItemName').focus();
+}
+function removePfCostItem(i){pfCostItemsList.splice(i,1);renderPfCostItems()}
+function populatePfGroupSelect(selectedGroupId){
+  const sel=document.getElementById('pfGroup');
+  sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
+  document.getElementById('pfNewGroupRow').innerHTML='';
+}
+function onPfGroupSelectChange(){
+  const sel=document.getElementById('pfGroup');
+  if(sel.value==='__new__'){
+    document.getElementById('pfNewGroupRow').innerHTML=`<div class="new-group-row"><input class="new-group-input" id="pfInlineGroupName" placeholder="Category name…"><button class="new-group-save" onclick="savePfInlineGroup()">Add</button></div>`;
+    setTimeout(()=>{const i=document.getElementById('pfInlineGroupName');if(i)i.focus()},50);
+  }else{document.getElementById('pfNewGroupRow').innerHTML=''}
+}
+function savePfInlineGroup(){const name=document.getElementById('pfInlineGroupName').value.trim();if(!name){showToast('Please enter a name');return}const g={id:genId(),name};groups.push(g);save();populatePfGroupSelect(g.id);showToast('Category created')}
+
+function openNewProjectForm(){
+  editingProjId=null;pfMode='solo';pfDirection='pay';pfParticipants=[];
+  document.getElementById('projectFormTitle').textContent='New Project';
+  document.getElementById('projectFormSubmitBtn').textContent='Create Project';
+  document.getElementById('pfName').value='';
+  document.getElementById('pfCurrency').value='$';
+  document.getElementById('pfBudget').value='';
+  pfCostItemsList=[];renderPfCostItems();renderPfParticipants();
+  setPfMode('solo');setPfDirection('pay');
+  populatePfGroupSelect('');showView('projectFormView');
+}
+function editProjectForm(id){
+  const p=getProject(id);if(!p)return;
+  editingProjId=p.id;
+  pfMode=p.participants&&p.participants.length?'group':'solo';
+  pfDirection=p.direction||'pay';
+  pfParticipants=[...(p.participants||[])];
+  document.getElementById('projectFormTitle').textContent='Edit Project';
+  document.getElementById('projectFormSubmitBtn').textContent='Save Changes';
+  document.getElementById('pfName').value=p.name;
+  document.getElementById('pfCurrency').value=p.currency||'';
+  document.getElementById('pfBudget').value=p.budget||'';
+  pfCostItemsList=[...(p.costItems||[])];renderPfCostItems();renderPfParticipants();
+  setPfMode(pfMode);setPfDirection(pfDirection);
+  populatePfGroupSelect(p.groupId||'');showView('projectFormView');
+}
+function reconcileCostItems(items, budget){
+  if(!budget||!items.length)return items;
+  const total=items.reduce((s,i)=>s+i.amount,0);
+  const diff=rd2(budget-total);
+  // Remove existing auto-generated "Other" before recalculating
+  const filtered=items.filter(i=>!i.auto);
+  const filteredTotal=filtered.reduce((s,i)=>s+i.amount,0);
+  const newDiff=rd2(budget-filteredTotal);
+  if(newDiff>0.01){
+    filtered.push({name:'Other',amount:newDiff,auto:true});
+  }else if(newDiff<-0.01){
+    // Items exceed budget — don't add Other, will show warning
+  }
+  return filtered;
+}
+
+function saveProjectForm(){
+  const name=document.getElementById('pfName').value.trim();
+  const currency=document.getElementById('pfCurrency').value;
+  const groupId=document.getElementById('pfGroup').value;
+  if(!name){showToast('Please enter a name');return}
+  if(pfMode==='group'&&pfParticipants.length<2){showToast('Add at least 2 participants');return}
+  if(groupId==='__new__'){showToast('Please save the new category first');return}
+  const budget=parseFloat(document.getElementById('pfBudget').value)||0;
+  if(editingProjId){
+    const p=getProject(editingProjId);
+    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.costItems=reconcileCostItems([...pfCostItemsList],budget);p.direction=pfMode==='group'?'pay':pfDirection;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
+  }else{
+    const reconciled=reconcileCostItems([...pfCostItemsList],budget);const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,budget,costItems:reconciled,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
+    projects.push(p);save();showToast('Project created');goHome();
+  }
+}
+
+// ===== GROUP ACTIVITY FORM =====
+let gfParticipants=[];
+let editingGroupId=null;
+function renderGfParticipants(){
+  const el=document.getElementById('gfParticipantsList');
+  if(!gfParticipants.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:8px 0">No participants added yet</p>';return}
+  el.innerHTML=gfParticipants.map((name,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(name)}</span><button onclick="removeGfParticipant(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
+}
+function addGfParticipant(){
+  const inp=document.getElementById('gfNewParticipant');
+  const name=inp.value.trim();
+  if(!name){showToast('Please enter a name');return}
+  if(gfParticipants.includes(name)){showToast('Already added');return}
+  gfParticipants.push(name);
+  inp.value='';renderGfParticipants();inp.focus();
+}
+function removeGfParticipant(i){gfParticipants.splice(i,1);renderGfParticipants()}
+function populateGfGroupSelect(selectedGroupId){
+  const sel=document.getElementById('gfGroup');
+  sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
+  document.getElementById('gfNewGroupRow').innerHTML='';
+}
+function onGfGroupSelectChange(){
+  const sel=document.getElementById('gfGroup');
+  if(sel.value==='__new__'){
+    document.getElementById('gfNewGroupRow').innerHTML=`<div class="new-group-row"><input class="new-group-input" id="gfInlineGroupName" placeholder="Category name…"><button class="new-group-save" onclick="saveGfInlineGroup()">Add</button></div>`;
+    setTimeout(()=>{const i=document.getElementById('gfInlineGroupName');if(i)i.focus()},50);
+  }else{document.getElementById('gfNewGroupRow').innerHTML=''}
+}
+function saveGfInlineGroup(){const name=document.getElementById('gfInlineGroupName').value.trim();if(!name){showToast('Please enter a name');return}const g={id:genId(),name};groups.push(g);save();populateGfGroupSelect(g.id);showToast('Category created')}
+
+function openNewGroupActivity(){
+  editingGroupId=null;gfParticipants=[];
+  document.getElementById('groupFormTitle').textContent='New Group Activity';
+  document.getElementById('groupFormSubmitBtn').textContent='Create Group Activity';
+  document.getElementById('gfName').value='';
+  document.getElementById('gfCurrency').value='$';
+  renderGfParticipants();populateGfGroupSelect('');showView('groupFormView');
+}
+function editGroupActivity(id){
+  const p=getProject(id);if(!p)return;
+  editingGroupId=p.id;gfParticipants=[...(p.participants||[])];
+  document.getElementById('groupFormTitle').textContent='Edit Group Activity';
+  document.getElementById('groupFormSubmitBtn').textContent='Save Changes';
+  document.getElementById('gfName').value=p.name;
+  document.getElementById('gfCurrency').value=p.currency||'';
+  renderGfParticipants();populateGfGroupSelect(p.groupId||'');showView('groupFormView');
+}
+function saveGroupActivity(){
+  const name=document.getElementById('gfName').value.trim();
+  const currency=document.getElementById('gfCurrency').value;
+  const groupId=document.getElementById('gfGroup').value;
+  if(!name){showToast('Please enter a name');return}
+  if(gfParticipants.length<2){showToast('Add at least 2 participants');return}
+  if(groupId==='__new__'){showToast('Please save the new group first');return}
+  if(editingGroupId){
+    const p=getProject(editingGroupId);
+    if(p){p.name=name;p.currency=currency;p.participants=[...gfParticipants];p.groupId=groupId||null;save();showToast('Group activity updated');currentProjectId=p.id;goBack()}
+  }else{
+    const p={id:genId(),name,type:'group',currency,participants:[...gfParticipants],groupId:groupId||null,direction:'pay',balance:0,history:[],createdAt:new Date().toISOString()};
+    projects.push(p);save();showToast('Group activity created');goHome();
+  }
+}
+
+// ===== SETTINGS =====
+function openSettings(){
+  document.getElementById('sName').value=settings.name||'';
+  document.getElementById('sEmail').value=settings.email||'';
+  document.getElementById('sPhone').value=settings.phone||'';
+  document.getElementById('sAddress').value=settings.address||'';
+  document.getElementById('sInvoiceInfo').value=settings.invoiceInfo||'';
+  renderArchivedList();
+  stopTick();showView('settingsView');
+}
+function saveSettings(){
+  settings.name=document.getElementById('sName').value.trim();
+  settings.email=document.getElementById('sEmail').value.trim();
+  settings.phone=document.getElementById('sPhone').value.trim();
+  settings.address=document.getElementById('sAddress').value.trim();
+  settings.invoiceInfo=document.getElementById('sInvoiceInfo').value.trim();
+  try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}catch(e){}
+  showToast('Settings saved');goBack();
+}
+
+// ===== ARCHIVE =====
+function archiveCurrentProject(){
+  const p=getProject(currentProjectId);if(!p)return;
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Archive "${esc(p.name)}"?</p>
+    <p class="dialog-text">This will hide it from the home screen. You can restore it anytime from Settings.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="dialog-confirm" style="background:var(--text)" onclick="doArchive()">Archive</button>
+    </div>
+  </div></div>`;
+}
+function doArchive(){
+  const p=getProject(currentProjectId);if(!p)return;
+  p.archived=true;save();closeOverlay();goHome();showToast(p.name+' archived');
+}
+function restoreProject(id){
+  const p=getProject(id);if(!p)return;
+  p.archived=false;save();renderArchivedList();showToast(p.name+' restored');
+}
+function deleteProjectPermanently(id){
+  const p=getProject(id);if(!p)return;
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Delete Permanently?</p>
+    <p class="dialog-text">This will permanently delete "${esc(p.name)}" and all its data. This cannot be undone.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="dialog-confirm" onclick="doDeleteProject('${id}')">Delete</button>
+    </div>
+  </div></div>`;
+}
+function doDeleteProject(id){
+  projects=projects.filter(p=>p.id!==id);
+  if(timers[id]){delete timers[id];saveTimers()}
+  save();closeOverlay();renderArchivedList();showToast('Deleted permanently');
+}
+function renderArchivedList(){
+  const el=document.getElementById('archivedList');
+  const archived=projects.filter(p=>p.archived);
+  if(!archived.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:8px 0">No archived activities</p>';return}
+  el.innerHTML=archived.map(p=>{
+    const typeLabel=p.type==='group'?'Group':p.type==='lending'?'Lending':p.type==='project'?'Project':'Activity';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+      <div><div style="font-size:14px;font-weight:600">${esc(p.name)}</div><div style="font-size:11px;color:var(--text-muted)">${typeLabel}</div></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="restoreProject('${p.id}')" style="background:none;border:1px solid var(--green);color:var(--green);padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Restore</button>
+        <button onclick="deleteProjectPermanently('${p.id}')" style="background:none;border:1px solid var(--red);color:var(--red);padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== INVOICE TOGGLE =====
+function toggleInvoiceSetting(){
+  invoiceEnabled=!invoiceEnabled;
+  updateInvoiceToggle();
+}
+function updateInvoiceToggle(){
+  const b=document.getElementById('fInvoiceToggle');
+  if(invoiceEnabled)b.classList.add('on');else b.classList.remove('on');
+  document.getElementById('fInvoiceFields').style.display=invoiceEnabled?'':'none';
+}
+
+// ===== FORM =====
+function openNewProject(){
+  editingProjectId=null;selectedDays=[];formDirection='pay';invoiceEnabled=false;
+  document.getElementById('formTitle').textContent='New Activity';
+  document.getElementById('formSubmitBtn').textContent='Create Activity';
+  document.getElementById('fName').value='';document.getElementById('fType').value='fixed';document.getElementById('fRate').value='';
+  document.getElementById('fCustomRateAmt').value='';document.getElementById('fCustomRateMin').value='';
+  document.getElementById('fCurrency').value='$';
+  document.getElementById('fClientName').value='';document.getElementById('fClientEmail').value='';document.getElementById('fClientAddress').value='';document.getElementById('fInvoiceNotes').value='';
+  updateInvoiceToggle();
+  setDirection('pay');populateGroupSelect('');onTypeChange();renderDayChips();showView('formView');
+}
+function editCurrentProject(){
+  const p=getProject(currentProjectId);if(!p)return;
+  if(p.type==='group'){if(p.budget||p.costItems&&p.costItems.length){editProjectForm(currentProjectId);return}editGroupActivity(currentProjectId);return}
+  if(p.type==='lending'){editLendingCircle(currentProjectId);return}
+  if(p.type==='project'){editProjectForm(currentProjectId);return}
+  editingProjectId=p.id;selectedDays=[...(p.days||[])];formDirection=p.direction||'pay';invoiceEnabled=!!p.invoiceEnabled;
+  document.getElementById('formTitle').textContent='Edit Activity';
+  document.getElementById('formSubmitBtn').textContent='Save Changes';
+  document.getElementById('fName').value=p.name;document.getElementById('fType').value=p.type;document.getElementById('fRate').value=p.rate||'';
+  document.getElementById('fCustomRateAmt').value=p.customRateAmt||'';document.getElementById('fCustomRateMin').value=p.customRateMin||'';
+  document.getElementById('fCurrency').value=p.currency||'';
+  try{document.getElementById('fCustomRateUnit').value=p.customRateUnit||'min'}catch(e){}
+  document.getElementById('fClientName').value=p.clientName||'';document.getElementById('fClientEmail').value=p.clientEmail||'';document.getElementById('fClientAddress').value=p.clientAddress||'';document.getElementById('fInvoiceNotes').value=p.invoiceNotes||'';
+  updateInvoiceToggle();
+  setDirection(formDirection);populateGroupSelect(p.groupId||'');onTypeChange();renderDayChips();showView('formView');
+}
+function onTypeChange(){
+  const type=document.getElementById('fType').value;
+  const g=document.getElementById('fRateGroup'),l=document.getElementById('fRateLabel');
+  const cg=document.getElementById('fCustomRateGroup');
+  const hint=document.getElementById('fTypeHint');
+  const c=document.getElementById('fCurrency').value;
+  cg.style.display='none';
+  // Show direction toggle for all types
+  document.getElementById('fDirSection').style.display='';
+  // Show scheduled days only for fixed/daily
+  document.getElementById('fDaysSection').style.display=(type==='fixed'||type==='daily')?'':'none';
+  if(type==='fixed'){g.style.display='';l.textContent='Rate per Session'+(c?' ('+c+')':'');hint.textContent='Same price every time — one tap to log'}
+  else if(type==='daily'){g.style.display='';l.textContent='Daily Rate'+(c?' ('+c+')':'');hint.textContent='Fixed price per day — great for daily contractors'}
+  else if(type==='hourly'){g.style.display='';l.textContent='Hourly Rate'+(c?' ('+c+')':'');hint.textContent='Enter hours after each session — app calculates the cost'}
+  else{g.style.display='none';cg.style.display='';document.getElementById('fCustomRateLabel').textContent='Rate'+(c?' ('+c+')':'');hint.textContent='Set your own price per time unit'}
+}
+function renderDayChips(){document.getElementById('fDays').innerHTML=DAY_NAMES.map((d,i)=>`<button class="day-chip ${selectedDays.includes(i)?'selected':''}" onclick="toggleDay(${i})">${d}</button>`).join('')}
+function toggleDay(i){if(selectedDays.includes(i))selectedDays=selectedDays.filter(d=>d!==i);else selectedDays.push(i);renderDayChips()}
+
+function saveProject(){
+  const name=document.getElementById('fName').value.trim(),type=document.getElementById('fType').value,rate=parseFloat(document.getElementById('fRate').value)||0;
+  const customRateAmt=parseFloat(document.getElementById('fCustomRateAmt').value)||0;
+  const customRateMin=parseFloat(document.getElementById('fCustomRateMin').value)||0;
+  const groupId=document.getElementById('fGroup').value;
+  const currency=document.getElementById('fCurrency').value;
+  const clientName=document.getElementById('fClientName').value.trim();
+  const clientEmail=document.getElementById('fClientEmail').value.trim();
+  const clientAddress=document.getElementById('fClientAddress').value.trim();
+  const invoiceNotes=document.getElementById('fInvoiceNotes').value.trim();
+  if(!name){showToast('Please enter a name');return}
+  if((type==='fixed'||type==='daily')&&rate<=0){showToast('Please enter a rate');return}
+  if(type==='hourly'&&rate<=0){showToast('Please enter an hourly rate');return}
+  if(type==='customrate'&&(customRateAmt<=0||customRateMin<=0)){showToast('Please enter both rate and minutes');return}
+  if(invoiceEnabled&&!clientName){showToast('Please enter a client name for invoicing');return}
+  if(groupId==='__new__'){showToast('Please save the new group first');return}
+  if(editingProjectId){
+    const p=getProject(editingProjectId);
+    if(p){p.name=name;p.type=type;p.rate=rate;p.days=[...selectedDays];p.groupId=groupId||null;p.direction=formDirection;p.customRateAmt=customRateAmt;p.customRateMin=customRateMin;p.customRateUnit=document.getElementById('fCustomRateUnit').value;p.currency=currency;p.invoiceEnabled=invoiceEnabled;p.clientName=clientName;p.clientEmail=clientEmail;p.clientAddress=clientAddress;p.invoiceNotes=invoiceNotes;save();showToast('Activity updated');currentProjectId=p.id;goBack()}
+  }else{
+    const p={id:genId(),name,type,rate,days:[...selectedDays],groupId:groupId||null,direction:formDirection,customRateAmt,customRateMin,customRateUnit:document.getElementById('fCustomRateUnit').value,currency,invoiceEnabled,clientName,clientEmail,clientAddress,invoiceNotes,balance:0,history:[],createdAt:new Date().toISOString()};
+    projects.push(p);save();showToast('Activity created');goHome();
+  }
+}
+
+// ===== DETAIL =====
+function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&p.type==='group'){if(p.budget||p.costItems&&p.costItems.length){renderProjectDetail();showView('projectDetailView')}else{renderGroupDetail();showView('groupDetailView')}}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else if(p&&p.type==='project'){renderProjectDetail();showView('projectDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
+
+function renderDetail(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const pay=isPay(p);
+  document.getElementById('detailTitle').textContent=p.name;
+  const tl=p.type==='fixed'?`${cur(p)}${p.rate} / session`:p.type==='daily'?`${cur(p)}${p.rate} / day`:p.type==='hourly'?`${cur(p)}${p.rate} / hour`:p.type==='customrate'?`${cur(p)}${p.customRateAmt} / ${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='group'?`${(p.participants||[]).length} people`:p.type==='lending'?`${(p.participants||[]).length} people`:'Project';
+  const ds=p.days&&p.days.length?' · '+p.days.map(d=>DAY_NAMES[d]).join(', '):'';
+  const gName=p.groupId&&getGroup(p.groupId)?getGroup(p.groupId).name+' · ':'';
+  const dirBadge=p.type==='project'?'':pay?'<span class="detail-dir-badge badge-pay">I PAY</span>':'<span class="detail-dir-badge badge-earn">I EARN</span>';
+  document.getElementById('detailType').innerHTML=gName+tl+ds+' '+dirBadge;
+
+  const bal=p.balance||0,abs=Math.abs(bal);
+  const lbl=document.getElementById('dBalLabel'),amt=document.getElementById('dBalAmt');
+  lbl.textContent=balLabel(p);
+  amt.textContent=cur(p)+abs;
+  amt.className='balance-amount '+balColorClass(p);
+
+  document.getElementById('dAddLabel').textContent=p.type==='project'?'Add Expense':'Add Session';
+  document.getElementById('dPayLabel').textContent=p.type==='project'?'I Got Paid':pay?'I Paid':'I Got Paid';
+  document.getElementById('chargeInput').innerHTML='';
+  document.getElementById('payInput').innerHTML='';
+
+  renderTimerWidget(p);
+
+  const hist=p.history||[],hEl=document.getElementById('detailHistory');
+  if(!hist.length){hEl.innerHTML='<p class="empty-history">No records yet.</p>'}
+  else{
+    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
+    hEl.innerHTML=tapHint+hist.map((h,i)=>{
+    let dc,ac;
+    if(p.type==='project'){
+      // Projects: expenses always red, payments always green
+      if(h.type==='charge'){dc='dot-charge';ac='amt-charge'}
+      else if(h.type==='payment'){dc='dot-payment';ac='amt-payment'}
+      else{dc='dot-skipped';ac='amt-skipped'}
+    }else{
+      if(h.type==='charge'){dc=pay?'dot-charge':'dot-charge-earn';ac=pay?'amt-charge':'amt-charge-earn'}
+      else if(h.type==='payment'){dc=pay?'dot-payment':'dot-payment-earn';ac=pay?'amt-payment':'amt-payment-earn'}
+      else{dc='dot-skipped';ac='amt-skipped'}
+    }
+    const at=h.type==='charge'?'+'+cur(p)+rd2(h.amount):h.type==='payment'?'-'+cur(p)+rd2(h.amount):'—';
+    const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
+    return`<div class="history-row" onclick="showEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+  }).join('')}
+}
+
+// ===== TIMER =====
+function calcTimeCost(p,ms){
+  const mins=ms/(1000*60);
+  if(p.type==='hourly')return rd2((mins/60)*p.rate);
+  if(p.type==='customrate'){const unit=p.customRateUnit||'min';const divisor=unit==='hr'?(p.customRateMin*60):p.customRateMin;return rd2((mins/divisor)*p.customRateAmt)}
+  return 0;
+}
+function calcTimeLabel(p,ms){
+  const mins=ms/(1000*60);
+  const hrsVal=Math.round(mins/60*100)/100;
+  if(p.type==='hourly')return hrsVal+'hrs × '+cur(p)+p.rate;
+  if(p.type==='customrate'){const unit=p.customRateUnit||'min';if(unit==='hr')return rd2(mins/60)+'hrs × '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr';return Math.round(mins)+'min × '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
+  return '';
+}
+function renderTimerWidget(p){
+  const el=document.getElementById('timerWidget');
+  if(p.type!=='hourly'&&p.type!=='customrate'){el.innerHTML='';return}
+  const running=!!timers[p.id],now=Date.now(),elapsed=running?(now-timers[p.id]):0;
+  const cost=calcTimeCost(p,elapsed).toFixed(2);
+  const costLabel=calcTimeLabel(p,elapsed);
+  if(running){
+    el.innerHTML=`<div class="timer-widget running"><div class="timer-label"><span class="pulse-dot"></span>Session in Progress</div><div class="timer-display" id="timerTime">${formatElapsed(elapsed,true)}</div><div class="timer-cost" id="timerCost"><strong>${cur(p)}${cost}</strong> so far (${costLabel})</div><div class="timer-btns"><button class="timer-end" onclick="endTimer()">End Session</button><button class="timer-cancel" onclick="cancelTimer()">Cancel</button></div></div>`;
+  }else{
+    el.innerHTML=`<div class="timer-widget" style="border:1.5px dashed var(--border);background:transparent;box-shadow:none;padding:18px 20px"><div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">⏱</span><span style="font-size:13px;color:var(--text-muted);font-weight:500">Prefer to time it instead?</span></div><button class="timer-start" style="padding:9px 20px;font-size:12px;border-radius:8px" onclick="startTimer()">Start Timer</button></div></div>`;
+  }
+}
+function updateTimerDisplay(p){
+  const te=document.getElementById('timerTime'),ce=document.getElementById('timerCost');
+  if(!te||!timers[p.id])return;
+  const elapsed=Date.now()-timers[p.id],cost=calcTimeCost(p,elapsed).toFixed(2),costLabel=calcTimeLabel(p,elapsed);
+  te.innerHTML=formatElapsed(elapsed,true);ce.innerHTML=`<strong>${cur(p)}${cost}</strong> so far (${costLabel})`;
+}
+function startTimer(){const p=getProject(currentProjectId);if(!p)return;timers[p.id]=Date.now();saveTimers();renderDetail();startTick();showToast('Timer started')}
+function endTimer(){
+  const p=getProject(currentProjectId);if(!p||!timers[p.id])return;
+  const elapsed=Date.now()-timers[p.id];
+  const amount=rd2(calcTimeCost(p,elapsed));
+  const mins=Math.round(elapsed/(1000*60));
+  const unit=p.customRateUnit||'min';
+  let noteText;
+  if(p.type==='hourly')noteText=rd2(formatHours(elapsed))+'hrs @ '+cur(p)+p.rate+' (timed)';
+  else if(unit==='hr')noteText=rd2(mins/60)+'hrs @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr (timed)';
+  else noteText=mins+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min (timed)';
+  delete timers[p.id];saveTimers();stopTick();
+  p.balance=(p.balance||0)+amount;p.history=p.history||[];
+  p.history.unshift({type:'charge',amount,date:new Date().toISOString(),note:noteText});
+  save();renderDetail();showToast('+'+cur(p)+amount+' session logged');
+}
+function cancelTimer(){
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()"><p class="dialog-title">Cancel Timer?</p><p class="dialog-text">This will discard the current session. No charge will be recorded.</p><div class="dialog-btns"><button class="dialog-cancel" onclick="closeOverlay()">Keep Running</button><button class="dialog-confirm" onclick="doCancelTimer()">Cancel Timer</button></div></div></div>`;
+}
+function doCancelTimer(){const p=getProject(currentProjectId);if(p){delete timers[p.id];saveTimers()}stopTick();closeOverlay();renderDetail();showToast('Timer cancelled')}
+function closeOverlay(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('overlay').innerHTML=''}
+
+// ===== ENTRY ACTIONS =====
+function showEntryActions(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const c=cur(p);
+  const typeLabel=h.type==='charge'?(p.type==='project'?'Expense':'Session/Charge'):h.type==='payment'?'Payment':'Skipped';
+  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
+  const isSkipped=h.type==='skipped';
+  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:320px">
+    <p class="dialog-title" style="text-align:center">${typeLabel}</p>
+    ${!isSkipped?`
+    <label style="${lbl}">Description</label>
+    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}">
+    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
+    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
+    `:''}
+    <label style="${lbl}">Date</label>
+    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
+    <label style="${lbl}">Note</label>
+    <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="doEditEntry(${idx})">Save</button>
+      <button class="dialog-btn-delete" onclick="showDeleteConfirm(${idx})">Delete Entry</button>
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+
+function doEditEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const isSkipped=h.type==='skipped';
+  if(!isSkipped){
+    const newAmt=parseFloat(document.getElementById('editAmt').value);
+    const newName=document.getElementById('editName').value.trim();
+    if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
+    const diff=newAmt-(h.amount||0);
+    if(h.type==='charge')p.balance=(p.balance||0)+diff;
+    else if(h.type==='payment')p.balance=(p.balance||0)-diff;
+    h.amount=rd2(newAmt);
+    if(newName)h.note=newName;
+  }
+  const newDate=document.getElementById('editDate').value;
+  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
+  const comment=document.getElementById('editComment').value.trim();
+  h.comment=comment||'';
+  save();closeOverlay();renderDetail();showToast('Entry updated');
+}
+
+function showDeleteConfirm(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Delete Entry?</p>
+    <p class="dialog-text">This will remove the entry and correct the balance automatically.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="showEntryActions(${idx})">Back</button>
+      <button class="dialog-confirm" onclick="doDeleteEntry(${idx})">Delete</button>
+    </div>
+  </div></div>`;
+}
+function doDeleteEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  if(h.type==='charge')p.balance=(p.balance||0)-h.amount;
+  else if(h.type==='payment')p.balance=(p.balance||0)+h.amount;
+  p.history.splice(idx,1);
+  save();closeOverlay();renderDetail();showToast('Entry deleted');
+}
+
+function showClearAllConfirm(){
+  const p=getProject(currentProjectId);if(!p)return;
+  if(!p.history||!p.history.length){showToast('No entries to clear');return}
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Clear All Entries?</p>
+    <p class="dialog-text">This will delete all ${p.history.length} entries and reset the balance to zero. This cannot be undone.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="dialog-confirm" onclick="doClearAll()">Clear All</button>
+    </div>
+  </div></div>`;
+}
+function doClearAll(){
+  const p=getProject(currentProjectId);if(!p)return;
+  p.history=[];p.balance=0;
+  save();closeOverlay();
+  if(p.type==='group')renderGroupDetail();else if(p.type==='lending')renderLendingDetail();else if(p.type==='project')renderProjectDetail();else renderDetail();
+  showToast('All entries cleared');
+}
+
+// ===== CHARGE & PAY =====
+function showAddCharge(){
+  const p=getProject(currentProjectId);if(!p)return;
+  payOpen=false;document.getElementById('payInput').innerHTML='';
+  if(p.type==='fixed'||p.type==='daily'){
+    const defNote=p.type==='daily'?'Day charge':'Session';
+    p.balance=(p.balance||0)+p.rate;p.history=p.history||[];
+    p.history.unshift({type:'charge',amount:p.rate,date:new Date().toISOString(),note:defNote});
+    save();renderDetail();showToast('+'+cur(p)+p.rate+' added');return;
+  }
+  chargeOpen=!chargeOpen;
+  if(!chargeOpen){document.getElementById('chargeInput').innerHTML='';return}
+  if(p.type==='project'){
+    document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="chargeVal" autofocus></div><div class="input-row"><input class="input-field" type="text" placeholder="What was this for?" id="chargeNote" style="font-size:14px"><button class="input-confirm" onclick="confirmProjectCharge()">Add</button></div>`;
+    document.getElementById('chargeVal').focus();return;
+  }
+  const ph=p.type==='hourly'?'Hours…':p.type==='customrate'?(p.customRateUnit==='hr'?'Hours…':'Minutes…'):'Amount…';
+  document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="${ph}" id="chargeVal" autofocus><button class="input-confirm" onclick="confirmCharge()">Add</button></div>`;
+  document.getElementById('chargeVal').focus();
+}
+function confirmCharge(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;
+  let amount,noteText;
+  if(p.type==='hourly'){amount=rd2(val*p.rate);noteText=val+'hr'+(val!==1?'s':'')+' @ '+cur(p)+p.rate}
+  else if(p.type==='customrate'){const unit=p.customRateUnit||'min';amount=rd2((val/p.customRateMin)*p.customRateAmt);noteText=val+(unit==='hr'?'hrs':'min')+' @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+(unit==='hr'?'hr':'min')}
+  else{amount=rd2(val);noteText='Expense'}
+  p.balance=(p.balance||0)+amount;p.history=p.history||[];
+  p.history.unshift({type:'charge',amount,date:new Date().toISOString(),note:noteText});
+  save();chargeOpen=false;renderDetail();showToast('+'+cur(p)+amount+' added');
+}
+function confirmProjectCharge(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;
+  const note=document.getElementById('chargeNote').value.trim()||'Expense';
+  const amount=rd2(val);
+  p.balance=(p.balance||0)+amount;p.history=p.history||[];
+  p.history.unshift({type:'charge',amount,date:new Date().toISOString(),note});
+  save();chargeOpen=false;renderDetail();showToast('+'+cur(p)+amount+' added');
+}
+function showPayInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  chargeOpen=false;document.getElementById('chargeInput').innerHTML='';
+  payOpen=!payOpen;
+  if(!payOpen){document.getElementById('payInput').innerHTML='';return}
+  const label=isPay(p)?'Amount I paid…':'Amount I received…';
+  document.getElementById('payInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="${label}" id="payVal" autofocus><button class="input-confirm" onclick="confirmPay()">Confirm</button></div>`;
+  document.getElementById('payVal').focus();
+}
+function confirmPay(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const val=parseFloat(document.getElementById('payVal').value);if(!val||val<=0)return;
+  const defaultNote=isPay(p)?'Payment':'Receipt';
+  p.balance=(p.balance||0)-val;p.history=p.history||[];
+  p.history.unshift({type:'payment',amount:rd2(val),date:new Date().toISOString(),note:defaultNote});
+  save();payOpen=false;renderDetail();showToast('-'+cur(p)+rd2(val)+(isPay(p)?' paid':' received'));
+}
+
+// ===== PROJECT DETAIL =====
+function renderProjectDetail(){
+  const p=getProject(currentProjectId);if(!p)return;
+  document.getElementById('projDetailTitle').textContent=p.name;
+  const c=cur(p);
+  const totalExpenses=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPaid=rd2((p.history||[]).filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
+  const budget=p.budget||0;
+  const costItems=p.costItems||[];
+  const isGroup=p.participants&&p.participants.length>0;
+  const pay=isPay(p);
+
+  // For solo I Pay: "charges" are payments (only button is "I Paid")
+  // For solo I Earn: "charges" are expenses, "payments" are income received
+  // For group: "charges" are group expenses
+  const totalOut=pay&&!isGroup?totalExpenses:totalExpenses; // money spent
+  const totalIn=pay&&!isGroup?0:totalPaid; // money received
+
+  let html='';
+  if(budget){
+    const spent=pay&&!isGroup?totalOut:totalOut;
+    const remaining=rd2(budget-spent);
+    const pct=Math.min(100,Math.round((spent/budget)*100));
+    html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Paid</div></div>`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${remaining>0?'var(--accent)':'var(--green)'}}">${c}${Math.abs(remaining)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${remaining>0?'Remaining':'Overpaid'}</div></div>`;
+    if(!pay&&!isGroup&&totalIn>0){
+      html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
+    }
+    html+=`</div>`;
+    html+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden"><div style="background:var(--green);height:100%;width:${pct}%;border-radius:6px;transition:width .3s ease"></div></div>`;
+  }else{
+    // No budget
+    if(pay&&!isGroup){
+      // Solo I Pay: just show total paid
+      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Paid</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
+    }else if(!pay&&!isGroup){
+      // Solo I Earn: show expenses and received
+      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
+      if(totalIn>0){
+        html+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
+        html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
+        html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${totalOut-totalIn>0?'var(--red)':'var(--green)'}}">${c}${rd2(Math.abs(totalOut-totalIn))}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${totalOut-totalIn>0?'Outstanding':'Profit'}</div></div>`;
+        html+=`</div>`;
+      }
+    }else{
+      // Group: show total expenses
+      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span><span style="font-size:12px;color:var(--text-muted);margin-top:6px">${p.participants.length} people</span></div>`;
+    }
+  }
+  document.getElementById('projBudgetSummary').innerHTML=html;
+  document.getElementById('projBudgetEditBtn').innerHTML='<div style="text-align:center;margin-bottom:12px"><button onclick="showEditBudget()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">Edit Budget</button></div>';
+
+  // Cost item breakdown
+  let itemHtml='';
+  if(costItems.length){
+    itemHtml+='<div class="settle-section" style="margin-bottom:16px">';
+    itemHtml+='<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700;margin-bottom:10px;padding:0 18px">Cost Breakdown</div>';
+    // Calculate proportional share of whole-project payments
+    const totalItemBudget=costItems.reduce((s,i)=>s+i.amount,0);
+    const wholeProjectPayments=rd2((p.history||[]).filter(h=>h.type==='charge'&&(!h.costItem||h.costItem==='')).reduce((s,h)=>s+h.amount,0));
+    let totalRemaining=0;
+    let totalOverbudget=0;
+    costItems.forEach(item=>{
+      const directPayments=rd2((p.history||[]).filter(h=>h.type==='charge'&&h.costItem===item.name).reduce((s,h)=>s+h.amount,0));
+      const proportion=totalItemBudget>0?item.amount/totalItemBudget:0;
+      const proportionalShare=rd2(wholeProjectPayments*proportion);
+      const itemTotal=rd2(directPayments+proportionalShare);
+      const itemPct=item.amount?Math.round((itemTotal/item.amount)*100):0;
+      const itemRemaining=rd2(item.amount-itemTotal);
+      if(itemRemaining>0)totalRemaining+=itemRemaining;
+      else totalOverbudget+=Math.abs(itemRemaining);
+      const isOver=itemPct>100;
+      const autoTag=item.auto?' <span style="font-size:10px;color:var(--text-light)">(auto)</span>':'';
+      const overTag=isOver?`<span style="font-size:10px;color:var(--red);font-weight:700;margin-left:6px">OVER BUDGET +${c}${rd2(Math.abs(itemRemaining))}</span>`:'';
+      itemHtml+=`<div style="padding:10px 18px;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(item.name)}${autoTag}${overTag}</span><span style="font-size:13px;color:var(--text-mid)">${c}${itemTotal} / ${c}${item.amount}</span></div><div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden"><div style="background:${isOver?'var(--red)':'var(--accent)'};height:100%;width:${Math.min(100,itemPct)}%;border-radius:4px"></div></div></div>`;
+    });
+    itemHtml+='</div>';
+
+    // Override the remaining calculation in the summary using item-level data
+    if(budget){
+      const correctedRemaining=rd2(totalRemaining);
+      // Re-render the summary with corrected remaining
+      const spent=totalOut;
+      const pct=Math.min(100,Math.round((spent/budget)*100));
+      let correctedHtml=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
+      correctedHtml+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
+      correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Paid</div></div>`;
+      correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${correctedRemaining>0?'var(--accent)':'var(--green)'}">${c}${correctedRemaining}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${correctedRemaining>0?'Remaining':'All Paid'}</div></div>`;
+      if(totalOverbudget>0){
+        correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--red)">${c}${rd2(totalOverbudget)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Over Budget</div></div>`;
+      }
+      if(!pay&&!isGroup&&totalIn>0){
+        correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
+      }
+      correctedHtml+=`</div>`;
+      correctedHtml+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden"><div style="background:${totalOverbudget>0?'var(--red)':'var(--green)'};height:100%;width:${pct}%;border-radius:6px;transition:width .3s ease"></div></div>`;
+      document.getElementById('projBudgetSummary').innerHTML=correctedHtml;
+    }
+  }
+  document.getElementById('projCostBreakdown').innerHTML=itemHtml;
+
+  // History
+  const hist=p.history||[],hEl=document.getElementById('projHistory');
+  if(!hist.length){hEl.innerHTML='<p class="empty-history">No records yet.</p>'}
+  else{
+    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
+    hEl.innerHTML=tapHint+hist.map((h,i)=>{
+      const isCharge=h.type==='charge';
+      const dc=isCharge?'dot-charge':'dot-payment';
+      const ac=isCharge?'amt-charge':'amt-payment';
+      const at=isCharge?'+'+c+rd2(h.amount):'-'+c+rd2(h.amount);
+      const itemTag=h.costItem?` · ${esc(h.costItem)}`:'';
+      const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
+      return`<div class="history-row" onclick="showProjectEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${itemTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+    }).join('');
+  }
+  // Dynamic buttons based on scenario
+  let actionsHtml='';
+  if(isGroup){
+    // Group: Add Expense + Record Payment + Settle & Reset
+    actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
+    actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
+    actionsHtml+='<button class="detail-btn" style="border:1.5px solid var(--border);background:var(--card);color:var(--text)" onclick="showProjectGroupPaymentInput()"><span class="btn-icon">↔</span> Record Payment</button>';
+    actionsHtml+='</div>';
+    actionsHtml+='<div style="margin-top:8px"><button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectSettleConfirm()"><span class="btn-icon">✓</span> Settle & Reset</button></div>';
+  }else if(pay){
+    // Solo, I Pay: just "I Paid"
+    actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
+    actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Paid</button>';
+    actionsHtml+='</div>';
+  }else{
+    // Solo, I Earn: "Add Expense" + "I Got Paid"
+    actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
+    actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
+    actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Got Paid</button>';
+    actionsHtml+='</div>';
+  }
+  document.getElementById('projActions').innerHTML=actionsHtml;
+
+  // Group settlement section
+  if(isGroup){
+    const parts=p.participants;
+    const paid={};const owes={};
+    parts.forEach(n=>{paid[n]=0;owes[n]=0});
+    const expenses=(p.history||[]).filter(h=>h.type==='charge');
+    const payments=(p.history||[]).filter(h=>h.type==='payment'&&h.from&&h.to);
+    expenses.forEach(h=>{
+      if(h.paidBy&&paid[h.paidBy]!==undefined)paid[h.paidBy]+=h.amount;
+      if(h.customSplit){Object.keys(h.customSplit).forEach(n=>{if(owes[n]!==undefined)owes[n]+=h.customSplit[n]})}
+      else{const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;const share=rd2(h.amount/among.length);among.forEach(n=>{if(owes[n]!==undefined)owes[n]+=share})}
+    });
+    payments.forEach(h=>{if(paid[h.from]!==undefined)paid[h.from]+=h.amount;if(paid[h.to]!==undefined)paid[h.to]-=h.amount});
+    const balances={};parts.forEach(n=>{balances[n]=rd2(paid[n]-owes[n])});
+    const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
+    const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
+    const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
+    if(shouldPay.length||shouldReceive.length){
+      let sHtml='<div class="settle-section" style="margin-top:16px">';
+      if(shouldPay.length){
+        sHtml+='<div class="settle-block"><div class="settle-header settle-header-pay">Should Pay</div>';
+        shouldPay.forEach(n=>{const amt=rd2(Math.abs(balances[n]));sHtml+=`<div class="settle-row"><div><span class="settle-name">${esc(n)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${rd2(paid[n])} · Share ${c}${rd2(owes[n])}</span></div><span class="settle-amt settle-owes">${c}${amt}</span></div>`});
+        sHtml+='</div>';
+      }
+      if(shouldReceive.length){
+        sHtml+='<div class="settle-block"><div class="settle-header settle-header-receive">Should Receive</div>';
+        shouldReceive.forEach(n=>{const amt=rd2(balances[n]);sHtml+=`<div class="settle-row"><div><span class="settle-name">${esc(n)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${rd2(paid[n])} · Share ${c}${rd2(owes[n])}</span></div><span class="settle-amt settle-gets">${c}${amt}</span></div>`});
+        sHtml+='</div>';
+      }
+      sHtml+='</div>';
+      document.getElementById('projCostBreakdown').innerHTML+=sHtml;
+    }
+  }
+
+  document.getElementById('projExpenseInput').innerHTML='';
+}
+
+function showEditBudget(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const costItems=p.costItems||[];
+  const itemRows=costItems.map((item,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><input class="dialog-input" style="flex:1;margin-bottom:0" value="${esc(item.name)}" id="budgetItemName${i}"><input class="dialog-input" style="width:80px;margin-bottom:0;text-align:right" type="number" inputmode="decimal" value="${item.amount}" id="budgetItemAmt${i}"><button onclick="removeBudgetItem(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
+  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
+    <p class="dialog-title" style="text-align:center">Edit Budget</p>
+    <label style="${lbl}">Total Budget${c?' ('+c+')':''}</label>
+    <input class="dialog-input" id="editBudgetAmt" type="number" inputmode="decimal" value="${p.budget||''}">
+    <label style="${lbl}">Cost Items</label>
+    <div id="editBudgetItems">${itemRows}</div>
+    <div style="display:flex;gap:6px;margin-top:8px;margin-bottom:16px">
+      <input class="dialog-input" style="flex:1;margin-bottom:0" placeholder="New item…" id="editBudgetNewName">
+      <input class="dialog-input" style="width:80px;margin-bottom:0;text-align:right" type="number" inputmode="decimal" placeholder="Amt" id="editBudgetNewAmt">
+      <button onclick="addBudgetItem()" style="background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">+</button>
+    </div>
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="saveBudgetEdit()">Save</button>
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+
+let tempBudgetItems=[];
+function removeBudgetItem(i){
+  const p=getProject(currentProjectId);if(!p)return;
+  p.costItems=p.costItems||[];p.costItems.splice(i,1);save();showEditBudget();
+}
+function addBudgetItem(){
+  const name=document.getElementById('editBudgetNewName').value.trim();
+  const amt=parseFloat(document.getElementById('editBudgetNewAmt').value)||0;
+  if(!name){showToast('Enter item name');return}
+  const p=getProject(currentProjectId);if(!p)return;
+  p.costItems=p.costItems||[];p.costItems.push({name,amount:amt});save();showEditBudget();
+}
+function saveBudgetEdit(){
+  const p=getProject(currentProjectId);if(!p)return;
+  p.budget=parseFloat(document.getElementById('editBudgetAmt').value)||0;
+  const items=p.costItems||[];
+  items.forEach((item,i)=>{
+    const nameEl=document.getElementById('budgetItemName'+i);
+    const amtEl=document.getElementById('budgetItemAmt'+i);
+    if(nameEl)item.name=nameEl.value.trim()||item.name;
+    if(amtEl)item.amount=parseFloat(amtEl.value)||item.amount;
+  });
+  p.costItems=reconcileCostItems(items,p.budget);
+  save();closeOverlay();renderProjectDetail();showToast('Budget updated');
+}
+
+function showProjectExpenseInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const el=document.getElementById('projExpenseInput');
+  if(el.innerHTML){el.innerHTML='';return}
+  const costItems=p.costItems||[];
+  const isGroup=p.participants&&p.participants.length>0;
+  const paidByOpts=isGroup?`<div class="input-row"><select class="form-select" id="projExpPaidBy" style="flex:1">${p.participants.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div><p style="font-size:11px;color:var(--text-muted);margin-top:2px;margin-bottom:8px">Who paid for this?</p>`:'';
+  const itemOpts=costItems.length?`<select class="form-select" id="projExpItem" style="margin-bottom:8px"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}">${esc(i.name)}</option>`).join('')}</select>`:'';
+  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projExpAmt" autofocus></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="What was it for?" id="projExpNote" style="font-size:14px"></div>
+    ${paidByOpts}
+    ${itemOpts}
+    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectExpense()">Add Expense</button>
+  </div>`;
+  document.getElementById('projExpAmt').focus();
+}
+
+function confirmProjectExpense(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const val=parseFloat(document.getElementById('projExpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
+  const note=document.getElementById('projExpNote').value.trim()||'Expense';
+  const itemSel=document.getElementById('projExpItem');
+  const costItem=itemSel?itemSel.value:'';
+  p.history=p.history||[];
+  const entry={type:'charge',amount:rd2(val),note,date:new Date().toISOString()};
+  if(costItem)entry.costItem=costItem;
+  const paidBySel=document.getElementById('projExpPaidBy');
+  if(paidBySel)entry.paidBy=paidBySel.value;
+  const isGroup=p.participants&&p.participants.length>0;
+  if(isGroup){entry.splitAmong=[...p.participants]}
+  p.history.unshift(entry);
+  p.balance=rd2((p.balance||0)+val);
+  save();document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+' added');
+}
+
+function showProjectPayInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const el=document.getElementById('projExpenseInput');
+  if(el.innerHTML){el.innerHTML='';return}
+  const pay=isPay(p);
+  const costItems=p.costItems||[];
+  const itemOpts=pay&&costItems.length?`<select class="form-select" id="projPayItem" style="margin-bottom:8px"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}">${esc(i.name)}</option>`).join('')}</select>`:'';
+  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projPayAmt" autofocus></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="What was this for?" id="projPayNote" style="font-size:14px"></div>
+    ${itemOpts}
+    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${pay?'Record Payment':'Record Payment Received'}</button>
+  </div>`;
+  document.getElementById('projPayAmt').focus();
+}
+
+function confirmProjectPay(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const val=parseFloat(document.getElementById('projPayAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
+  const pay=isPay(p);
+  const note=document.getElementById('projPayNote').value.trim()||(pay?'Payment':'Payment received');
+  const itemSel=document.getElementById('projPayItem');
+  const costItem=itemSel?itemSel.value:'';
+  p.history=p.history||[];
+  const entry=pay?{type:'charge',amount:rd2(val),note,date:new Date().toISOString()}:{type:'payment',amount:rd2(val),note,date:new Date().toISOString()};
+  if(costItem)entry.costItem=costItem;
+  if(pay)p.balance=rd2((p.balance||0)+val);
+  p.history.unshift(entry);
+  save();document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+(pay?' paid':' received'));
+}
+
+function showProjectEntryActions(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const c=cur(p);
+  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
+  const costItems=p.costItems||[];
+  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+  const itemOpts=costItems.length&&h.type==='charge'?`<label style="${lbl}">Cost Item</label><select class="dialog-input" id="editCostItem" style="appearance:auto;-webkit-appearance:auto"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}" ${h.costItem===i.name?'selected':''}>${esc(i.name)}</option>`).join('')}</select>`:'';
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:320px;max-height:90vh;overflow-y:auto">
+    <p class="dialog-title" style="text-align:center">${h.type==='charge'?'Expense':'Payment'}</p>
+    <label style="${lbl}">Description</label>
+    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}" onfocus="this.setSelectionRange(0,this.value.length)">
+    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
+    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
+    ${itemOpts}
+    <label style="${lbl}">Date</label>
+    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
+    <label style="${lbl}">Note</label>
+    <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="doEditProjectEntry(${idx})">Save</button>
+      <button class="dialog-btn-delete" onclick="doDeleteProjectEntry(${idx})">Delete</button>
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+
+function doEditProjectEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const newAmt=parseFloat(document.getElementById('editAmt').value);
+  if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
+  const diff=newAmt-(h.amount||0);
+  if(h.type==='charge')p.balance=rd2((p.balance||0)+diff);
+  h.amount=rd2(newAmt);
+  h.note=document.getElementById('editName').value.trim()||h.note;
+  const itemSel=document.getElementById('editCostItem');
+  if(itemSel)h.costItem=itemSel.value||'';
+  const newDate=document.getElementById('editDate').value;
+  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
+  h.comment=document.getElementById('editComment').value.trim()||'';
+  save();closeOverlay();renderProjectDetail();showToast('Entry updated');
+}
+
+function showProjectGroupPaymentInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const parts=p.participants||[];
+  const el=document.getElementById('projExpenseInput');
+  if(el.innerHTML){el.innerHTML='';return}
+  const fromOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===0?' selected':''}>${esc(n)}</option>`).join('');
+  const toOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===1?' selected':''}>${esc(n)}</option>`).join('');
+  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
+    <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Record a payment between members</p>
+    <div class="input-row" style="gap:6px;align-items:center"><select class="form-select" id="projGpFrom" style="flex:1">${fromOpts}</select><span style="font-size:13px;color:var(--text-muted);font-weight:600;padding:0 2px">paid</span><select class="form-select" id="projGpTo" style="flex:1">${toOpts}</select></div>
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projGpAmt" autofocus></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="Note (optional)" id="projGpNote" style="font-size:14px"><button class="input-confirm" onclick="confirmProjectGroupPayment()">Add</button></div>
+  </div>`;
+  document.getElementById('projGpAmt').focus();
+}
+
+function confirmProjectGroupPayment(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const from=document.getElementById('projGpFrom').value;
+  const to=document.getElementById('projGpTo').value;
+  if(from===to){showToast('Pick two different people');return}
+  const val=parseFloat(document.getElementById('projGpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
+  const note=document.getElementById('projGpNote').value.trim();
+  p.history=p.history||[];
+  p.history.unshift({type:'payment',from,to,amount:rd2(val),note:note||from+' paid '+to,date:new Date().toISOString()});
+  save();document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+' payment recorded');
+}
+
+function showProjectSettleConfirm(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const expenses=(p.history||[]).filter(h=>h.type==='charge');
+  if(!expenses.length){showToast('No expenses to settle');return}
+  const c=cur(p);
+  const total=rd2(expenses.reduce((s,h)=>s+h.amount,0));
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Settle & Reset?</p>
+    <p class="dialog-text">This marks the current round as settled (${c}${total} total) and clears all expenses so you can start fresh. The settlement will be noted in the history.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="dialog-confirm" style="background:var(--green-btn)" onclick="doProjectSettle()">Settle</button>
+    </div>
+  </div></div>`;
+}
+function doProjectSettle(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const total=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const oldSettlements=(p.history||[]).filter(h=>h.type==='settlement');
+  p.history=[{type:'settlement',amount:total,note:'Settled on '+dateStr+' — Total was '+c+total,date:new Date().toISOString()},...oldSettlements];
+  p.balance=0;
+  save();closeOverlay();renderProjectDetail();showToast('Settled! Starting fresh');
+}
+
+function showShareSummary(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const isGroup=p.participants&&p.participants.length>0;
+  let text='📊 *Tally* — '+p.name+'\n';
+  if(p.budget)text+='Budget: '+c+p.budget+'\n';
+  const totalExp=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPaid=rd2((p.history||[]).filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
+  text+='Total Expenses: '+c+totalExp+'\n';
+  if(totalPaid)text+='Total Paid: '+c+totalPaid+'\n';
+  if(isGroup){
+    const parts=p.participants;
+    const paidMap={};const owesMap={};
+    parts.forEach(n=>{paidMap[n]=0;owesMap[n]=0});
+    (p.history||[]).filter(h=>h.type==='charge').forEach(h=>{
+      if(h.paidBy&&paidMap[h.paidBy]!==undefined)paidMap[h.paidBy]+=h.amount;
+      if(h.customSplit){Object.keys(h.customSplit).forEach(n=>{if(owesMap[n]!==undefined)owesMap[n]+=h.customSplit[n]})}
+      else{const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;const share=rd2(h.amount/among.length);among.forEach(n=>{if(owesMap[n]!==undefined)owesMap[n]+=share})}
+    });
+    (p.history||[]).filter(h=>h.type==='payment'&&h.from&&h.to).forEach(h=>{if(paidMap[h.from]!==undefined)paidMap[h.from]+=h.amount;if(paidMap[h.to]!==undefined)paidMap[h.to]-=h.amount});
+    text+='\n👥 Settlement:\n';
+    parts.forEach(n=>{
+      const bal=rd2(paidMap[n]-owesMap[n]);
+      if(bal<-0.01)text+='🔴 '+n+' should pay '+c+rd2(Math.abs(bal))+'\n';
+      else if(bal>0.01)text+='🟢 '+n+' should receive '+c+rd2(bal)+'\n';
+      else text+='⚪ '+n+' — even\n';
+    });
+  }
+  text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
+  const encoded=encodeURIComponent(text);
+  window.open('https://wa.me/?text='+encoded,'_blank');
+}
+
+function doDeleteProjectEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  if(h.type==='charge')p.balance=rd2((p.balance||0)-h.amount);
+  p.history.splice(idx,1);
+  save();closeOverlay();renderProjectDetail();showToast('Entry deleted');
+}
+
+// ===== GROUP DETAIL =====
+function calcGroupSettlement(p){
+  const parts=p.participants||[];
+  const hist=p.history||[];
+  const expenses=hist.filter(h=>h.type==='expense');
+  const payments=hist.filter(h=>h.type==='payment'&&h.from&&h.to);
+  const totalExpenses=rd2(expenses.reduce((s,h)=>s+h.amount,0));
+  const paid={};
+  const owes={};
+  parts.forEach(name=>{paid[name]=0;owes[name]=0});
+  expenses.forEach(h=>{
+    if(paid[h.paidBy]!==undefined)paid[h.paidBy]+=h.amount;
+    if(h.customSplit){
+      const cs=h.customSplit;
+      Object.keys(cs).forEach(n=>{if(owes[n]!==undefined)owes[n]+=cs[n]});
+    }else{
+      const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;
+      const share=rd2(h.amount/among.length);
+      among.forEach(n=>{if(owes[n]!==undefined)owes[n]+=share});
+    }
+  });
+  // Person-to-person payments adjust balances
+  payments.forEach(h=>{
+    if(paid[h.from]!==undefined)paid[h.from]+=h.amount;
+    if(paid[h.to]!==undefined)paid[h.to]-=h.amount;
+  });
+  const fairShare=parts.length?rd2(totalExpenses/parts.length):0;
+  const balances={};
+  parts.forEach(name=>{balances[name]=rd2(paid[name]-owes[name])});
+  return{totalExpenses,fairShare,paid,owes,balances,parts};
+}
+
+function renderGroupDetail(){
+  const p=getProject(currentProjectId);if(!p)return;
+  document.getElementById('groupDetailTitle').textContent=p.name;
+  const c=cur(p);
+  const{totalExpenses,fairShare,paid,owes,balances,parts}=calcGroupSettlement(p);
+
+  // Total card
+  let html=`<div class="balance-card" style="margin-top:0;margin-bottom:16px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text)">${c}${totalExpenses}</span><span style="font-size:12px;color:var(--text-muted);margin-top:6px">${parts.length} people</span></div>`;
+
+  // Combined: people sorted by who should pay first, then who should receive
+  const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
+  const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
+  const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
+
+  if(shouldPay.length||shouldReceive.length||even.length){
+    html+='<div class="settle-section">';
+    if(shouldPay.length){
+      html+='<div class="settle-block"><div class="settle-header settle-header-pay">Should Pay</div>';
+      html+=shouldPay.map(name=>{
+        const p2=rd2(paid[name]||0);const ow=rd2(owes[name]||0);const amt=rd2(Math.abs(balances[name]));
+        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${p2} · Share ${c}${ow}</span></div><span class="settle-amt settle-owes">${c}${amt}</span></div>`;
+      }).join('')+'</div>';
+    }
+    if(shouldReceive.length){
+      html+='<div class="settle-block"><div class="settle-header settle-header-receive">Should Receive</div>';
+      html+=shouldReceive.map(name=>{
+        const p2=rd2(paid[name]||0);const ow=rd2(owes[name]||0);const amt=rd2(balances[name]);
+        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${p2} · Share ${c}${ow}</span></div><span class="settle-amt settle-gets">${c}${amt}</span></div>`;
+      }).join('')+'</div>';
+    }
+    if(even.length){
+      html+='<div class="settle-block"><div class="settle-header settle-header-even">All Settled</div>';
+      html+=even.map(name=>{
+        const p2=rd2(paid[name]||0);const ow=rd2(owes[name]||0);
+        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${p2} · Share ${c}${ow}</span></div><span class="settle-amt settle-even">Even</span></div>`;
+      }).join('')+'</div>';
+    }
+    html+='</div>';
+  }
+
+  document.getElementById('groupSummary').innerHTML=html;
+
+  // Expense history
+  const hist=p.history||[],hEl=document.getElementById('groupHistory');
+  if(!hist.length){hEl.innerHTML='<p class="empty-history">No expenses yet.<br>Add the first one to start splitting.</p>'}
+  else{
+    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
+    const expenseRows=hist.filter(h=>h.type==='expense').map(h=>{
+      const realIdx=hist.indexOf(h);
+      const splitInfo=h.customSplit?'Custom split':h.splitAmong&&h.splitAmong.length<(p.participants||[]).length?h.splitAmong.length+' people':'Everyone';
+      return`<div class="history-row" onclick="showGroupEntryActions(${realIdx})" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge"></span><div><span class="row-note">${esc(h.note||'Expense')}</span><span class="row-date">${formatDate(h.date)} · ${esc(h.paidBy||'?')} paid · ${splitInfo}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt amt-charge">${c}${rd2(h.amount)}</span></div>`;
+    }).join('');
+    const paymentRows=hist.filter(h=>h.type==='payment'&&h.from&&h.to).map(h=>{
+      const realIdx=hist.indexOf(h);
+      return`<div class="history-row" onclick="showGroupPaymentActions(${realIdx})" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-payment"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(h.note):''}</span></div></div><span class="row-amt amt-payment">${c}${rd2(h.amount)}</span></div>`;
+    }).join('');
+    const settlementRows=hist.filter(h=>h.type==='settlement').map(h=>{
+      return`<div class="history-row" style="opacity:0.6"><div class="row-left"><span class="row-dot" style="background:var(--accent)"></span><div><span class="row-note" style="font-weight:500;color:var(--text-mid)">${esc(h.note)}</span><span class="row-date">${formatDate(h.date)}</span></div></div><span class="row-amt" style="color:var(--text-muted)">${c}${rd2(h.amount)}</span></div>`;
+    }).join('');
+    hEl.innerHTML=tapHint+expenseRows+paymentRows+settlementRows;
+  }
+
+  document.getElementById('groupExpenseInput').innerHTML='';
+}
+
+let groupSplitMode='equal';
+function showSettleConfirm(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const expenses=(p.history||[]).filter(h=>h.type==='expense');
+  if(!expenses.length){showToast('No expenses to settle');return}
+  const c=cur(p);
+  const{totalExpenses}=calcGroupSettlement(p);
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Settle & Reset?</p>
+    <p class="dialog-text">This marks the current round as settled (${c}${totalExpenses} total) and clears all expenses so you can start fresh. The settlement will be noted in the history.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="dialog-confirm" style="background:var(--green-btn)" onclick="doSettle()">Settle</button>
+    </div>
+  </div></div>`;
+}
+function doSettle(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const{totalExpenses}=calcGroupSettlement(p);
+  const date=new Date().toISOString();
+  const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  // Remove all expense entries, keep settlement markers
+  const oldSettlements=(p.history||[]).filter(h=>h.type==='settlement');
+  p.history=[{type:'settlement',amount:totalExpenses,note:'Settled on '+dateStr+' — Total was '+c+totalExpenses,date},...oldSettlements];
+  p.balance=0;
+  save();closeOverlay();renderGroupDetail();showToast('Settled! Starting fresh');
+}
+
+function showGroupExpenseInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const parts=p.participants||[];
+  const opts=parts.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  const el=document.getElementById('groupExpenseInput');
+  if(el.innerHTML){el.innerHTML='';groupSplitMode='equal';return}
+  groupSplitMode='equal';
+  const checks=parts.map(n=>`<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;font-weight:500"><input type="checkbox" checked value="${esc(n)}" class="grp-split-cb" onchange="updateGroupSplitPreview()" style="width:18px;height:18px;accent-color:var(--accent)">${esc(n)}<span class="grp-share-mult" style="margin-left:auto;display:flex;align-items:center;gap:4px"><select class="grp-mult-select" data-name="${esc(n)}" onchange="updateGroupSplitPreview()" style="padding:4px 6px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--card);color:var(--text)"><option value="1" selected>×1</option><option value="2">×2</option><option value="3">×3</option><option value="0.5">×½</option></select></span><span class="grp-custom-amt" style="display:none;margin-left:4px"><input type="number" inputmode="decimal" class="grp-custom-input" data-name="${esc(n)}" data-manual="false" oninput="this.dataset.manual=&apos;true&apos;;updateGroupSplitPreview()" style="width:70px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);font-size:13px;text-align:right" onchange="updateGroupSplitPreview()"></span></label>`).join('');
+  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="groupExpAmt" autofocus onchange="updateGroupSplitPreview()" oninput="updateGroupSplitPreview()"></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="What was it for?" id="groupExpNote" style="font-size:14px"></div>
+    <div class="input-row"><select class="form-select" id="groupExpPaidBy" style="flex:1">${opts}</select></div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:12px">Who paid for this?</p>
+    <div style="display:flex;gap:0;border-radius:8px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:10px">
+      <button id="splitEqBtn" onclick="setGroupSplitMode('equal')" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:600;background:var(--accent);color:#fff;cursor:pointer">Split equally</button>
+      <button id="splitCustBtn" onclick="setGroupSplitMode('custom')" style="flex:1;padding:10px;border:none;border-left:1px solid var(--border);font-size:13px;font-weight:600;background:var(--card);color:var(--text-mid);cursor:pointer">Custom split</button>
+    </div>
+    <div id="groupSplitParticipants" style="padding:4px 0">${checks}</div>
+    <p id="groupSplitPreview" style="font-size:12px;color:var(--text-muted);margin:8px 0"></p>
+    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmGroupExpense()">Add Expense</button>
+  </div>`;
+  document.getElementById('groupExpAmt').focus();
+  updateGroupSplitPreview();
+}
+
+function setGroupSplitMode(mode){
+  groupSplitMode=mode;
+  document.getElementById('splitEqBtn').style.background=mode==='equal'?'var(--accent)':'var(--card)';
+  document.getElementById('splitEqBtn').style.color=mode==='equal'?'#fff':'var(--text-mid)';
+  document.getElementById('splitCustBtn').style.background=mode==='custom'?'var(--accent)':'var(--card)';
+  document.getElementById('splitCustBtn').style.color=mode==='custom'?'#fff':'var(--text-mid)';
+  document.querySelectorAll('.grp-custom-amt').forEach(el=>{el.style.display=mode==='custom'?'':'none'});
+  document.querySelectorAll('.grp-share-mult').forEach(el=>{el.style.display=mode==='equal'?'':'none'});
+  if(mode==='custom')prefillCustomAmounts();
+  updateGroupSplitPreview();
+}
+
+function prefillCustomAmounts(){
+  const amt=parseFloat(document.getElementById('groupExpAmt').value)||0;
+  const cbs=document.querySelectorAll('.grp-split-cb:checked');
+  const share=cbs.length?rd2(amt/cbs.length):0;
+  document.querySelectorAll('.grp-custom-input').forEach(inp=>{
+    const cb=inp.closest('label').querySelector('.grp-split-cb');
+    if(cb&&cb.checked&&!inp.value)inp.value=share;
+  });
+}
+
+function updateGroupSplitPreview(){
+  const el=document.getElementById('groupSplitPreview');if(!el)return;
+  const amt=parseFloat(document.getElementById('groupExpAmt').value)||0;
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  if(groupSplitMode==='equal'){
+    const cbs=document.querySelectorAll('.grp-split-cb:checked');
+    let totalShares=0;
+    cbs.forEach(cb=>{const mult=document.querySelector('.grp-mult-select[data-name="'+cb.value+'"]');totalShares+=mult?parseFloat(mult.value)||1:1});
+    if(totalShares&&amt){el.textContent=c+rd2(amt/totalShares)+' per share ('+totalShares+' shares)'}
+    else{el.textContent=''}
+  }else{
+    autoRecalcCustomSplits();
+    const inputs=document.querySelectorAll('.grp-custom-input');
+    let total=0;
+    inputs.forEach(inp=>{const cb=inp.closest('label').querySelector('.grp-split-cb');if(cb&&cb.checked)total+=parseFloat(inp.value)||0});
+    if(amt&&total){
+      const diff=rd2(amt-total);
+      if(Math.abs(diff)<0.01)el.innerHTML='<span style="color:var(--green)">Splits add up correctly</span>';
+      else el.innerHTML='<span style="color:var(--red)">Splits total '+c+rd2(total)+' — off by '+c+Math.abs(diff)+'</span>';
+    }else{el.textContent=''}
+  }
+}
+
+function autoRecalcCustomSplits(){
+  const amt=parseFloat(document.getElementById('groupExpAmt').value)||0;
+  if(!amt)return;
+  const inputs=document.querySelectorAll('.grp-custom-input');
+  const checkedInputs=[];
+  let manualTotal=0;
+  let manualCount=0;
+  inputs.forEach(inp=>{
+    const cb=inp.closest('label').querySelector('.grp-split-cb');
+    if(!cb||!cb.checked)return;
+    checkedInputs.push(inp);
+    if(inp.dataset.manual==='true'){manualTotal+=parseFloat(inp.value)||0;manualCount++}
+  });
+  const autoInputs=checkedInputs.filter(inp=>inp.dataset.manual!=='true');
+  if(autoInputs.length>0){
+    const remaining=rd2(amt-manualTotal);
+    const each=rd2(remaining/autoInputs.length);
+    autoInputs.forEach(inp=>{inp.value=each});
+  }
+}
+
+function confirmGroupExpense(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const val=parseFloat(document.getElementById('groupExpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
+  const note=document.getElementById('groupExpNote').value.trim()||'Expense';
+  const paidBy=document.getElementById('groupExpPaidBy').value;
+  if(!paidBy){showToast('Select who paid');return}
+  const cbs=document.querySelectorAll('.grp-split-cb:checked');
+  if(!cbs.length){showToast('Select at least one person to split with');return}
+  const splitAmong=Array.from(cbs).map(cb=>cb.value);
+  let customSplit=null;
+  // For equal with multipliers, convert to customSplit
+  if(groupSplitMode==='equal'){
+    let totalShares=0;
+    cbs.forEach(cb=>{const mult=document.querySelector('.grp-mult-select[data-name="'+cb.value+'"]');totalShares+=mult?parseFloat(mult.value)||1:1});
+    const hasNonOne=Array.from(document.querySelectorAll('.grp-mult-select')).some(s=>s.value!=='1');
+    if(hasNonOne&&totalShares>0){
+      customSplit={};
+      const perShare=rd2(val/totalShares);
+      cbs.forEach(cb=>{const mult=document.querySelector('.grp-mult-select[data-name="'+cb.value+'"]');const m=mult?parseFloat(mult.value)||1:1;customSplit[cb.value]=rd2(perShare*m)});
+    }
+  }
+  if(groupSplitMode==='custom'){
+    customSplit={};
+    let total=0;
+    document.querySelectorAll('.grp-custom-input').forEach(inp=>{
+      const cb=inp.closest('label').querySelector('.grp-split-cb');
+      if(cb&&cb.checked){const v=parseFloat(inp.value)||0;customSplit[inp.dataset.name]=rd2(v);total+=v}
+    });
+    if(Math.abs(total-val)>0.01){showToast('Split amounts don\'t add up to total');return}
+  }
+  p.history=p.history||[];
+  const entry={type:'expense',amount:rd2(val),paidBy,note,date:new Date().toISOString(),splitAmong};
+  if(customSplit)entry.customSplit=customSplit;
+  p.history.unshift(entry);
+  p.balance=rd2((p.balance||0)+val);
+  save();document.getElementById('groupExpenseInput').innerHTML='';groupSplitMode='equal';renderGroupDetail();showToast(cur(p)+rd2(val)+' added');
+}
+
+function showGroupPaymentInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const parts=p.participants||[];
+  const fromOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===0?' selected':''}>${esc(n)}</option>`).join('');
+  const toOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===1?' selected':''}>${esc(n)}</option>`).join('');
+  const el=document.getElementById('groupExpenseInput');
+  if(el.innerHTML){el.innerHTML='';return}
+  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
+    <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Record a payment between members</p>
+    <div class="input-row" style="gap:6px;align-items:center"><select class="form-select" id="groupPayFrom" style="flex:1">${fromOpts}</select><span style="font-size:13px;color:var(--text-muted);font-weight:600;padding:0 2px">paid</span><select class="form-select" id="groupPayTo" style="flex:1">${toOpts}</select></div>
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="groupPayAmt" autofocus></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="Note (optional)" id="groupPayNote" style="font-size:14px"><button class="input-confirm" onclick="confirmGroupPayment()">Add</button></div>
+  </div>`;
+  document.getElementById('groupPayAmt').focus();
+}
+
+function confirmGroupPayment(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const from=document.getElementById('groupPayFrom').value;
+  const to=document.getElementById('groupPayTo').value;
+  if(from===to){showToast('Pick two different people');return}
+  const val=parseFloat(document.getElementById('groupPayAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
+  const note=document.getElementById('groupPayNote').value.trim();
+  p.history=p.history||[];
+  p.history.unshift({type:'payment',from,to,amount:rd2(val),note:note||from+' paid '+to,date:new Date().toISOString()});
+  save();document.getElementById('groupExpenseInput').innerHTML='';renderGroupDetail();showToast(cur(p)+rd2(val)+' payment recorded');
+}
+
+function showGroupEntryActions(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const c=cur(p);
+  const parts=p.participants||[];
+  const opts=parts.map(n=>`<option value="${esc(n)}" ${n===h.paidBy?'selected':''}>${esc(n)}</option>`).join('');
+  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
+  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+  const splitAmong=h.splitAmong||parts;
+  const isCustom=!!h.customSplit;
+  const splitChecks=parts.map(n=>{
+    const checked=splitAmong.includes(n)?'checked':'';
+    const custVal=isCustom&&h.customSplit[n]?h.customSplit[n]:'';
+    return`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px"><input type="checkbox" ${checked} value="${esc(n)}" class="edit-split-cb" style="width:16px;height:16px;accent-color:var(--accent)">${esc(n)}<span class="edit-custom-amt" style="display:${isCustom?'':'none'};margin-left:auto"><input type="number" inputmode="decimal" class="edit-custom-input" data-name="${esc(n)}" value="${custVal}" style="width:70px;padding:5px 6px;border-radius:6px;border:1px solid var(--border);font-size:12px;text-align:right"></span></label>`;
+  }).join('');
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
+    <p class="dialog-title" style="text-align:center">Expense</p>
+    <label style="${lbl}">Description</label>
+    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}" onfocus="this.setSelectionRange(0,this.value.length)">
+    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
+    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
+    <label style="${lbl}">Paid By</label>
+    <select class="dialog-input" id="editPaidBy" style="appearance:auto;-webkit-appearance:auto">${opts}</select>
+    <label style="${lbl}">Split</label>
+    <div style="display:flex;gap:0;border-radius:6px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px">
+      <button id="editSplitEqBtn" onclick="setEditSplitMode('equal')" style="flex:1;padding:8px;border:none;font-size:12px;font-weight:600;background:${isCustom?'var(--card)':'var(--accent)'};color:${isCustom?'var(--text-mid)':'#fff'};cursor:pointer">Equal</button>
+      <button id="editSplitCustBtn" onclick="setEditSplitMode('custom')" style="flex:1;padding:8px;border:none;border-left:1px solid var(--border);font-size:12px;font-weight:600;background:${isCustom?'var(--accent)':'var(--card)'};color:${isCustom?'#fff':'var(--text-mid)'};cursor:pointer">Custom</button>
+    </div>
+    <div id="editSplitParticipants">${splitChecks}</div>
+    <label style="${lbl};margin-top:12px">Date</label>
+    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
+    <label style="${lbl}">Note</label>
+    <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="doEditGroupEntry(${idx})">Save</button>
+      <button class="dialog-btn-delete" onclick="doDeleteGroupEntry(${idx})">Delete</button>
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+  
+}
+let editSplitMode='equal';
+function setEditSplitMode(mode){
+  editSplitMode=mode;
+  document.getElementById('editSplitEqBtn').style.background=mode==='equal'?'var(--accent)':'var(--card)';
+  document.getElementById('editSplitEqBtn').style.color=mode==='equal'?'#fff':'var(--text-mid)';
+  document.getElementById('editSplitCustBtn').style.background=mode==='custom'?'var(--accent)':'var(--card)';
+  document.getElementById('editSplitCustBtn').style.color=mode==='custom'?'#fff':'var(--text-mid)';
+  document.querySelectorAll('.edit-custom-amt').forEach(el=>{el.style.display=mode==='custom'?'':'none'});
+}
+
+function doEditGroupEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const newAmt=parseFloat(document.getElementById('editAmt').value);
+  if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
+  const diff=newAmt-(h.amount||0);
+  p.balance=rd2((p.balance||0)+diff);
+  h.amount=rd2(newAmt);
+  h.note=document.getElementById('editName').value.trim()||h.note;
+  h.paidBy=document.getElementById('editPaidBy').value;
+  // Save split
+  const cbs=document.querySelectorAll('.edit-split-cb:checked');
+  h.splitAmong=Array.from(cbs).map(cb=>cb.value);
+  const isCustom=editSplitMode==='custom';
+  if(isCustom){
+    h.customSplit={};
+    document.querySelectorAll('.edit-custom-input').forEach(inp=>{
+      const cb=inp.closest('label').querySelector('.edit-split-cb');
+      if(cb&&cb.checked)h.customSplit[inp.dataset.name]=rd2(parseFloat(inp.value)||0);
+    });
+  }else{delete h.customSplit}
+  const newDate=document.getElementById('editDate').value;
+  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
+  h.comment=document.getElementById('editComment').value.trim()||'';
+  save();closeOverlay();renderGroupDetail();showToast('Entry updated');
+}
+
+function doDeleteGroupEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  if(h.type==='expense')p.balance=rd2((p.balance||0)-h.amount);
+  p.history.splice(idx,1);
+  save();closeOverlay();renderGroupDetail();showToast('Entry deleted');
+}
+
+function showGroupPaymentActions(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const c=cur(p);
+  const parts=p.participants||[];
+  const fromOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.from?'selected':''}>${esc(n)}</option>`).join('');
+  const toOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.to?'selected':''}>${esc(n)}</option>`).join('');
+  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
+  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
+    <p class="dialog-title" style="text-align:center">Payment</p>
+    <label style="${lbl}">Who paid</label>
+    <select class="dialog-input" id="editGpFrom" style="appearance:auto;-webkit-appearance:auto">${fromOpts}</select>
+    <label style="${lbl}">Paid to</label>
+    <select class="dialog-input" id="editGpTo" style="appearance:auto;-webkit-appearance:auto">${toOpts}</select>
+    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
+    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
+    <label style="${lbl}">Date</label>
+    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
+    <label style="${lbl}">Note</label>
+    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}">
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="doEditGroupPayment(${idx})">Save</button>
+      <button class="dialog-btn-delete" onclick="doDeleteGroupEntry(${idx})">Delete</button>
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+
+function doEditGroupPayment(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const newAmt=parseFloat(document.getElementById('editAmt').value);
+  if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
+  h.amount=rd2(newAmt);
+  h.from=document.getElementById('editGpFrom').value;
+  h.to=document.getElementById('editGpTo').value;
+  h.note=document.getElementById('editName').value.trim();
+  const newDate=document.getElementById('editDate').value;
+  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
+  save();closeOverlay();renderGroupDetail();showToast('Payment updated');
+}
+
+// ===== LENDING CIRCLE FORM =====
+let lfParticipants=[];
+let editingLendingId=null;
+function renderLfParticipants(){
+  const el=document.getElementById('lfParticipantsList');
+  if(!lfParticipants.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:8px 0">No people added yet</p>';return}
+  el.innerHTML=lfParticipants.map((name,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(name)}</span><button onclick="removeLfParticipant(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
+}
+function addLfParticipant(){
+  const inp=document.getElementById('lfNewParticipant');
+  const name=inp.value.trim();
+  if(!name){showToast('Please enter a name');return}
+  if(lfParticipants.includes(name)){showToast('Already added');return}
+  lfParticipants.push(name);
+  inp.value='';renderLfParticipants();inp.focus();
+}
+function removeLfParticipant(i){lfParticipants.splice(i,1);renderLfParticipants()}
+function populateLfGroupSelect(selectedGroupId){
+  const sel=document.getElementById('lfGroup');
+  sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
+  document.getElementById('lfNewGroupRow').innerHTML='';
+}
+function onLfGroupSelectChange(){
+  const sel=document.getElementById('lfGroup');
+  if(sel.value==='__new__'){
+    document.getElementById('lfNewGroupRow').innerHTML=`<div class="new-group-row"><input class="new-group-input" id="lfInlineGroupName" placeholder="Category name…"><button class="new-group-save" onclick="saveLfInlineGroup()">Add</button></div>`;
+    setTimeout(()=>{const i=document.getElementById('lfInlineGroupName');if(i)i.focus()},50);
+  }else{document.getElementById('lfNewGroupRow').innerHTML=''}
+}
+function saveLfInlineGroup(){const name=document.getElementById('lfInlineGroupName').value.trim();if(!name){showToast('Please enter a name');return}const g={id:genId(),name};groups.push(g);save();populateLfGroupSelect(g.id);showToast('Category created')}
+
+function openNewLendingCircle(){
+  editingLendingId=null;lfParticipants=[];
+  document.getElementById('lendingFormTitle').textContent='New Lending Circle';
+  document.getElementById('lendingFormSubmitBtn').textContent='Create';
+  document.getElementById('lfName').value='';
+  document.getElementById('lfCurrency').value='$';
+  renderLfParticipants();populateLfGroupSelect('');showView('lendingFormView');
+}
+function editLendingCircle(id){
+  const p=getProject(id);if(!p)return;
+  editingLendingId=p.id;lfParticipants=[...(p.participants||[])];
+  document.getElementById('lendingFormTitle').textContent='Edit Lending Circle';
+  document.getElementById('lendingFormSubmitBtn').textContent='Save Changes';
+  document.getElementById('lfName').value=p.name;
+  document.getElementById('lfCurrency').value=p.currency||'';
+  renderLfParticipants();populateLfGroupSelect(p.groupId||'');showView('lendingFormView');
+}
+function saveLendingCircle(){
+  const name=document.getElementById('lfName').value.trim();
+  const currency=document.getElementById('lfCurrency').value;
+  const groupId=document.getElementById('lfGroup').value;
+  if(!name){showToast('Please enter a name');return}
+  if(lfParticipants.length<2){showToast('Add at least 2 people');return}
+  if(groupId==='__new__'){showToast('Please save the new category first');return}
+  if(editingLendingId){
+    const p=getProject(editingLendingId);
+    if(p){p.name=name;p.currency=currency;p.participants=[...lfParticipants];p.groupId=groupId||null;save();showToast('Lending circle updated');currentProjectId=p.id;goBack()}
+  }else{
+    const p={id:genId(),name,type:'lending',currency,participants:[...lfParticipants],groupId:groupId||null,direction:'pay',balance:0,history:[],createdAt:new Date().toISOString()};
+    projects.push(p);save();showToast('Lending circle created');goHome();
+  }
+}
+
+// ===== LENDING CIRCLE DETAIL =====
+function calcLendingSettlement(p){
+  const parts=p.participants||[];
+  const hist=(p.history||[]).filter(h=>h.type==='transfer');
+  const balances={};
+  parts.forEach(name=>{balances[name]=0});
+  hist.forEach(h=>{
+    if(balances[h.from]!==undefined)balances[h.from]+=h.amount;
+    if(balances[h.to]!==undefined)balances[h.to]-=h.amount;
+  });
+  parts.forEach(name=>{balances[name]=rd2(balances[name])});
+  const totalMoved=rd2(hist.reduce((s,h)=>s+h.amount,0));
+  return{balances,parts,totalMoved};
+}
+
+function renderLendingDetail(){
+  const p=getProject(currentProjectId);if(!p)return;
+  document.getElementById('lendingDetailTitle').textContent=p.name;
+  const c=cur(p);
+  const{balances,parts,totalMoved}=calcLendingSettlement(p);
+
+  let html=`<div class="balance-card" style="margin-top:0;margin-bottom:16px"><span class="balance-label">Total Transactions</span><span class="balance-amount" style="color:var(--text)">${c}${totalMoved}</span><span style="font-size:12px;color:var(--text-muted);margin-top:6px">${parts.length} people</span></div>`;
+
+  const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
+  const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
+  const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
+
+  if(shouldPay.length||shouldReceive.length||even.length){
+    html+='<div class="settle-section">';
+    if(shouldPay.length){
+      html+='<div class="settle-block"><div class="settle-header settle-header-pay">Should Pay</div>';
+      html+=shouldPay.map(name=>{
+        const amt=rd2(Math.abs(balances[name]));
+        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Owes more than they've lent</span></div><span class="settle-amt settle-owes">${c}${amt}</span></div>`;
+      }).join('')+'</div>';
+    }
+    if(shouldReceive.length){
+      html+='<div class="settle-block"><div class="settle-header settle-header-receive">Should Receive</div>';
+      html+=shouldReceive.map(name=>{
+        const amt=rd2(balances[name]);
+        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Has lent more than they owe</span></div><span class="settle-amt settle-gets">${c}${amt}</span></div>`;
+      }).join('')+'</div>';
+    }
+    if(even.length){
+      html+='<div class="settle-block"><div class="settle-header settle-header-even">All Settled</div>';
+      html+=even.map(name=>{
+        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span></div><span class="settle-amt settle-even">Even</span></div>`;
+      }).join('')+'</div>';
+    }
+    html+='</div>';
+  }
+
+  document.getElementById('lendingSummary').innerHTML=html;
+
+  // Transaction history
+  const hist=p.history||[],hEl=document.getElementById('lendingHistory');
+  if(!hist.length){hEl.innerHTML='<p class="empty-history">No transactions yet.<br>Add the first one to start tracking.</p>'}
+  else{
+    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
+    hEl.innerHTML=tapHint+hist.filter(h=>h.type==='transfer').map((h,i)=>{
+      const realIdx=hist.indexOf(h);
+      return`<div class="history-row" onclick="showLendingEntryActions(${realIdx})" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge-earn"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(h.note):''}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt" style="color:var(--text);font-weight:700">${c}${rd2(h.amount)}</span></div>`;
+    }).join('')+
+    hist.filter(h=>h.type==='settlement').map(h=>{
+      return`<div class="history-row" style="opacity:0.6"><div class="row-left"><span class="row-dot" style="background:var(--accent)"></span><div><span class="row-note" style="font-weight:500;color:var(--text-mid)">${esc(h.note)}</span><span class="row-date">${formatDate(h.date)}</span></div></div><span class="row-amt" style="color:var(--text-muted)">${c}${rd2(h.amount)}</span></div>`;
+    }).join('');
+  }
+
+  document.getElementById('lendingTransInput').innerHTML='';
+}
+
+function showLendingTransInput(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const parts=p.participants||[];
+  const fromOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===0?' selected':''}>${esc(n)}</option>`).join('');
+  const toOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===1?' selected':''}>${esc(n)}</option>`).join('');
+  const el=document.getElementById('lendingTransInput');
+  if(el.innerHTML){el.innerHTML='';return}
+  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
+    <div class="input-row" style="gap:6px;align-items:center"><select class="form-select" id="lendFrom" style="flex:1">${fromOpts}</select><span style="font-size:13px;color:var(--text-muted);font-weight:600;padding:0 2px">paid for</span><select class="form-select" id="lendTo" style="flex:1">${toOpts}</select></div>
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="lendAmt" autofocus></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="What for? (optional)" id="lendNote" style="font-size:14px"><button class="input-confirm" onclick="confirmLendingTrans()">Add</button></div>
+  </div>`;
+  document.getElementById('lendAmt').focus();
+}
+
+function confirmLendingTrans(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const from=document.getElementById('lendFrom').value;
+  const to=document.getElementById('lendTo').value;
+  if(from===to){showToast('Pick two different people');return}
+  const val=parseFloat(document.getElementById('lendAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
+  const note=document.getElementById('lendNote').value.trim();
+  p.history=p.history||[];
+  p.history.unshift({type:'transfer',from,to,amount:rd2(val),note:note||'',date:new Date().toISOString()});
+  p.balance=rd2((p.balance||0)+val);
+  save();document.getElementById('lendingTransInput').innerHTML='';renderLendingDetail();showToast(cur(p)+rd2(val)+' recorded');
+}
+
+function showLendingEntryActions(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const c=cur(p);
+  const parts=p.participants||[];
+  const fromOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.from?'selected':''}>${esc(n)}</option>`).join('');
+  const toOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.to?'selected':''}>${esc(n)}</option>`).join('');
+  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
+  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
+    <p class="dialog-title" style="text-align:center">Transaction</p>
+    <label style="${lbl}">Who paid</label>
+    <select class="dialog-input" id="editLendFrom" style="appearance:auto;-webkit-appearance:auto">${fromOpts}</select>
+    <label style="${lbl}">Paid for</label>
+    <select class="dialog-input" id="editLendTo" style="appearance:auto;-webkit-appearance:auto">${toOpts}</select>
+    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
+    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
+    <label style="${lbl}">What for</label>
+    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}" onfocus="this.setSelectionRange(0,this.value.length)">
+    <label style="${lbl}">Date</label>
+    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
+    <label style="${lbl}">Note</label>
+    <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="doEditLendingEntry(${idx})">Save</button>
+      <button class="dialog-btn-delete" onclick="doDeleteLendingEntry(${idx})">Delete</button>
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+
+function doEditLendingEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  const newAmt=parseFloat(document.getElementById('editAmt').value);
+  if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
+  const diff=newAmt-(h.amount||0);
+  p.balance=rd2((p.balance||0)+diff);
+  h.amount=rd2(newAmt);
+  h.from=document.getElementById('editLendFrom').value;
+  h.to=document.getElementById('editLendTo').value;
+  h.note=document.getElementById('editName').value.trim();
+  const newDate=document.getElementById('editDate').value;
+  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
+  h.comment=document.getElementById('editComment').value.trim()||'';
+  save();closeOverlay();renderLendingDetail();showToast('Entry updated');
+}
+
+function doDeleteLendingEntry(idx){
+  const p=getProject(currentProjectId);if(!p)return;
+  const h=p.history[idx];if(!h)return;
+  p.balance=rd2((p.balance||0)-h.amount);
+  p.history.splice(idx,1);
+  save();closeOverlay();renderLendingDetail();showToast('Entry deleted');
+}
+
+function showLendingSettleConfirm(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const transfers=(p.history||[]).filter(h=>h.type==='transfer');
+  if(!transfers.length){showToast('No transactions to settle');return}
+  const c=cur(p);
+  const{totalMoved}=calcLendingSettlement(p);
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Settle & Reset?</p>
+    <p class="dialog-text">This marks the current round as settled (${c}${totalMoved} in transactions) and clears everything so you can start fresh.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="dialog-confirm" style="background:var(--green-btn)" onclick="doLendingSettle()">Settle</button>
+    </div>
+  </div></div>`;
+}
+function doLendingSettle(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const{totalMoved}=calcLendingSettlement(p);
+  const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const oldSettlements=(p.history||[]).filter(h=>h.type==='settlement');
+  p.history=[{type:'settlement',amount:totalMoved,note:'Settled on '+dateStr+' — '+c+totalMoved+' in transactions',date:new Date().toISOString()},...oldSettlements];
+  p.balance=0;
+  save();closeOverlay();renderLendingDetail();showToast('Settled! Starting fresh');
+}
+
+function showGroupShareSummary(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const{totalExpenses,paid,owes,balances,parts}=calcGroupSettlement(p);
+  let text='📊 *Tally* — '+p.name+'\nTotal: '+c+totalExpenses+'\n\n👥 Settlement:\n';
+  parts.forEach(n=>{
+    const bal=rd2(balances[n]);
+    if(bal<-0.01)text+='🔴 '+n+' should pay '+c+rd2(Math.abs(bal))+'\n';
+    else if(bal>0.01)text+='🟢 '+n+' should receive '+c+rd2(bal)+'\n';
+    else text+='⚪ '+n+' — even\n';
+  });
+  text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+function showLendingShareSummary(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const{balances,parts,totalMoved}=calcLendingSettlement(p);
+  let text='📊 *Tally* — '+p.name+'\nTotal Transactions: '+c+totalMoved+'\n\n👥 Settlement:\n';
+  parts.forEach(n=>{
+    const bal=rd2(balances[n]);
+    if(bal<-0.01)text+='🔴 '+n+' should pay '+c+rd2(Math.abs(bal))+'\n';
+    else if(bal>0.01)text+='🟢 '+n+' should receive '+c+rd2(bal)+'\n';
+    else text+='⚪ '+n+' — even\n';
+  });
+  text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+function showActivityShareSummary(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  const pay=isPay(p);
+  const bal=p.balance||0;
+  const abs=rd2(Math.abs(bal));
+  let text='📊 *Tally* — '+p.name+'\n';
+  const totalCharges=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPayments=rd2((p.history||[]).filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
+  text+='Total Charges: '+c+totalCharges+'\n';
+  text+='Total Payments: '+c+totalPayments+'\n';
+  if(bal===0)text+='\n✅ All settled!\n';
+  else if(pay){
+    text+=bal>0?'\n🔴 Balance due: '+c+abs+'\n':'\n🟢 Credit (paid ahead): '+c+abs+'\n';
+  }else{
+    text+=bal>0?'\n🟢 They owe: '+c+abs+'\n':'\n🔴 Overpaid: '+c+abs+'\n';
+  }
+  text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+// ===== EXPORT =====
+function getDefaultFrom(){const d=new Date();d.setMonth(d.getMonth()-1);return d.toISOString().split('T')[0]}
+function getDefaultTo(){return new Date().toISOString().split('T')[0]}
+
+function showExportDialog(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const invoiceBtns=p.invoiceEnabled?`
+      <div style="border-top:1.5px solid var(--border);padding-top:10px;margin-top:4px">
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;text-align:center">Invoice</p>
+        <button class="dialog-btn-save" style="background:#2c2418" onclick="doGenerateInvoice('detailed')">Invoice — Detailed Line Items</button>
+        <button class="dialog-btn-save" style="background:#6b5e50;margin-top:6px" onclick="doGenerateInvoice('summary')">Invoice — Summary Only</button>
+      </div>`:'';
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px">
+    <p class="dialog-title" style="text-align:center">Export History</p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;text-align:center">${esc(p.name)}</p>
+    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block">From</label>
+    <input class="dialog-input" id="exportFrom" type="date" value="${getDefaultFrom()}">
+    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block">To</label>
+    <input class="dialog-input" id="exportTo" type="date" value="${getDefaultTo()}">
+    <div class="dialog-actions-col">
+      <button class="dialog-btn-save" onclick="doExportCSV()">Export Excel</button>
+      <button class="dialog-btn-save" style="background:var(--accent)" onclick="doExportPDF()">Export PDF</button>
+      ${invoiceBtns}
+      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+
+function getFilteredHistory(){
+  const p=getProject(currentProjectId);if(!p)return{p:null,items:[]};
+  const from=document.getElementById('exportFrom').value;
+  const to=document.getElementById('exportTo').value;
+  const fromDate=new Date(from+'T00:00:00');
+  const toDate=new Date(to+'T23:59:59');
+  const items=(p.history||[]).filter(h=>{
+    const d=new Date(h.date);
+    return d>=fromDate&&d<=toDate;
+  });
+  return{p,items,from,to};
+}
+
+function doExportCSV(){
+  const{p,items,from,to}=getFilteredHistory();
+  if(!p)return;
+  if(!items.length){showToast('No entries in this period');return}
+  const c=cur(p);
+  const totalCharges=rd2(items.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPayments=rd2(items.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
+  let rows=items.map(h=>{
+    const date=new Date(h.date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    const type=h.type==='charge'?(pay?'Session/Charge':'Expense'):h.type==='payment'?'Payment':'Skipped';
+    const amt=h.type==='charge'?'+'+rd2(h.amount):h.type==='payment'?'-'+rd2(h.amount):'0';
+    return'<tr><td>'+date+'</td><td>'+type+'</td><td>'+amt+'</td><td>'+(h.note||'')+'</td><td>'+(h.comment||'')+'</td></tr>';
+  }).join('');
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table><thead><tr><th>Date</th><th>Type</th><th>Amount (${c})</th><th>Note</th><th>Comment</th></tr></thead><tbody>${rows}<tr><td></td><td><b>Total Charges</b></td><td><b>+${totalCharges}</b></td><td></td><td></td></tr><tr><td></td><td><b>Total Payments</b></td><td><b>-${totalPayments}</b></td><td></td><td></td></tr><tr><td></td><td><b>Net Balance</b></td><td><b>${rd2(totalCharges-totalPayments)}</b></td><td></td><td></td></tr></tbody></table></body></html>`;
+  const blob=new Blob([html],{type:'application/vnd.ms-excel'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=p.name.replace(/[^a-zA-Z0-9]/g,'_')+'_'+from+'_to_'+to+'.xls';
+  a.click();URL.revokeObjectURL(url);
+  closeOverlay();showToast('Excel file exported');
+}
+
+function doExportPDF(){
+  const{p,items,from,to}=getFilteredHistory();
+  if(!p)return;
+  if(!items.length){showToast('No entries in this period');return}
+  const c=cur(p);
+  const pay=isPay(p);
+  const totalCharges=items.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0);
+  const totalPayments=items.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0);
+  const net=totalCharges-totalPayments;
+
+  let rows=items.map(h=>{
+    const date=new Date(h.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const type=h.type==='charge'?(p.type==='project'?'Expense':'Session/Charge'):h.type==='payment'?'Payment':'Skipped';
+    const amt=h.type==='charge'?'+'+c+h.amount:h.type==='payment'?'-'+c+h.amount:'—';
+    const note=esc(h.note||'');
+    const comment=h.comment?'<br><em style="color:#999">'+esc(h.comment)+'</em>':'';
+    return'<tr><td>'+date+'</td><td>'+type+'</td><td>'+note+comment+'</td><td style="text-align:right">'+amt+'</td></tr>';
+  }).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(p.name)} — Export</title>
+<style>body{font-family:-apple-system,sans-serif;max-width:700px;margin:40px auto;color:#2c2418;padding:0 20px}
+h1{font-size:22px;margin-bottom:4px}
+.sub{color:#9e9486;font-size:13px;margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 8px;border-bottom:2px solid #ede8e1;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#9e9486}
+th:last-child{text-align:right}
+td{padding:10px 8px;border-bottom:1px solid #f0ebe4}
+td:last-child{text-align:right;font-weight:600;white-space:nowrap}
+.summary{margin-top:24px;padding:16px;background:#f8f6f3;border-radius:12px;font-size:14px}
+.summary-row{display:flex;justify-content:space-between;padding:4px 0}
+.summary-row.total{font-weight:700;border-top:1px solid #ede8e1;margin-top:8px;padding-top:10px}
+@media print{body{margin:20px}}
+</style></head><body>
+<h1>${esc(p.name)}</h1>
+<div class="sub">${new Date(from).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} — ${new Date(to).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${items.length} entries</div>
+<table><thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="summary">
+<div class="summary-row"><span>Total Charges</span><span>+${c}${totalCharges}</span></div>
+<div class="summary-row"><span>Total Payments</span><span>-${c}${totalPayments}</span></div>
+<div class="summary-row total"><span>${net>=0?(pay?'Balance Owed':'Owed to You'):(pay?'Credit':'Overpaid')}</span><span>${c}${Math.abs(net)}</span></div>
+</div>
+<script>window.print()<\/script>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close()}
+  else{showToast('Please allow popups to export PDF')}
+  closeOverlay();
+}
+
+// ===== INVOICE =====
+function doGenerateInvoice(mode){
+  const{p,items,from,to}=getFilteredHistory();
+  if(!p)return;
+  const charges=items.filter(h=>h.type==='charge');
+  if(!charges.length){showToast('No charges in this period');return}
+  const c=cur(p);
+  const totalCharges=charges.reduce((s,h)=>s+h.amount,0);
+  const totalPayments=items.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0);
+  const amountDue=totalCharges-totalPayments;
+  const invNum='INV-'+Date.now().toString(36).toUpperCase();
+  const fromDate=new Date(from).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const toDate=new Date(to).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+  const fromInfo=[];
+  if(settings.name)fromInfo.push('<strong>'+esc(settings.name)+'</strong>');
+  if(settings.email)fromInfo.push(esc(settings.email));
+  if(settings.phone)fromInfo.push(esc(settings.phone));
+  if(settings.address)fromInfo.push(esc(settings.address));
+  if(settings.invoiceInfo)fromInfo.push('<span style="display:block;margin-top:6px;white-space:pre-line">'+esc(settings.invoiceInfo)+'</span>');
+
+  const toInfo=[];
+  if(p.clientName)toInfo.push('<strong>'+esc(p.clientName)+'</strong>');
+  if(p.clientEmail)toInfo.push(esc(p.clientEmail));
+  if(p.clientAddress)toInfo.push(esc(p.clientAddress));
+
+  let tableHtml='';
+  if(mode==='detailed'){
+    const rows=charges.map(h=>{
+      const date=new Date(h.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const desc=esc(h.note||'Session')+(h.comment?' — '+esc(h.comment):'');
+      return'<tr><td>'+date+'</td><td>'+desc+'</td><td style="text-align:right">'+c+h.amount+'</td></tr>';
+    }).join('');
+    tableHtml=`<table><thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }else{
+    tableHtml=`<table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
+      <tr><td>${esc(p.name)} — ${fromDate} to ${toDate} (${charges.length} session${charges.length!==1?'s':''})</td><td style="text-align:right">${c}${totalCharges}</td></tr>
+    </tbody></table>`;
+  }
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${invNum}</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:700px;margin:0 auto;color:#2c2418;padding:40px 24px}
+.inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px;border-bottom:3px solid #2c2418;padding-bottom:24px}
+.inv-title{font-size:32px;font-weight:800;letter-spacing:-1px;color:#2c2418}
+.inv-meta{text-align:right;font-size:13px;color:#6b5e50;line-height:1.7}
+.inv-meta strong{color:#2c2418}
+.parties{display:flex;justify-content:space-between;margin-bottom:32px;gap:40px}
+.party{font-size:13px;line-height:1.7;color:#6b5e50}
+.party-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#9e9486;font-weight:700;margin-bottom:6px}
+.party strong{color:#2c2418}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
+th{text-align:left;padding:12px 10px;border-bottom:2px solid #ede8e1;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9e9486}
+th:last-child{text-align:right}
+td{padding:12px 10px;border-bottom:1px solid #f0ebe4}
+td:last-child{text-align:right;font-weight:600;white-space:nowrap}
+.totals{margin-left:auto;width:260px;font-size:14px}
+.total-row{display:flex;justify-content:space-between;padding:6px 0;color:#6b5e50}
+.total-row.due{font-weight:800;font-size:18px;color:#2c2418;border-top:2px solid #2c2418;margin-top:8px;padding-top:12px}
+.footer{margin-top:48px;padding-top:20px;border-top:1px solid #ede8e1;font-size:12px;color:#9e9486;text-align:center}
+.notes{margin-top:32px;padding:16px;background:#faf8f5;border-radius:8px;border:1px solid #ede8e1;font-size:13px;color:#6b5e50;white-space:pre-line;line-height:1.6}
+.notes-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9e9486;font-weight:700;margin-bottom:6px}
+@media print{body{margin:0;padding:20px}}
+</style></head><body>
+<div class="inv-header">
+  <div class="inv-title">INVOICE</div>
+  <div class="inv-meta">
+    <strong>${invNum}</strong><br>
+    Date: ${today}<br>
+    Period: ${fromDate} — ${toDate}
+  </div>
+</div>
+<div class="parties">
+  <div class="party"><div class="party-label">From</div>${fromInfo.length?fromInfo.join('<br>'):'<em style="color:#c4b9ab">Set your details in Settings</em>'}</div>
+  <div class="party" style="text-align:right"><div class="party-label">Bill To</div>${toInfo.length?toInfo.join('<br>'):'—'}</div>
+</div>
+${tableHtml}
+<div class="totals">
+  ${mode==='detailed'?`<div class="total-row"><span>Subtotal</span><span>${c}${totalCharges}</span></div>`:''}
+  ${totalPayments>0?`<div class="total-row"><span>Payments Received</span><span>-${c}${totalPayments}</span></div>`:''}
+  <div class="total-row due"><span>${amountDue>=0?'Amount Due':'Credit'}</span><span>${c}${Math.abs(amountDue)}</span></div>
+</div>
+${p.invoiceNotes?`<div class="notes"><div class="notes-label">Notes</div>${esc(p.invoiceNotes)}</div>`:''}
+<div class="footer">Thank you for your business</div>
+<script>window.print()<\/script>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close()}
+  else{showToast('Please allow popups to generate invoice')}
+  closeOverlay();
+}
+
+load();renderHome();startHomeTick();
+</script>
+</body>
+</html>
