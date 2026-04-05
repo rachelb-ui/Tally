@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0051)file:///C:/Users/rsawan/Downloads/Tally%205APR.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Tally</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -10,10 +10,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f7f5f2">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwOCIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjEyNCIgeT0iMTM3IiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiMyYzI0MTgiLz48cmVjdCB4PSIyMDQiIHk9IjEzNyIgd2lkdGg9IjY0IiBoZWlnaHQ9IjIzOCIgcng9IjEwIiBmaWxsPSIjMmMyNDE4Ii8+PHJlY3QgeD0iMjg4IiB5PSIyMTEiIHdpZHRoPSIxMDAiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjZTY3ZTIyIi8+PHJlY3QgeD0iMjg4IiB5PSIyNzEiIHdpZHRoPSI3NiIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9IiMyN2FlNjAiIG9wYWNpdHk9IjAuOCIvPjxyZWN0IHg9IjI4OCIgeT0iMzMxIiB3aWR0aD0iNTIiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjMjdhZTYwIiBvcGFjaXR5PSIwLjUiLz48L3N2Zz4K">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="file:///C:/Users/rsawan/Downloads/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./index_files/css2" rel="stylesheet">
 <style>
 :root {
   --bg: #f7f5f2; --card: #ffffff; --text: #2c2418; --text-mid: #6b5e50;
@@ -216,6 +216,21 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
 .person-bar-paid{font-size:12px;color:var(--text-muted)}
 .person-bar-bal{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
 
+.cat-rollup-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden}
+.cat-rollup-header{padding:14px 18px 10px;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700}
+.cat-row{display:flex;align-items:center;padding:12px 18px;border-top:1px solid var(--border);gap:12px}
+.cat-color{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-info{flex:1;min-width:0}
+.cat-name{font-size:14px;font-weight:600;color:var(--text)}
+.cat-bar-track{height:5px;background:var(--border);border-radius:3px;margin-top:5px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.cat-amt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
+.cat-pct{font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap}
+.cat-input-row{display:flex;gap:6px;padding:10px 18px;border-top:1px solid var(--border);align-items:center}
+.cat-input-row input{flex:1;padding:8px 10px;border-radius:6px;border:1px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);outline:none}
+.cat-input-row input:focus{border-color:var(--accent)}
+.cat-input-row button{padding:8px 12px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-weight:600;font-size:12px;cursor:pointer}
+
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -232,7 +247,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <div class="home-header">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div class="home-logo"><svg width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg><span class="home-logo-text">Tally</span></div>
+        <div class="home-logo"><svg width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"></rect><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"></rect><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"></rect><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"></rect><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"></rect><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"></rect></g></svg><span class="home-logo-text">Tally</span></div>
         <p class="home-tagline">The simple balance tracker</p>
         <p class="home-sub" style="font-weight:700">Track balances<br>across all your activities</p>
       </div>
@@ -241,7 +256,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   </div>
   <div id="timersBanner"></div>
   <div id="pendingBanner"></div>
-  <div id="projectsList"></div>
+  <div id="projectsList"><div class="group-section"><div class="group-header" onclick="toggleGroup(&#39;mnfxj4he6x6s&#39;)"><div class="group-header-left"><span class="group-chevron open">›</span><span class="group-name">Projects</span><span class="group-count">(1)</span></div><div style="display:flex;align-items:center;gap:8px"><span class="group-total owe">$7857</span><button class="group-edit-btn" onclick="event.stopPropagation();editGroup(&#39;mnfxj4he6x6s&#39;)">⋯</button></div></div><div class="group-items" style=""><div class="project-card " onclick="openProject(&#39;mnfxjsxdzs0l&#39;)"><div class="project-info"><div class="project-name">Solo - I Pay - Items</div><div class="project-meta">Project</div></div><span class="project-balance bal-owe">$7857</span><span class="project-arrow">›</span></div></div></div><div class="ungrouped-label">Other Activities</div><div class="project-card " onclick="openProject(&#39;mnkp8ghftcm1&#39;)"><div class="project-info"><div class="project-name">Trip</div><div class="project-meta">Group Project · </div></div><span class="project-balance bal-owe">$2736</span><span class="project-arrow">›</span></div><div class="project-card " onclick="openProject(&#39;mnkoj6shelc1&#39;)"><div class="project-info"><div class="project-name">Ren</div><div class="project-meta">Project</div></div><span class="project-balance bal-owe">$8300</span><span class="project-arrow">›</span></div><div class="project-card " onclick="openProject(&#39;mnd3wn5605ez&#39;)"><div class="project-info"><div class="project-name">fdfdf</div><div class="project-meta">Activity · $15/session · I pay</div></div><span class="project-balance bal-zero">$0</span><span class="project-arrow">›</span></div><div class="project-card " onclick="openProject(&#39;mn3b60sci565&#39;)"><div class="project-info"><div class="project-name">Math Tutor</div><div class="project-meta">Activity · $50/hr · I earn</div></div><span class="project-balance bal-owe">$113</span><span class="project-arrow">›</span></div><div class="project-card " onclick="openProject(&#39;mnd3v87ysasr&#39;)"><div class="project-info"><div class="project-name">trtrt</div><div class="project-meta">Lending · Lending · 2 people</div></div><span class="project-balance bal-zero">$0</span><span class="project-arrow">›</span></div><div class="project-card " onclick="openProject(&#39;mnd3u9o1ya9s&#39;)"><div class="project-info"><div class="project-name">fsds</div><div class="project-meta">Group Project · 2 people</div></div><span class="project-balance bal-owe">$445</span><span class="project-arrow">›</span></div><div class="project-card " onclick="openProject(&#39;mnd3t6asozt6&#39;)"><div class="project-info"><div class="project-name">jj</div><div class="project-meta">Project</div></div><span class="project-balance bal-owe">$570</span><span class="project-arrow">›</span></div><div class="home-actions"><button class="add-project-btn" onclick="openNewProject()">＋ Activity<span class="btn-sub">ongoing sessions<br>pilates, tutor, guitar…</span></button><button class="add-project-btn" onclick="openNewProjectForm()">＋ Project<span class="btn-sub">renovation, trip, party…</span></button><button class="add-project-btn" onclick="openNewLendingCircle()">＋ Lending Circle<span class="btn-sub">between family &amp; friends</span></button></div><div class="home-actions" style="margin-top:0"><button class="add-group-btn" onclick="openNewGroup()">◫ Category</button></div></div>
 </div>
 
 <!-- FORM -->
@@ -258,8 +273,8 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <div class="form-group">
     <label class="form-label">I am…</label>
     <div class="dir-toggle" id="fDirToggle">
-      <button class="dir-option selected" onclick="setDirection('pay')">Paying for this</button>
-      <button class="dir-option" onclick="setDirection('earn')">Earning from this</button>
+      <button class="dir-option selected" onclick="setDirection(&#39;pay&#39;)">Paying for this</button>
+      <button class="dir-option" onclick="setDirection(&#39;earn&#39;)">Earning from this</button>
     </div>
     <p class="form-hint" id="fDirHint">Track what you owe someone (e.g. tutor, trainer, contractor)</p>
   </div>
@@ -342,7 +357,8 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     </div>
     <div class="form-group">
       <label class="form-label">Invoice Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <textarea class="form-input" id="fInvoiceNotes" rows="3" style="resize:vertical;min-height:60px;font-size:14px" placeholder="e.g. Payment due within 15 days&#10;Late fee: 2% per month"></textarea>
+      <textarea class="form-input" id="fInvoiceNotes" rows="3" style="resize:vertical;min-height:60px;font-size:14px" placeholder="e.g. Payment due within 15 days
+Late fee: 2% per month"></textarea>
       <p class="form-hint">Specific to this client — shown at the bottom of their invoices.</p>
     </div>
   </div>
@@ -376,7 +392,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <label class="form-label">Currency</label>
     <select class="form-select" id="gfCurrency">
       <option value="">No currency</option>
-      <option value="$" selected>$ — USD</option>
+      <option value="$" selected="">$ — USD</option>
       <option value="€">€ — EUR</option>
       <option value="£">£ — GBP</option>
       <option value="AED">AED — Dirham</option>
@@ -403,7 +419,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <label class="form-label">Participants</label>
     <div id="gfParticipantsList"></div>
     <div style="display:flex;gap:8px;margin-top:8px">
-      <input class="form-input" id="gfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addGfParticipant()}">
+      <input class="form-input" id="gfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();addGfParticipant()}">
       <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addGfParticipant()">Add</button>
     </div>
     <p class="form-hint">Add everyone involved — including yourself</p>
@@ -419,8 +435,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
   </div>
   <div id="projBudgetSummary"></div>
-  <div id="projBudgetEditBtn"></div>
-  <div id="projCostBreakdown"></div>
+  <div id="projCategoryRollups"></div>
   <div id="projActions"></div>
   <div id="projExpenseInput"></div>
   <div class="history-header">
@@ -488,7 +503,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   </div>
   <div style="margin-bottom:10px">
     <button class="detail-btn btn-add-payment" style="width:100%" onclick="showSettleConfirm()">
-      <span class="btn-icon">✓</span> Settle & Reset
+      <span class="btn-icon">✓</span> Settle &amp; Reset
     </button>
   </div>
   <div id="groupExpenseInput"></div>
@@ -512,16 +527,16 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <div class="form-group">
     <label class="form-label">Who is involved?</label>
     <div class="dir-toggle" id="pfModeToggle">
-      <button class="dir-option selected" onclick="setPfMode('solo')">Just me</button>
-      <button class="dir-option" onclick="setPfMode('group')">With others</button>
+      <button class="dir-option selected" onclick="setPfMode(&#39;solo&#39;)">Just me</button>
+      <button class="dir-option" onclick="setPfMode(&#39;group&#39;)">With others</button>
     </div>
   </div>
   <div id="pfDirSection">
   <div class="form-group">
     <label class="form-label">I am…</label>
     <div class="dir-toggle" id="pfDirToggle">
-      <button class="dir-option selected" onclick="setPfDirection('pay')">Paying for this</button>
-      <button class="dir-option" onclick="setPfDirection('earn')">Earning from this</button>
+      <button class="dir-option selected" onclick="setPfDirection(&#39;pay&#39;)">Paying for this</button>
+      <button class="dir-option" onclick="setPfDirection(&#39;earn&#39;)">Earning from this</button>
     </div>
   </div>
   </div>
@@ -530,7 +545,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
       <label class="form-label">Participants</label>
       <div id="pfParticipantsList"></div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <input class="form-input" id="pfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addPfParticipant()}">
+        <input class="form-input" id="pfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();addPfParticipant()}">
         <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addPfParticipant()">Add</button>
       </div>
       <p class="form-hint">Add everyone involved — including yourself</p>
@@ -545,7 +560,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <label class="form-label">Currency</label>
     <select class="form-select" id="pfCurrency">
       <option value="">No currency</option>
-      <option value="$" selected>$ — USD</option>
+      <option value="$" selected="">$ — USD</option>
       <option value="€">€ — EUR</option>
       <option value="£">£ — GBP</option>
       <option value="AED">AED — Dirham</option>
@@ -573,16 +588,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <input class="form-input" id="pfBudget" type="number" inputmode="decimal" placeholder="e.g. 6900">
     <p class="form-hint">Total budget for the project. Leave empty if unknown.</p>
   </div>
-  <div class="form-group">
-    <label class="form-label">Cost Items <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <div id="pfCostItems"></div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <input class="form-input" id="pfNewItemName" placeholder="Item name…" style="flex:1">
-      <input class="form-input" id="pfNewItemAmt" type="number" inputmode="decimal" placeholder="Amount" style="width:90px">
-      <button style="padding:12px 14px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addPfCostItem()">Add</button>
-    </div>
-    <p class="form-hint">Break down the budget into items (e.g. Carpenter, Electrician, Materials)</p>
-  </div>
+
   <button class="form-submit" id="projectFormSubmitBtn" onclick="saveProjectForm()">Create Project</button>
 </div>
 
@@ -605,7 +611,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <label class="form-label">Currency</label>
     <select class="form-select" id="lfCurrency">
       <option value="">No currency</option>
-      <option value="$" selected>$ — USD</option>
+      <option value="$" selected="">$ — USD</option>
       <option value="€">€ — EUR</option>
       <option value="£">£ — GBP</option>
       <option value="AED">AED — Dirham</option>
@@ -632,7 +638,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <label class="form-label">People</label>
     <div id="lfParticipantsList"></div>
     <div style="display:flex;gap:8px;margin-top:8px">
-      <input class="form-input" id="lfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addLfParticipant()}">
+      <input class="form-input" id="lfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();addLfParticipant()}">
       <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addLfParticipant()">Add</button>
     </div>
     <p class="form-hint">Add everyone involved — including yourself</p>
@@ -654,7 +660,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
       <span class="btn-icon">＋</span> Add Transaction
     </button>
     <button class="detail-btn btn-add-payment" style="flex:1" onclick="showLendingSettleConfirm()">
-      <span class="btn-icon">✓</span> Settle & Reset
+      <span class="btn-icon">✓</span> Settle &amp; Reset
     </button>
   </div>
   <div id="lendingTransInput"></div>
@@ -689,7 +695,10 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   </div>
   <div class="form-group">
     <label class="form-label">Additional Invoice Info <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <textarea class="form-input" id="sInvoiceInfo" rows="4" style="resize:vertical;min-height:80px;font-size:14px" placeholder="Anything else to show on invoices, e.g.&#10;Tax ID: 123456789&#10;Bank: IBAN XX1234...&#10;Payment Terms: Net 30 days"></textarea>
+    <textarea class="form-input" id="sInvoiceInfo" rows="4" style="resize:vertical;min-height:80px;font-size:14px" placeholder="Anything else to show on invoices, e.g.
+Tax ID: 123456789
+Bank: IBAN XX1234...
+Payment Terms: Net 30 days"></textarea>
     <p class="form-hint">This appears on every invoice you generate. Add tax numbers, bank details, payment terms — whatever your business needs.</p>
   </div>
   <button class="form-submit" onclick="saveSettings()">Save Settings</button>
@@ -890,7 +899,6 @@ function saveInlineGroup(){const name=document.getElementById('inlineGroupName')
 
 // ===== PROJECT FORM =====
 let editingProjId=null;
-let pfCostItemsList=[];
 let pfParticipants=[];
 let pfMode='solo';
 let pfDirection='pay';
@@ -919,21 +927,6 @@ function addPfParticipant(){
   pfParticipants.push(name);inp.value='';renderPfParticipants();inp.focus();
 }
 function removePfParticipant(i){pfParticipants.splice(i,1);renderPfParticipants()}
-function renderPfCostItems(){
-  const el=document.getElementById('pfCostItems');
-  if(!pfCostItemsList.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:4px 0">No cost items</p>';return}
-  el.innerHTML=pfCostItemsList.map((item,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(item.name)}</span><span style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--text-mid)">${item.amount}</span><button onclick="removePfCostItem(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></span></div>`).join('');
-}
-function addPfCostItem(){
-  const name=document.getElementById('pfNewItemName').value.trim();
-  const amt=parseFloat(document.getElementById('pfNewItemAmt').value)||0;
-  if(!name){showToast('Enter item name');return}
-  if(amt<=0){showToast('Enter amount');return}
-  pfCostItemsList.push({name,amount:amt});
-  document.getElementById('pfNewItemName').value='';document.getElementById('pfNewItemAmt').value='';
-  renderPfCostItems();document.getElementById('pfNewItemName').focus();
-}
-function removePfCostItem(i){pfCostItemsList.splice(i,1);renderPfCostItems()}
 function populatePfGroupSelect(selectedGroupId){
   const sel=document.getElementById('pfGroup');
   sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
@@ -955,7 +948,7 @@ function openNewProjectForm(){
   document.getElementById('pfName').value='';
   document.getElementById('pfCurrency').value='$';
   document.getElementById('pfBudget').value='';
-  pfCostItemsList=[];renderPfCostItems();renderPfParticipants();
+  renderPfParticipants();
   setPfMode('solo');setPfDirection('pay');
   populatePfGroupSelect('');showView('projectFormView');
 }
@@ -970,26 +963,10 @@ function editProjectForm(id){
   document.getElementById('pfName').value=p.name;
   document.getElementById('pfCurrency').value=p.currency||'';
   document.getElementById('pfBudget').value=p.budget||'';
-  pfCostItemsList=[...(p.costItems||[])];renderPfCostItems();renderPfParticipants();
+  renderPfParticipants();
   setPfMode(pfMode);setPfDirection(pfDirection);
   populatePfGroupSelect(p.groupId||'');showView('projectFormView');
 }
-function reconcileCostItems(items, budget){
-  if(!budget||!items.length)return items;
-  const total=items.reduce((s,i)=>s+i.amount,0);
-  const diff=rd2(budget-total);
-  // Remove existing auto-generated "Other" before recalculating
-  const filtered=items.filter(i=>!i.auto);
-  const filteredTotal=filtered.reduce((s,i)=>s+i.amount,0);
-  const newDiff=rd2(budget-filteredTotal);
-  if(newDiff>0.01){
-    filtered.push({name:'Other',amount:newDiff,auto:true});
-  }else if(newDiff<-0.01){
-    // Items exceed budget — don't add Other, will show warning
-  }
-  return filtered;
-}
-
 function saveProjectForm(){
   const name=document.getElementById('pfName').value.trim();
   const currency=document.getElementById('pfCurrency').value;
@@ -1000,9 +977,9 @@ function saveProjectForm(){
   const budget=parseFloat(document.getElementById('pfBudget').value)||0;
   if(editingProjId){
     const p=getProject(editingProjId);
-    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.costItems=reconcileCostItems([...pfCostItemsList],budget);p.direction=pfMode==='group'?'pay':pfDirection;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
+    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.direction=pfMode==='group'?'pay':pfDirection;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
   }else{
-    const reconciled=reconcileCostItems([...pfCostItemsList],budget);const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,budget,costItems:reconciled,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
+    const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,budget,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
     projects.push(p);save();showToast('Project created');goHome();
   }
 }
@@ -1168,7 +1145,7 @@ function openNewProject(){
 }
 function editCurrentProject(){
   const p=getProject(currentProjectId);if(!p)return;
-  if(p.type==='group'){if(p.budget||p.costItems&&p.costItems.length){editProjectForm(currentProjectId);return}editGroupActivity(currentProjectId);return}
+  if(p.type==='group'){if(p.budget||p.type==='project'){editProjectForm(currentProjectId);return}editGroupActivity(currentProjectId);return}
   if(p.type==='lending'){editLendingCircle(currentProjectId);return}
   if(p.type==='project'){editProjectForm(currentProjectId);return}
   editingProjectId=p.id;selectedDays=[...(p.days||[])];formDirection=p.direction||'pay';invoiceEnabled=!!p.invoiceEnabled;
@@ -1227,7 +1204,7 @@ function saveProject(){
 }
 
 // ===== DETAIL =====
-function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&p.type==='group'){if(p.budget||p.costItems&&p.costItems.length){renderProjectDetail();showView('projectDetailView')}else{renderGroupDetail();showView('groupDetailView')}}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else if(p&&p.type==='project'){renderProjectDetail();showView('projectDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
+function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&p.type==='group'){if(p.budget){renderProjectDetail();showView('projectDetailView')}else{renderGroupDetail();showView('groupDetailView')}}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else if(p&&p.type==='project'){renderProjectDetail();showView('projectDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
 
 function renderDetail(){
   const p=getProject(currentProjectId);if(!p)return;
@@ -1478,6 +1455,25 @@ function confirmPay(){
 }
 
 // ===== PROJECT DETAIL =====
+const CAT_COLORS=['#e67e22','#2ecc71','#3498db','#9b59b6','#e74c3c','#1abc9c','#f39c12','#8e44ad','#2980b9','#d35400','#16a085','#c0392b'];
+function getCatColor(i){return CAT_COLORS[i%CAT_COLORS.length]}
+function getProjectCategories(p){
+  const cats={};
+  (p.history||[]).forEach(h=>{
+    if(h.type!=='charge')return;
+    const cat=h.costItem||'Uncategorized';
+    if(!cats[cat])cats[cat]={name:cat,total:0,count:0};
+    cats[cat].total=rd2(cats[cat].total+h.amount);
+    cats[cat].count++;
+  });
+  return Object.values(cats).sort((a,b)=>b.total-a.total);
+}
+function getUsedCategories(p){
+  const s=new Set();
+  (p.history||[]).forEach(h=>{if(h.costItem)s.add(h.costItem)});
+  return[...s].sort();
+}
+
 function renderProjectDetail(){
   const p=getProject(currentProjectId);if(!p)return;
   document.getElementById('projDetailTitle').textContent=p.name;
@@ -1485,132 +1481,75 @@ function renderProjectDetail(){
   const totalExpenses=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
   const totalPaid=rd2((p.history||[]).filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
   const budget=p.budget||0;
-  const costItems=p.costItems||[];
   const isGroup=p.participants&&p.participants.length>0;
   const pay=isPay(p);
 
-  // For solo I Pay: "charges" are payments (only button is "I Paid")
-  // For solo I Earn: "charges" are expenses, "payments" are income received
-  // For group: "charges" are group expenses
-  const totalOut=pay&&!isGroup?totalExpenses:totalExpenses; // money spent
-  const totalIn=pay&&!isGroup?0:totalPaid; // money received
+  const totalOut=totalExpenses;
+  const totalIn=pay&&!isGroup?0:totalPaid;
 
   let html='';
   if(budget){
-    const spent=pay&&!isGroup?totalOut:totalOut;
+    const spent=totalOut;
     const remaining=rd2(budget-spent);
     const pct=Math.min(100,Math.round((spent/budget)*100));
+    const overBudget=remaining<0;
+    const barColor=overBudget?'var(--red)':'var(--green)';
     html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
-    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
-    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Paid</div></div>`;
-    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${remaining>0?'var(--accent)':'var(--green)'}}">${c}${Math.abs(remaining)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${remaining>0?'Remaining':'Overpaid'}</div></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:6px">`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--text)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Spent</div></div>`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${overBudget?'var(--red)':'var(--accent)'}">${c}${Math.abs(remaining)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${overBudget?'Over Budget':'Remaining'}</div></div>`;
     if(!pay&&!isGroup&&totalIn>0){
       html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
     }
     html+=`</div>`;
-    html+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden"><div style="background:var(--green);height:100%;width:${pct}%;border-radius:6px;transition:width .3s ease"></div></div>`;
+    html+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:4px;overflow:hidden"><div style="background:${barColor};height:100%;width:${pct}%;border-radius:6px;transition:width .4s ease"></div></div>`;
+    html+=`<div style="text-align:right;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:${overBudget?'var(--red)':'var(--text-muted)'}">${pct}%</span></div>`;
   }else{
-    // No budget
     if(pay&&!isGroup){
-      // Solo I Pay: just show total paid
-      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Paid</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
+      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Spent</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
     }else if(!pay&&!isGroup){
-      // Solo I Earn: show expenses and received
       html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
       if(totalIn>0){
         html+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
         html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
-        html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${totalOut-totalIn>0?'var(--red)':'var(--green)'}}">${c}${rd2(Math.abs(totalOut-totalIn))}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${totalOut-totalIn>0?'Outstanding':'Profit'}</div></div>`;
+        html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${totalOut-totalIn>0?'var(--red)':'var(--green)'}">${c}${rd2(Math.abs(totalOut-totalIn))}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${totalOut-totalIn>0?'Outstanding':'Profit'}</div></div>`;
         html+=`</div>`;
       }
     }else{
-      // Group: show total expenses
       html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span><span style="font-size:12px;color:var(--text-muted);margin-top:6px">${p.participants.length} people</span></div>`;
     }
   }
+  html+=`<div style="text-align:center;margin-bottom:14px"><button onclick="showEditBudget()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">${budget?'Edit Budget':'Set Budget'}</button></div>`;
   document.getElementById('projBudgetSummary').innerHTML=html;
-  document.getElementById('projBudgetEditBtn').innerHTML='<div style="text-align:center;margin-bottom:12px"><button onclick="showEditBudget()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">Edit Budget</button></div>';
 
-  // Cost item breakdown
-  let itemHtml='';
-  if(costItems.length){
-    itemHtml+='<div class="settle-section" style="margin-bottom:16px">';
-    itemHtml+='<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700;margin-bottom:10px;padding:0 18px">Cost Breakdown</div>';
-    // Calculate proportional share of whole-project payments
-    const totalItemBudget=costItems.reduce((s,i)=>s+i.amount,0);
-    const wholeProjectPayments=rd2((p.history||[]).filter(h=>h.type==='charge'&&(!h.costItem||h.costItem==='')).reduce((s,h)=>s+h.amount,0));
-    let totalRemaining=0;
-    let totalOverbudget=0;
-    costItems.forEach(item=>{
-      const directPayments=rd2((p.history||[]).filter(h=>h.type==='charge'&&h.costItem===item.name).reduce((s,h)=>s+h.amount,0));
-      const proportion=totalItemBudget>0?item.amount/totalItemBudget:0;
-      const proportionalShare=rd2(wholeProjectPayments*proportion);
-      const itemTotal=rd2(directPayments+proportionalShare);
-      const itemPct=item.amount?Math.round((itemTotal/item.amount)*100):0;
-      const itemRemaining=rd2(item.amount-itemTotal);
-      if(itemRemaining>0)totalRemaining+=itemRemaining;
-      else totalOverbudget+=Math.abs(itemRemaining);
-      const isOver=itemPct>100;
-      const autoTag=item.auto?' <span style="font-size:10px;color:var(--text-light)">(auto)</span>':'';
-      const overTag=isOver?`<span style="font-size:10px;color:var(--red);font-weight:700;margin-left:6px">OVER BUDGET +${c}${rd2(Math.abs(itemRemaining))}</span>`:'';
-      itemHtml+=`<div style="padding:10px 18px;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(item.name)}${autoTag}${overTag}</span><span style="font-size:13px;color:var(--text-mid)">${c}${itemTotal} / ${c}${item.amount}</span></div><div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden"><div style="background:${isOver?'var(--red)':'var(--accent)'};height:100%;width:${Math.min(100,itemPct)}%;border-radius:4px"></div></div></div>`;
+  // Category rollups
+  const categories=getProjectCategories(p);
+  let catHtml='';
+  if(categories.length>0){
+    catHtml+='<div class="cat-rollup-card">';
+    catHtml+='<div class="cat-rollup-header">Spending by Category</div>';
+    categories.forEach((cat,i)=>{
+      const color=getCatColor(i);
+      const pctOfTotal=totalOut>0?Math.round((cat.total/totalOut)*100):0;
+      catHtml+=`<div class="cat-row"><div class="cat-color" style="background:${color}"></div><div class="cat-info"><div class="cat-name">${esc(cat.name)}</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pctOfTotal}%;background:${color}"></div></div></div><div style="text-align:right"><div class="cat-amt">${c}${cat.total}</div><div class="cat-pct">${pctOfTotal}% · ${cat.count} item${cat.count!==1?'s':''}</div></div></div>`;
     });
-    itemHtml+='</div>';
-
-    // Override the remaining calculation in the summary using item-level data
-    if(budget){
-      const correctedRemaining=rd2(totalRemaining);
-      // Re-render the summary with corrected remaining
-      const spent=totalOut;
-      const pct=Math.min(100,Math.round((spent/budget)*100));
-      let correctedHtml=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
-      correctedHtml+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
-      correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Paid</div></div>`;
-      correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${correctedRemaining>0?'var(--accent)':'var(--green)'}">${c}${correctedRemaining}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${correctedRemaining>0?'Remaining':'All Paid'}</div></div>`;
-      if(totalOverbudget>0){
-        correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--red)">${c}${rd2(totalOverbudget)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Over Budget</div></div>`;
-      }
-      if(!pay&&!isGroup&&totalIn>0){
-        correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
-      }
-      correctedHtml+=`</div>`;
-      correctedHtml+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden"><div style="background:${totalOverbudget>0?'var(--red)':'var(--green)'};height:100%;width:${pct}%;border-radius:6px;transition:width .3s ease"></div></div>`;
-      document.getElementById('projBudgetSummary').innerHTML=correctedHtml;
-    }
+    catHtml+='</div>';
   }
-  document.getElementById('projCostBreakdown').innerHTML=itemHtml;
+  document.getElementById('projCategoryRollups').innerHTML=catHtml;
 
-  // History
-  const hist=p.history||[],hEl=document.getElementById('projHistory');
-  if(!hist.length){hEl.innerHTML='<p class="empty-history">No records yet.</p>'}
-  else{
-    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
-    hEl.innerHTML=tapHint+hist.map((h,i)=>{
-      const isCharge=h.type==='charge';
-      const dc=isCharge?'dot-charge':'dot-payment';
-      const ac=isCharge?'amt-charge':'amt-payment';
-      const at=isCharge?'+'+c+rd2(h.amount):'-'+c+rd2(h.amount);
-      const itemTag=h.costItem?` · ${esc(h.costItem)}`:'';
-      const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
-      return`<div class="history-row" onclick="showProjectEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${itemTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
-    }).join('');
-  }
-  // Dynamic buttons based on scenario
+  // Action buttons
   let actionsHtml='';
   if(isGroup){
-    // Group: Add Expense + Record Payment + Settle & Reset
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
     actionsHtml+='<button class="detail-btn" style="border:1.5px solid var(--border);background:var(--card);color:var(--text)" onclick="showProjectGroupPaymentInput()"><span class="btn-icon">↔</span> Record Payment</button>';
     actionsHtml+='</div>';
     actionsHtml+='<div style="margin-top:8px"><button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectSettleConfirm()"><span class="btn-icon">✓</span> Settle & Reset</button></div>';
   }else if(pay){
-    // Solo, I Pay: just "I Paid"
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Paid</button>';
     actionsHtml+='</div>';
   }else{
-    // Solo, I Earn: "Add Expense" + "I Got Paid"
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
     actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Got Paid</button>';
@@ -1618,7 +1557,7 @@ function renderProjectDetail(){
   }
   document.getElementById('projActions').innerHTML=actionsHtml;
 
-  // Group settlement section
+  // Group settlement
   if(isGroup){
     const parts=p.participants;
     const paid={};const owes={};
@@ -1634,7 +1573,6 @@ function renderProjectDetail(){
     const balances={};parts.forEach(n=>{balances[n]=rd2(paid[n]-owes[n])});
     const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
     const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
-    const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
     if(shouldPay.length||shouldReceive.length){
       let sHtml='<div class="settle-section" style="margin-top:16px">';
       if(shouldPay.length){
@@ -1648,76 +1586,79 @@ function renderProjectDetail(){
         sHtml+='</div>';
       }
       sHtml+='</div>';
-      document.getElementById('projCostBreakdown').innerHTML+=sHtml;
+      document.getElementById('projCategoryRollups').innerHTML+=sHtml;
     }
   }
 
+  // History
+  const hist=p.history||[],hEl=document.getElementById('projHistory');
+  if(!hist.length){hEl.innerHTML='<p class="empty-history">No records yet.</p>'}
+  else{
+    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
+    hEl.innerHTML=tapHint+hist.map((h,i)=>{
+      const isCharge=h.type==='charge';
+      const dc=isCharge?'dot-charge':'dot-payment';
+      const ac=isCharge?'amt-charge':'amt-payment';
+      const at=isCharge?'+'+c+rd2(h.amount):'-'+c+rd2(h.amount);
+      const catTag=h.costItem?` · ${esc(h.costItem)}`:'';
+      const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
+      return`<div class="history-row" onclick="showProjectEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${catTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+    }).join('');
+  }
   document.getElementById('projExpenseInput').innerHTML='';
 }
 
 function showEditBudget(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
-  const costItems=p.costItems||[];
-  const itemRows=costItems.map((item,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><input class="dialog-input" style="flex:1;margin-bottom:0" value="${esc(item.name)}" id="budgetItemName${i}"><input class="dialog-input" style="width:80px;margin-bottom:0;text-align:right" type="number" inputmode="decimal" value="${item.amount}" id="budgetItemAmt${i}"><button onclick="removeBudgetItem(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
   const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
-  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
-    <p class="dialog-title" style="text-align:center">Edit Budget</p>
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px">
+    <p class="dialog-title" style="text-align:center">${p.budget?'Edit Budget':'Set Budget'}</p>
     <label style="${lbl}">Total Budget${c?' ('+c+')':''}</label>
-    <input class="dialog-input" id="editBudgetAmt" type="number" inputmode="decimal" value="${p.budget||''}">
-    <label style="${lbl}">Cost Items</label>
-    <div id="editBudgetItems">${itemRows}</div>
-    <div style="display:flex;gap:6px;margin-top:8px;margin-bottom:16px">
-      <input class="dialog-input" style="flex:1;margin-bottom:0" placeholder="New item…" id="editBudgetNewName">
-      <input class="dialog-input" style="width:80px;margin-bottom:0;text-align:right" type="number" inputmode="decimal" placeholder="Amt" id="editBudgetNewAmt">
-      <button onclick="addBudgetItem()" style="background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">+</button>
-    </div>
+    <input class="dialog-input" id="editBudgetAmt" type="number" inputmode="decimal" value="${p.budget||''}" placeholder="e.g. 20000">
+    <p style="font-size:12px;color:var(--text-muted);margin-top:-10px;margin-bottom:16px;line-height:1.4">Leave empty to remove budget.</p>
     <div class="dialog-actions-col">
       <button class="dialog-btn-save" onclick="saveBudgetEdit()">Save</button>
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
 }
-
-let tempBudgetItems=[];
-function removeBudgetItem(i){
-  const p=getProject(currentProjectId);if(!p)return;
-  p.costItems=p.costItems||[];p.costItems.splice(i,1);save();showEditBudget();
-}
-function addBudgetItem(){
-  const name=document.getElementById('editBudgetNewName').value.trim();
-  const amt=parseFloat(document.getElementById('editBudgetNewAmt').value)||0;
-  if(!name){showToast('Enter item name');return}
-  const p=getProject(currentProjectId);if(!p)return;
-  p.costItems=p.costItems||[];p.costItems.push({name,amount:amt});save();showEditBudget();
-}
 function saveBudgetEdit(){
   const p=getProject(currentProjectId);if(!p)return;
   p.budget=parseFloat(document.getElementById('editBudgetAmt').value)||0;
-  const items=p.costItems||[];
-  items.forEach((item,i)=>{
-    const nameEl=document.getElementById('budgetItemName'+i);
-    const amtEl=document.getElementById('budgetItemAmt'+i);
-    if(nameEl)item.name=nameEl.value.trim()||item.name;
-    if(amtEl)item.amount=parseFloat(amtEl.value)||item.amount;
-  });
-  p.costItems=reconcileCostItems(items,p.budget);
-  save();closeOverlay();renderProjectDetail();showToast('Budget updated');
+  save();closeOverlay();renderProjectDetail();showToast(p.budget?'Budget updated':'Budget removed');
+}
+
+function buildCategoryPicker(p, elId){
+  const used=getUsedCategories(p);
+  if(!used.length)return`<div style="margin-bottom:8px"><input class="input-field" type="text" placeholder="Category (e.g. Flights, Food; Woodwork, Lighting)" id="${elId}" style="font-size:14px;width:100%"></div>`;
+  return`<div style="margin-bottom:8px"><select class="form-select" id="${elId}" onchange="if(this.value==='__new__'){this.style.display='none';document.getElementById('${elId}New').style.display='';document.getElementById('${elId}New').focus()}"><option value="">No category</option>${used.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}<option value="__new__">＋ New category…</option></select><input class="input-field" type="text" placeholder="New category name…" id="${elId}New" style="font-size:14px;width:100%;display:none;margin-top:6px"></div>`;
+}
+function getCategoryValue(elId){
+  const sel=document.getElementById(elId);
+  if(!sel)return'';
+  if(sel.tagName==='SELECT'){
+    if(sel.value==='__new__'){
+      const inp=document.getElementById(elId+'New');
+      return inp?inp.value.trim():'';
+    }
+    return sel.value;
+  }
+  return sel.value.trim();
 }
 
 function showProjectExpenseInput(){
   const p=getProject(currentProjectId);if(!p)return;
   const el=document.getElementById('projExpenseInput');
   if(el.innerHTML){el.innerHTML='';return}
-  const costItems=p.costItems||[];
   const isGroup=p.participants&&p.participants.length>0;
   const paidByOpts=isGroup?`<div class="input-row"><select class="form-select" id="projExpPaidBy" style="flex:1">${p.participants.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div><p style="font-size:11px;color:var(--text-muted);margin-top:2px;margin-bottom:8px">Who paid for this?</p>`:'';
-  const itemOpts=costItems.length?`<select class="form-select" id="projExpItem" style="margin-bottom:8px"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}">${esc(i.name)}</option>`).join('')}</select>`:'';
+  const catPicker=buildCategoryPicker(p,'projExpCat');
   el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
     <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projExpAmt" autofocus></div>
-    <div class="input-row"><input class="input-field" type="text" placeholder="What was it for?" id="projExpNote" style="font-size:14px"></div>
+    ${catPicker}
+    <div class="input-row"><input class="input-field" type="text" placeholder="Description (optional)" id="projExpNote" style="font-size:14px"></div>
     ${paidByOpts}
-    ${itemOpts}
     <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectExpense()">Add Expense</button>
   </div>`;
   document.getElementById('projExpAmt').focus();
@@ -1726,9 +1667,8 @@ function showProjectExpenseInput(){
 function confirmProjectExpense(){
   const p=getProject(currentProjectId);if(!p)return;
   const val=parseFloat(document.getElementById('projExpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
-  const note=document.getElementById('projExpNote').value.trim()||'Expense';
-  const itemSel=document.getElementById('projExpItem');
-  const costItem=itemSel?itemSel.value:'';
+  const costItem=getCategoryValue('projExpCat');
+  const note=document.getElementById('projExpNote').value.trim()||costItem||'Expense';
   p.history=p.history||[];
   const entry={type:'charge',amount:rd2(val),note,date:new Date().toISOString()};
   if(costItem)entry.costItem=costItem;
@@ -1746,12 +1686,11 @@ function showProjectPayInput(){
   const el=document.getElementById('projExpenseInput');
   if(el.innerHTML){el.innerHTML='';return}
   const pay=isPay(p);
-  const costItems=p.costItems||[];
-  const itemOpts=pay&&costItems.length?`<select class="form-select" id="projPayItem" style="margin-bottom:8px"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}">${esc(i.name)}</option>`).join('')}</select>`:'';
+  const catPicker=pay?buildCategoryPicker(p,'projPayCat'):'';
   el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
     <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projPayAmt" autofocus></div>
-    <div class="input-row"><input class="input-field" type="text" placeholder="What was this for?" id="projPayNote" style="font-size:14px"></div>
-    ${itemOpts}
+    ${catPicker}
+    <div class="input-row"><input class="input-field" type="text" placeholder="Description (optional)" id="projPayNote" style="font-size:14px"></div>
     <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${pay?'Record Payment':'Record Payment Received'}</button>
   </div>`;
   document.getElementById('projPayAmt').focus();
@@ -1761,9 +1700,8 @@ function confirmProjectPay(){
   const p=getProject(currentProjectId);if(!p)return;
   const val=parseFloat(document.getElementById('projPayAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
   const pay=isPay(p);
-  const note=document.getElementById('projPayNote').value.trim()||(pay?'Payment':'Payment received');
-  const itemSel=document.getElementById('projPayItem');
-  const costItem=itemSel?itemSel.value:'';
+  const costItem=pay?getCategoryValue('projPayCat'):'';
+  const note=document.getElementById('projPayNote').value.trim()||costItem||(pay?'Payment':'Payment received');
   p.history=p.history||[];
   const entry=pay?{type:'charge',amount:rd2(val),note,date:new Date().toISOString()}:{type:'payment',amount:rd2(val),note,date:new Date().toISOString()};
   if(costItem)entry.costItem=costItem;
@@ -1777,16 +1715,16 @@ function showProjectEntryActions(idx){
   const h=p.history[idx];if(!h)return;
   const c=cur(p);
   const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
-  const costItems=p.costItems||[];
+  const used=getUsedCategories(p);
   const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
-  const itemOpts=costItems.length&&h.type==='charge'?`<label style="${lbl}">Cost Item</label><select class="dialog-input" id="editCostItem" style="appearance:auto;-webkit-appearance:auto"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}" ${h.costItem===i.name?'selected':''}>${esc(i.name)}</option>`).join('')}</select>`:'';
+  const catOpts=h.type==='charge'?`<label style="${lbl}">Category</label><select class="dialog-input" id="editCostItem" style="appearance:auto;-webkit-appearance:auto"><option value="">No category</option>${used.map(c=>`<option value="${esc(c)}" ${h.costItem===c?'selected':''}>${esc(c)}</option>`).join('')}<option value="__new__">＋ New category…</option></select><input class="dialog-input" id="editCostItemNew" type="text" placeholder="New category name…" style="display:none">`:'';
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:320px;max-height:90vh;overflow-y:auto">
     <p class="dialog-title" style="text-align:center">${h.type==='charge'?'Expense':'Payment'}</p>
     <label style="${lbl}">Description</label>
     <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}" onfocus="this.setSelectionRange(0,this.value.length)">
     <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
     <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
-    ${itemOpts}
+    ${catOpts}
     <label style="${lbl}">Date</label>
     <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
     <label style="${lbl}">Note</label>
@@ -1797,6 +1735,12 @@ function showProjectEntryActions(idx){
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
+  // Wire up the "new category" toggle
+  const catSel=document.getElementById('editCostItem');
+  if(catSel)catSel.addEventListener('change',function(){
+    const newInp=document.getElementById('editCostItemNew');
+    if(this.value==='__new__'){newInp.style.display='';newInp.focus()}else{newInp.style.display='none';newInp.value=''}
+  });
 }
 
 function doEditProjectEntry(idx){
@@ -1809,7 +1753,12 @@ function doEditProjectEntry(idx){
   h.amount=rd2(newAmt);
   h.note=document.getElementById('editName').value.trim()||h.note;
   const itemSel=document.getElementById('editCostItem');
-  if(itemSel)h.costItem=itemSel.value||'';
+  if(itemSel){
+    if(itemSel.value==='__new__'){
+      const newInp=document.getElementById('editCostItemNew');
+      h.costItem=newInp?newInp.value.trim():'';
+    }else{h.costItem=itemSel.value||''}
+  }
   const newDate=document.getElementById('editDate').value;
   if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
   h.comment=document.getElementById('editComment').value.trim()||'';
@@ -2829,5 +2778,6 @@ ${p.invoiceNotes?`<div class="notes"><div class="notes-label">Notes</div>${esc(p
 
 load();renderHome();startHomeTick();
 </script>
-</body>
-</html>
+
+
+</body></html>
