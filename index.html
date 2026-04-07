@@ -216,21 +216,6 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
 .person-bar-paid{font-size:12px;color:var(--text-muted)}
 .person-bar-bal{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
 
-.cat-rollup-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden}
-.cat-rollup-header{padding:14px 18px 10px;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700}
-.cat-row{display:flex;align-items:center;padding:12px 18px;border-top:1px solid var(--border);gap:12px}
-.cat-color{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-.cat-info{flex:1;min-width:0}
-.cat-name{font-size:14px;font-weight:600;color:var(--text)}
-.cat-bar-track{height:5px;background:var(--border);border-radius:3px;margin-top:5px;overflow:hidden}
-.cat-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
-.cat-amt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
-.cat-pct{font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap}
-.cat-input-row{display:flex;gap:6px;padding:10px 18px;border-top:1px solid var(--border);align-items:center}
-.cat-input-row input{flex:1;padding:8px 10px;border-radius:6px;border:1px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);outline:none}
-.cat-input-row input:focus{border-color:var(--accent)}
-.cat-input-row button{padding:8px 12px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-weight:600;font-size:12px;cursor:pointer}
-
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -434,7 +419,8 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
   </div>
   <div id="projBudgetSummary"></div>
-  <div id="projCategoryRollups"></div>
+  <div id="projBudgetEditBtn"></div>
+  <div id="projCostBreakdown"></div>
   <div id="projActions"></div>
   <div id="projExpenseInput"></div>
   <div class="history-header">
@@ -587,7 +573,16 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <input class="form-input" id="pfBudget" type="number" inputmode="decimal" placeholder="e.g. 6900">
     <p class="form-hint">Total budget for the project. Leave empty if unknown.</p>
   </div>
-
+  <div class="form-group">
+    <label class="form-label">Cost Items <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <div id="pfCostItems"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="form-input" id="pfNewItemName" placeholder="Item name…" style="flex:1">
+      <input class="form-input" id="pfNewItemAmt" type="number" inputmode="decimal" placeholder="Amount" style="width:90px">
+      <button style="padding:12px 14px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addPfCostItem()">Add</button>
+    </div>
+    <p class="form-hint">Break down the budget into items (e.g. Carpenter, Electrician, Materials)</p>
+  </div>
   <button class="form-submit" id="projectFormSubmitBtn" onclick="saveProjectForm()">Create Project</button>
 </div>
 
@@ -712,6 +707,7 @@ const DAY_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sat
 let projects=[],groups=[],timers={},collapsedGroups={};
 let settings={name:'',email:'',phone:'',address:'',invoiceInfo:''};
 let currentProjectId=null,editingProjectId=null,selectedDays=[];
+let projSplitMode='equal';
 let invoiceEnabled=false,formDirection='pay',chargeOpen=false,payOpen=false,tickInterval=null;
 let navStack=[];
 
@@ -895,6 +891,7 @@ function saveInlineGroup(){const name=document.getElementById('inlineGroupName')
 
 // ===== PROJECT FORM =====
 let editingProjId=null;
+let pfCostItemsList=[];
 let pfParticipants=[];
 let pfMode='solo';
 let pfDirection='pay';
@@ -923,6 +920,21 @@ function addPfParticipant(){
   pfParticipants.push(name);inp.value='';renderPfParticipants();inp.focus();
 }
 function removePfParticipant(i){pfParticipants.splice(i,1);renderPfParticipants()}
+function renderPfCostItems(){
+  const el=document.getElementById('pfCostItems');
+  if(!pfCostItemsList.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:4px 0">No cost items</p>';return}
+  el.innerHTML=pfCostItemsList.map((item,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(item.name)}</span><span style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--text-mid)">${item.amount}</span><button onclick="removePfCostItem(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></span></div>`).join('');
+}
+function addPfCostItem(){
+  const name=document.getElementById('pfNewItemName').value.trim();
+  const amt=parseFloat(document.getElementById('pfNewItemAmt').value)||0;
+  if(!name){showToast('Enter item name');return}
+  if(amt<=0){showToast('Enter amount');return}
+  pfCostItemsList.push({name,amount:amt});
+  document.getElementById('pfNewItemName').value='';document.getElementById('pfNewItemAmt').value='';
+  renderPfCostItems();document.getElementById('pfNewItemName').focus();
+}
+function removePfCostItem(i){pfCostItemsList.splice(i,1);renderPfCostItems()}
 function populatePfGroupSelect(selectedGroupId){
   const sel=document.getElementById('pfGroup');
   sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
@@ -944,7 +956,7 @@ function openNewProjectForm(){
   document.getElementById('pfName').value='';
   document.getElementById('pfCurrency').value='$';
   document.getElementById('pfBudget').value='';
-  renderPfParticipants();
+  pfCostItemsList=[];renderPfCostItems();renderPfParticipants();
   setPfMode('solo');setPfDirection('pay');
   populatePfGroupSelect('');showView('projectFormView');
 }
@@ -959,10 +971,26 @@ function editProjectForm(id){
   document.getElementById('pfName').value=p.name;
   document.getElementById('pfCurrency').value=p.currency||'';
   document.getElementById('pfBudget').value=p.budget||'';
-  renderPfParticipants();
+  pfCostItemsList=[...(p.costItems||[])];renderPfCostItems();renderPfParticipants();
   setPfMode(pfMode);setPfDirection(pfDirection);
   populatePfGroupSelect(p.groupId||'');showView('projectFormView');
 }
+function reconcileCostItems(items, budget){
+  if(!budget||!items.length)return items;
+  const total=items.reduce((s,i)=>s+i.amount,0);
+  const diff=rd2(budget-total);
+  // Remove existing auto-generated "Other" before recalculating
+  const filtered=items.filter(i=>!i.auto);
+  const filteredTotal=filtered.reduce((s,i)=>s+i.amount,0);
+  const newDiff=rd2(budget-filteredTotal);
+  if(newDiff>0.01){
+    filtered.push({name:'Other',amount:newDiff,auto:true});
+  }else if(newDiff<-0.01){
+    // Items exceed budget — don't add Other, will show warning
+  }
+  return filtered;
+}
+
 function saveProjectForm(){
   const name=document.getElementById('pfName').value.trim();
   const currency=document.getElementById('pfCurrency').value;
@@ -973,9 +1001,9 @@ function saveProjectForm(){
   const budget=parseFloat(document.getElementById('pfBudget').value)||0;
   if(editingProjId){
     const p=getProject(editingProjId);
-    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.direction=pfMode==='group'?'pay':pfDirection;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
+    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.costItems=reconcileCostItems([...pfCostItemsList],budget);p.direction=pfMode==='group'?'pay':pfDirection;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
   }else{
-    const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,budget,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
+    const reconciled=reconcileCostItems([...pfCostItemsList],budget);const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,budget,costItems:reconciled,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
     projects.push(p);save();showToast('Project created');goHome();
   }
 }
@@ -1141,7 +1169,7 @@ function openNewProject(){
 }
 function editCurrentProject(){
   const p=getProject(currentProjectId);if(!p)return;
-  if(p.type==='group'){if(p.budget||p.type==='project'){editProjectForm(currentProjectId);return}editGroupActivity(currentProjectId);return}
+  if(p.type==='group'){if(p.budget||p.costItems&&p.costItems.length){editProjectForm(currentProjectId);return}editGroupActivity(currentProjectId);return}
   if(p.type==='lending'){editLendingCircle(currentProjectId);return}
   if(p.type==='project'){editProjectForm(currentProjectId);return}
   editingProjectId=p.id;selectedDays=[...(p.days||[])];formDirection=p.direction||'pay';invoiceEnabled=!!p.invoiceEnabled;
@@ -1200,7 +1228,7 @@ function saveProject(){
 }
 
 // ===== DETAIL =====
-function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&p.type==='group'){if(p.budget){renderProjectDetail();showView('projectDetailView')}else{renderGroupDetail();showView('groupDetailView')}}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else if(p&&p.type==='project'){renderProjectDetail();showView('projectDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
+function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&p.type==='group'){if(p.budget||p.costItems&&p.costItems.length){renderProjectDetail();showView('projectDetailView')}else{renderGroupDetail();showView('groupDetailView')}}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else if(p&&p.type==='project'){renderProjectDetail();showView('projectDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
 
 function renderDetail(){
   const p=getProject(currentProjectId);if(!p)return;
@@ -1451,25 +1479,6 @@ function confirmPay(){
 }
 
 // ===== PROJECT DETAIL =====
-const CAT_COLORS=['#e67e22','#2ecc71','#3498db','#9b59b6','#e74c3c','#1abc9c','#f39c12','#8e44ad','#2980b9','#d35400','#16a085','#c0392b'];
-function getCatColor(i){return CAT_COLORS[i%CAT_COLORS.length]}
-function getProjectCategories(p){
-  const cats={};
-  (p.history||[]).forEach(h=>{
-    if(h.type!=='charge')return;
-    const cat=h.costItem||'Uncategorized';
-    if(!cats[cat])cats[cat]={name:cat,total:0,count:0};
-    cats[cat].total=rd2(cats[cat].total+h.amount);
-    cats[cat].count++;
-  });
-  return Object.values(cats).sort((a,b)=>b.total-a.total);
-}
-function getUsedCategories(p){
-  const s=new Set();
-  (p.history||[]).forEach(h=>{if(h.costItem)s.add(h.costItem)});
-  return[...s].sort();
-}
-
 function renderProjectDetail(){
   const p=getProject(currentProjectId);if(!p)return;
   document.getElementById('projDetailTitle').textContent=p.name;
@@ -1477,75 +1486,135 @@ function renderProjectDetail(){
   const totalExpenses=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
   const totalPaid=rd2((p.history||[]).filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
   const budget=p.budget||0;
+  const costItems=p.costItems||[];
   const isGroup=p.participants&&p.participants.length>0;
   const pay=isPay(p);
 
-  const totalOut=totalExpenses;
-  const totalIn=pay&&!isGroup?0:totalPaid;
+  // For solo I Pay: "charges" are payments (only button is "I Paid")
+  // For solo I Earn: "charges" are expenses, "payments" are income received
+  // For group: "charges" are group expenses
+  const totalOut=pay&&!isGroup?totalExpenses:totalExpenses; // money spent
+  const totalIn=pay&&!isGroup?0:totalPaid; // money received
 
   let html='';
   if(budget){
-    const spent=totalOut;
+    const spent=pay&&!isGroup?totalOut:totalOut;
     const remaining=rd2(budget-spent);
     const pct=Math.min(100,Math.round((spent/budget)*100));
-    const overBudget=remaining<0;
-    const barColor=overBudget?'var(--red)':'var(--green)';
     html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
-    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:6px">`;
-    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--text)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Spent</div></div>`;
-    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${overBudget?'var(--red)':'var(--accent)'}">${c}${Math.abs(remaining)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${overBudget?'Over Budget':'Remaining'}</div></div>`;
+    html+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Paid</div></div>`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${remaining>0?'var(--accent)':'var(--green)'}}">${c}${Math.abs(remaining)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${remaining>0?'Remaining':'Overpaid'}</div></div>`;
     if(!pay&&!isGroup&&totalIn>0){
       html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
     }
     html+=`</div>`;
-    html+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:4px;overflow:hidden"><div style="background:${barColor};height:100%;width:${pct}%;border-radius:6px;transition:width .4s ease"></div></div>`;
-    html+=`<div style="text-align:right;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:${overBudget?'var(--red)':'var(--text-muted)'}">${pct}%</span></div>`;
+    html+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden"><div style="background:var(--green);height:100%;width:${pct}%;border-radius:6px;transition:width .3s ease"></div></div>`;
   }else{
+    // No budget
     if(pay&&!isGroup){
-      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Spent</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
+      // Solo I Pay: just show total paid
+      html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Paid</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
     }else if(!pay&&!isGroup){
+      // Solo I Earn: show expenses and received
       html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span></div>`;
       if(totalIn>0){
         html+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
         html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
-        html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${totalOut-totalIn>0?'var(--red)':'var(--green)'}">${c}${rd2(Math.abs(totalOut-totalIn))}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${totalOut-totalIn>0?'Outstanding':'Profit'}</div></div>`;
+        html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${totalOut-totalIn>0?'var(--red)':'var(--green)'}}">${c}${rd2(Math.abs(totalOut-totalIn))}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${totalOut-totalIn>0?'Outstanding':'Profit'}</div></div>`;
         html+=`</div>`;
       }
     }else{
+      // Group: show total expenses
       html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${totalOut}</span><span style="font-size:12px;color:var(--text-muted);margin-top:6px">${p.participants.length} people</span></div>`;
     }
   }
-  html+=`<div style="text-align:center;margin-bottom:14px"><button onclick="showEditBudget()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">${budget?'Edit Budget':'Set Budget'}</button></div>`;
   document.getElementById('projBudgetSummary').innerHTML=html;
+  document.getElementById('projBudgetEditBtn').innerHTML='<div style="text-align:center;margin-bottom:12px"><button onclick="showEditBudget()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">Edit Budget</button></div>';
 
-  // Category rollups
-  const categories=getProjectCategories(p);
-  let catHtml='';
-  if(categories.length>0){
-    catHtml+='<div class="cat-rollup-card">';
-    catHtml+='<div class="cat-rollup-header">Spending by Category</div>';
-    categories.forEach((cat,i)=>{
-      const color=getCatColor(i);
-      const pctOfTotal=totalOut>0?Math.round((cat.total/totalOut)*100):0;
-      catHtml+=`<div class="cat-row"><div class="cat-color" style="background:${color}"></div><div class="cat-info"><div class="cat-name">${esc(cat.name)}</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pctOfTotal}%;background:${color}"></div></div></div><div style="text-align:right"><div class="cat-amt">${c}${cat.total}</div><div class="cat-pct">${pctOfTotal}% · ${cat.count} item${cat.count!==1?'s':''}</div></div></div>`;
+  // Cost item breakdown
+  let itemHtml='';
+  if(costItems.length){
+    itemHtml+='<div class="settle-section" style="margin-bottom:16px">';
+    itemHtml+='<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700;margin-bottom:10px;padding:0 18px">Cost Breakdown</div>';
+    // Calculate proportional share of whole-project payments
+    const totalItemBudget=costItems.reduce((s,i)=>s+i.amount,0);
+    const wholeProjectPayments=rd2((p.history||[]).filter(h=>h.type==='charge'&&(!h.costItem||h.costItem==='')).reduce((s,h)=>s+h.amount,0));
+    let totalRemaining=0;
+    let totalOverbudget=0;
+    costItems.forEach(item=>{
+      const directPayments=rd2((p.history||[]).filter(h=>h.type==='charge'&&h.costItem===item.name).reduce((s,h)=>s+h.amount,0));
+      const proportion=totalItemBudget>0?item.amount/totalItemBudget:0;
+      const proportionalShare=rd2(wholeProjectPayments*proportion);
+      const itemTotal=rd2(directPayments+proportionalShare);
+      const itemPct=item.amount?Math.round((itemTotal/item.amount)*100):0;
+      const itemRemaining=rd2(item.amount-itemTotal);
+      if(itemRemaining>0)totalRemaining+=itemRemaining;
+      else totalOverbudget+=Math.abs(itemRemaining);
+      const isOver=itemPct>100;
+      const autoTag=item.auto?' <span style="font-size:10px;color:var(--text-light)">(auto)</span>':'';
+      const overTag=isOver?`<span style="font-size:10px;color:var(--red);font-weight:700;margin-left:6px">OVER BUDGET +${c}${rd2(Math.abs(itemRemaining))}</span>`:'';
+      itemHtml+=`<div style="padding:10px 18px;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(item.name)}${autoTag}${overTag}</span><span style="font-size:13px;color:var(--text-mid)">${c}${itemTotal} / ${c}${item.amount}</span></div><div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden"><div style="background:${isOver?'var(--red)':'var(--accent)'};height:100%;width:${Math.min(100,itemPct)}%;border-radius:4px"></div></div></div>`;
     });
-    catHtml+='</div>';
-  }
-  document.getElementById('projCategoryRollups').innerHTML=catHtml;
+    itemHtml+='</div>';
 
-  // Action buttons
+    // Override the remaining calculation in the summary using item-level data
+    if(budget){
+      const correctedRemaining=rd2(totalRemaining);
+      // Re-render the summary with corrected remaining
+      const spent=totalOut;
+      const pct=Math.min(100,Math.round((spent/budget)*100));
+      let correctedHtml=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
+      correctedHtml+=`<div style="display:flex;justify-content:space-between;margin-bottom:16px">`;
+      correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Paid</div></div>`;
+      correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${correctedRemaining>0?'var(--accent)':'var(--green)'}">${c}${correctedRemaining}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${correctedRemaining>0?'Remaining':'All Paid'}</div></div>`;
+      if(totalOverbudget>0){
+        correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--red)">${c}${rd2(totalOverbudget)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Over Budget</div></div>`;
+      }
+      if(!pay&&!isGroup&&totalIn>0){
+        correctedHtml+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
+      }
+      correctedHtml+=`</div>`;
+      correctedHtml+=`<div style="background:var(--border);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden"><div style="background:${totalOverbudget>0?'var(--red)':'var(--green)'};height:100%;width:${pct}%;border-radius:6px;transition:width .3s ease"></div></div>`;
+      document.getElementById('projBudgetSummary').innerHTML=correctedHtml;
+    }
+  }
+  document.getElementById('projCostBreakdown').innerHTML=itemHtml;
+
+  // History
+  const hist=p.history||[],hEl=document.getElementById('projHistory');
+  if(!hist.length){hEl.innerHTML='<p class="empty-history">No records yet.</p>'}
+  else{
+    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
+    hEl.innerHTML=tapHint+hist.map((h,i)=>{
+      const isCharge=h.type==='charge';
+      const dc=isCharge?'dot-charge':'dot-payment';
+      const ac=isCharge?'amt-charge':'amt-payment';
+      const at=isCharge?'+'+c+rd2(h.amount):'-'+c+rd2(h.amount);
+      const itemTag=h.costItem?` · ${esc(h.costItem)}`:'';
+      const paidByTag=h.paidBy?` · paid by ${esc(h.paidBy)}`:'';
+      const splitInfo=h.customSplit?'Custom split':h.splitAmong&&h.splitAmong.length<(p.participants||[]).length?h.splitAmong.length+' people':'';
+      const splitTag=splitInfo?` · ${splitInfo}`:'';
+      const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
+      return`<div class="history-row" onclick="showProjectEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${itemTag}${paidByTag}${splitTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+    }).join('');
+  }
+  // Dynamic buttons based on scenario
   let actionsHtml='';
   if(isGroup){
+    // Group: Add Expense + Record Payment + Settle & Reset
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
     actionsHtml+='<button class="detail-btn" style="border:1.5px solid var(--border);background:var(--card);color:var(--text)" onclick="showProjectGroupPaymentInput()"><span class="btn-icon">↔</span> Record Payment</button>';
     actionsHtml+='</div>';
     actionsHtml+='<div style="margin-top:8px"><button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectSettleConfirm()"><span class="btn-icon">✓</span> Settle & Reset</button></div>';
   }else if(pay){
+    // Solo, I Pay: just "I Paid"
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Paid</button>';
     actionsHtml+='</div>';
   }else{
+    // Solo, I Earn: "Add Expense" + "I Got Paid"
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
     actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Got Paid</button>';
@@ -1553,7 +1622,7 @@ function renderProjectDetail(){
   }
   document.getElementById('projActions').innerHTML=actionsHtml;
 
-  // Group settlement
+  // Group settlement section
   if(isGroup){
     const parts=p.participants;
     const paid={};const owes={};
@@ -1569,6 +1638,7 @@ function renderProjectDetail(){
     const balances={};parts.forEach(n=>{balances[n]=rd2(paid[n]-owes[n])});
     const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
     const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
+    const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
     if(shouldPay.length||shouldReceive.length){
       let sHtml='<div class="settle-section" style="margin-top:16px">';
       if(shouldPay.length){
@@ -1582,99 +1652,219 @@ function renderProjectDetail(){
         sHtml+='</div>';
       }
       sHtml+='</div>';
-      document.getElementById('projCategoryRollups').innerHTML+=sHtml;
+      document.getElementById('projCostBreakdown').innerHTML+=sHtml;
     }
   }
 
-  // History
-  const hist=p.history||[],hEl=document.getElementById('projHistory');
-  if(!hist.length){hEl.innerHTML='<p class="empty-history">No records yet.</p>'}
-  else{
-    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
-    hEl.innerHTML=tapHint+hist.map((h,i)=>{
-      const isCharge=h.type==='charge';
-      const dc=isCharge?'dot-charge':'dot-payment';
-      const ac=isCharge?'amt-charge':'amt-payment';
-      const at=isCharge?'+'+c+rd2(h.amount):'-'+c+rd2(h.amount);
-      const catTag=h.costItem?` · ${esc(h.costItem)}`:'';
-      const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
-      return`<div class="history-row" onclick="showProjectEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${catTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
-    }).join('');
-  }
   document.getElementById('projExpenseInput').innerHTML='';
 }
 
 function showEditBudget(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
+  const costItems=p.costItems||[];
+  const itemRows=costItems.map((item,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><input class="dialog-input" style="flex:1;margin-bottom:0" value="${esc(item.name)}" id="budgetItemName${i}"><input class="dialog-input" style="width:80px;margin-bottom:0;text-align:right" type="number" inputmode="decimal" value="${item.amount}" id="budgetItemAmt${i}"><button onclick="removeBudgetItem(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
   const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
-  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px">
-    <p class="dialog-title" style="text-align:center">${p.budget?'Edit Budget':'Set Budget'}</p>
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
+    <p class="dialog-title" style="text-align:center">Edit Budget</p>
     <label style="${lbl}">Total Budget${c?' ('+c+')':''}</label>
-    <input class="dialog-input" id="editBudgetAmt" type="number" inputmode="decimal" value="${p.budget||''}" placeholder="e.g. 20000">
-    <p style="font-size:12px;color:var(--text-muted);margin-top:-10px;margin-bottom:16px;line-height:1.4">Leave empty to remove budget.</p>
+    <input class="dialog-input" id="editBudgetAmt" type="number" inputmode="decimal" value="${p.budget||''}">
+    <label style="${lbl}">Cost Items</label>
+    <div id="editBudgetItems">${itemRows}</div>
+    <div style="display:flex;gap:6px;margin-top:8px;margin-bottom:16px">
+      <input class="dialog-input" style="flex:1;margin-bottom:0" placeholder="New item…" id="editBudgetNewName">
+      <input class="dialog-input" style="width:80px;margin-bottom:0;text-align:right" type="number" inputmode="decimal" placeholder="Amt" id="editBudgetNewAmt">
+      <button onclick="addBudgetItem()" style="background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">+</button>
+    </div>
     <div class="dialog-actions-col">
       <button class="dialog-btn-save" onclick="saveBudgetEdit()">Save</button>
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
 }
+
+let tempBudgetItems=[];
+function removeBudgetItem(i){
+  const p=getProject(currentProjectId);if(!p)return;
+  p.costItems=p.costItems||[];p.costItems.splice(i,1);save();showEditBudget();
+}
+function addBudgetItem(){
+  const name=document.getElementById('editBudgetNewName').value.trim();
+  const amt=parseFloat(document.getElementById('editBudgetNewAmt').value)||0;
+  if(!name){showToast('Enter item name');return}
+  const p=getProject(currentProjectId);if(!p)return;
+  p.costItems=p.costItems||[];p.costItems.push({name,amount:amt});save();showEditBudget();
+}
 function saveBudgetEdit(){
   const p=getProject(currentProjectId);if(!p)return;
   p.budget=parseFloat(document.getElementById('editBudgetAmt').value)||0;
-  save();closeOverlay();renderProjectDetail();showToast(p.budget?'Budget updated':'Budget removed');
-}
-
-function buildCategoryPicker(p, elId){
-  const used=getUsedCategories(p);
-  if(!used.length)return`<div style="margin-bottom:8px"><input class="input-field" type="text" placeholder="Category (e.g. Flights, Food; Woodwork, Lighting)" id="${elId}" style="font-size:14px;width:100%"></div>`;
-  return`<div style="margin-bottom:8px"><select class="form-select" id="${elId}" onchange="if(this.value==='__new__'){this.style.display='none';document.getElementById('${elId}New').style.display='';document.getElementById('${elId}New').focus()}"><option value="">No category</option>${used.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}<option value="__new__">＋ New category…</option></select><input class="input-field" type="text" placeholder="New category name…" id="${elId}New" style="font-size:14px;width:100%;display:none;margin-top:6px"></div>`;
-}
-function getCategoryValue(elId){
-  const sel=document.getElementById(elId);
-  if(!sel)return'';
-  if(sel.tagName==='SELECT'){
-    if(sel.value==='__new__'){
-      const inp=document.getElementById(elId+'New');
-      return inp?inp.value.trim():'';
-    }
-    return sel.value;
-  }
-  return sel.value.trim();
+  const items=p.costItems||[];
+  items.forEach((item,i)=>{
+    const nameEl=document.getElementById('budgetItemName'+i);
+    const amtEl=document.getElementById('budgetItemAmt'+i);
+    if(nameEl)item.name=nameEl.value.trim()||item.name;
+    if(amtEl)item.amount=parseFloat(amtEl.value)||item.amount;
+  });
+  p.costItems=reconcileCostItems(items,p.budget);
+  save();closeOverlay();renderProjectDetail();showToast('Budget updated');
 }
 
 function showProjectExpenseInput(){
   const p=getProject(currentProjectId);if(!p)return;
   const el=document.getElementById('projExpenseInput');
-  if(el.innerHTML){el.innerHTML='';return}
+  if(el.innerHTML){el.innerHTML='';projSplitMode='equal';return}
+  const costItems=p.costItems||[];
   const isGroup=p.participants&&p.participants.length>0;
-  const paidByOpts=isGroup?`<div class="input-row"><select class="form-select" id="projExpPaidBy" style="flex:1">${p.participants.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div><p style="font-size:11px;color:var(--text-muted);margin-top:2px;margin-bottom:8px">Who paid for this?</p>`:'';
-  const catPicker=buildCategoryPicker(p,'projExpCat');
+  const parts=isGroup?p.participants:[];
+  projSplitMode='equal';
+
+  // Paid by dropdown
+  const paidByOpts=isGroup?`<div class="input-row"><select class="form-select" id="projExpPaidBy" style="flex:1">${parts.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div><p style="font-size:11px;color:var(--text-muted);margin-top:2px;margin-bottom:8px">Who paid for this?</p>`:'';
+
+  // Cost item selector
+  const itemOpts=costItems.length?`<select class="form-select" id="projExpItem" style="margin-bottom:8px"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}">${esc(i.name)}</option>`).join('')}</select>`:'';
+
+  // Split UI (only for group projects)
+  let splitHtml='';
+  if(isGroup){
+    const checks=parts.map(n=>`<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;font-weight:500"><input type="checkbox" checked value="${esc(n)}" class="proj-split-cb" onchange="updateProjSplitPreview()" style="width:18px;height:18px;accent-color:var(--accent)">${esc(n)}<span class="proj-share-mult" style="margin-left:auto;display:flex;align-items:center;gap:4px"><select class="proj-mult-select" data-name="${esc(n)}" onchange="updateProjSplitPreview()" style="padding:4px 6px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--card);color:var(--text)"><option value="1" selected>×1</option><option value="2">×2</option><option value="3">×3</option><option value="0.5">×½</option></select></span><span class="proj-custom-amt" style="display:none;margin-left:4px"><input type="number" inputmode="decimal" class="proj-custom-input" data-name="${esc(n)}" data-manual="false" oninput="this.dataset.manual=&apos;true&apos;;updateProjSplitPreview()" style="width:70px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);font-size:13px;text-align:right" onchange="updateProjSplitPreview()"></span></label>`).join('');
+    splitHtml=`
+    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">Split between</p>
+    <div style="display:flex;gap:0;border-radius:8px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:10px">
+      <button id="projSplitEqBtn" onclick="setProjSplitMode('equal')" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:600;background:var(--accent);color:#fff;cursor:pointer">Split equally</button>
+      <button id="projSplitCustBtn" onclick="setProjSplitMode('custom')" style="flex:1;padding:10px;border:none;border-left:1px solid var(--border);font-size:13px;font-weight:600;background:var(--card);color:var(--text-mid);cursor:pointer">Custom split</button>
+    </div>
+    <div id="projSplitParticipants" style="padding:4px 0">${checks}</div>
+    <p id="projSplitPreview" style="font-size:12px;color:var(--text-muted);margin:8px 0"></p>`;
+  }
+
   el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
-    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projExpAmt" autofocus></div>
-    ${catPicker}
-    <div class="input-row"><input class="input-field" type="text" placeholder="Description (optional)" id="projExpNote" style="font-size:14px"></div>
+    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projExpAmt" autofocus ${isGroup?'onchange="updateProjSplitPreview()" oninput="updateProjSplitPreview()"':''}></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="What was it for?" id="projExpNote" style="font-size:14px"></div>
     ${paidByOpts}
+    ${splitHtml}
+    ${itemOpts}
     <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectExpense()">Add Expense</button>
   </div>`;
   document.getElementById('projExpAmt').focus();
+  if(isGroup)updateProjSplitPreview();
+}
+
+function setProjSplitMode(mode){
+  projSplitMode=mode;
+  document.getElementById('projSplitEqBtn').style.background=mode==='equal'?'var(--accent)':'var(--card)';
+  document.getElementById('projSplitEqBtn').style.color=mode==='equal'?'#fff':'var(--text-mid)';
+  document.getElementById('projSplitCustBtn').style.background=mode==='custom'?'var(--accent)':'var(--card)';
+  document.getElementById('projSplitCustBtn').style.color=mode==='custom'?'#fff':'var(--text-mid)';
+  document.querySelectorAll('.proj-custom-amt').forEach(el=>{el.style.display=mode==='custom'?'':'none'});
+  document.querySelectorAll('.proj-share-mult').forEach(el=>{el.style.display=mode==='equal'?'':'none'});
+  if(mode==='custom')prefillProjCustomAmounts();
+  updateProjSplitPreview();
+}
+
+function prefillProjCustomAmounts(){
+  const amt=parseFloat(document.getElementById('projExpAmt').value)||0;
+  const cbs=document.querySelectorAll('.proj-split-cb:checked');
+  const share=cbs.length?rd2(amt/cbs.length):0;
+  document.querySelectorAll('.proj-custom-input').forEach(inp=>{
+    const cb=inp.closest('label').querySelector('.proj-split-cb');
+    if(cb&&cb.checked&&!inp.value)inp.value=share;
+  });
+}
+
+function updateProjSplitPreview(){
+  const el=document.getElementById('projSplitPreview');if(!el)return;
+  const amt=parseFloat(document.getElementById('projExpAmt').value)||0;
+  const p=getProject(currentProjectId);if(!p)return;
+  const c=cur(p);
+  if(projSplitMode==='equal'){
+    const cbs=document.querySelectorAll('.proj-split-cb:checked');
+    let totalShares=0;
+    cbs.forEach(cb=>{const mult=document.querySelector('.proj-mult-select[data-name="'+cb.value+'"]');totalShares+=mult?parseFloat(mult.value)||1:1});
+    if(totalShares&&amt){el.textContent=c+rd2(amt/totalShares)+' per share ('+totalShares+' shares)'}
+    else{el.textContent=''}
+  }else{
+    autoRecalcProjCustomSplits();
+    const inputs=document.querySelectorAll('.proj-custom-input');
+    let total=0;
+    inputs.forEach(inp=>{const cb=inp.closest('label').querySelector('.proj-split-cb');if(cb&&cb.checked)total+=parseFloat(inp.value)||0});
+    if(amt&&total){
+      const diff=rd2(amt-total);
+      if(Math.abs(diff)<0.01)el.innerHTML='<span style="color:var(--green)">Splits add up correctly</span>';
+      else el.innerHTML='<span style="color:var(--red)">Splits total '+c+rd2(total)+' — off by '+c+Math.abs(diff)+'</span>';
+    }else{el.textContent=''}
+  }
+}
+
+function autoRecalcProjCustomSplits(){
+  const amt=parseFloat(document.getElementById('projExpAmt').value)||0;
+  if(!amt)return;
+  const inputs=document.querySelectorAll('.proj-custom-input');
+  const checkedInputs=[];
+  let manualTotal=0;
+  inputs.forEach(inp=>{
+    const cb=inp.closest('label').querySelector('.proj-split-cb');
+    if(!cb||!cb.checked)return;
+    checkedInputs.push(inp);
+    if(inp.dataset.manual==='true'){manualTotal+=parseFloat(inp.value)||0}
+  });
+  const autoInputs=checkedInputs.filter(inp=>inp.dataset.manual!=='true');
+  if(autoInputs.length>0){
+    const remaining=rd2(amt-manualTotal);
+    const each=rd2(remaining/autoInputs.length);
+    autoInputs.forEach(inp=>{inp.value=each});
+  }
 }
 
 function confirmProjectExpense(){
   const p=getProject(currentProjectId);if(!p)return;
   const val=parseFloat(document.getElementById('projExpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
-  const costItem=getCategoryValue('projExpCat');
-  const note=document.getElementById('projExpNote').value.trim()||costItem||'Expense';
+  const note=document.getElementById('projExpNote').value.trim()||'Expense';
+  const itemSel=document.getElementById('projExpItem');
+  const costItem=itemSel?itemSel.value:'';
   p.history=p.history||[];
   const entry={type:'charge',amount:rd2(val),note,date:new Date().toISOString()};
   if(costItem)entry.costItem=costItem;
-  const paidBySel=document.getElementById('projExpPaidBy');
-  if(paidBySel)entry.paidBy=paidBySel.value;
+
   const isGroup=p.participants&&p.participants.length>0;
-  if(isGroup){entry.splitAmong=[...p.participants]}
+  if(isGroup){
+    // Who paid
+    const paidBySel=document.getElementById('projExpPaidBy');
+    if(paidBySel){entry.paidBy=paidBySel.value}
+    if(!entry.paidBy){showToast('Select who paid');return}
+
+    // Who it applies to
+    const cbs=document.querySelectorAll('.proj-split-cb:checked');
+    if(!cbs.length){showToast('Select at least one person');return}
+    entry.splitAmong=Array.from(cbs).map(cb=>cb.value);
+
+    // Custom split or multipliers
+    let customSplit=null;
+    if(projSplitMode==='equal'){
+      let totalShares=0;
+      cbs.forEach(cb=>{const mult=document.querySelector('.proj-mult-select[data-name="'+cb.value+'"]');totalShares+=mult?parseFloat(mult.value)||1:1});
+      const hasNonOne=Array.from(document.querySelectorAll('.proj-mult-select')).some(s=>s.value!=='1');
+      if(hasNonOne&&totalShares>0){
+        customSplit={};
+        const perShare=rd2(val/totalShares);
+        cbs.forEach(cb=>{const mult=document.querySelector('.proj-mult-select[data-name="'+cb.value+'"]');const m=mult?parseFloat(mult.value)||1:1;customSplit[cb.value]=rd2(perShare*m)});
+      }
+    }
+    if(projSplitMode==='custom'){
+      customSplit={};
+      let total=0;
+      document.querySelectorAll('.proj-custom-input').forEach(inp=>{
+        const cb=inp.closest('label').querySelector('.proj-split-cb');
+        if(cb&&cb.checked){const v=parseFloat(inp.value)||0;customSplit[inp.dataset.name]=rd2(v);total+=v}
+      });
+      if(Math.abs(total-val)>0.01){showToast('Split amounts don\'t add up to total');return}
+    }
+    if(customSplit)entry.customSplit=customSplit;
+  }
+
   p.history.unshift(entry);
   p.balance=rd2((p.balance||0)+val);
-  save();document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+' added');
+  save();document.getElementById('projExpenseInput').innerHTML='';projSplitMode='equal';renderProjectDetail();showToast(cur(p)+rd2(val)+' added');
 }
 
 function showProjectPayInput(){
@@ -1682,11 +1872,12 @@ function showProjectPayInput(){
   const el=document.getElementById('projExpenseInput');
   if(el.innerHTML){el.innerHTML='';return}
   const pay=isPay(p);
-  const catPicker=pay?buildCategoryPicker(p,'projPayCat'):'';
+  const costItems=p.costItems||[];
+  const itemOpts=pay&&costItems.length?`<select class="form-select" id="projPayItem" style="margin-bottom:8px"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}">${esc(i.name)}</option>`).join('')}</select>`:'';
   el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
     <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projPayAmt" autofocus></div>
-    ${catPicker}
-    <div class="input-row"><input class="input-field" type="text" placeholder="Description (optional)" id="projPayNote" style="font-size:14px"></div>
+    <div class="input-row"><input class="input-field" type="text" placeholder="What was this for?" id="projPayNote" style="font-size:14px"></div>
+    ${itemOpts}
     <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${pay?'Record Payment':'Record Payment Received'}</button>
   </div>`;
   document.getElementById('projPayAmt').focus();
@@ -1696,8 +1887,9 @@ function confirmProjectPay(){
   const p=getProject(currentProjectId);if(!p)return;
   const val=parseFloat(document.getElementById('projPayAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
   const pay=isPay(p);
-  const costItem=pay?getCategoryValue('projPayCat'):'';
-  const note=document.getElementById('projPayNote').value.trim()||costItem||(pay?'Payment':'Payment received');
+  const note=document.getElementById('projPayNote').value.trim()||(pay?'Payment':'Payment received');
+  const itemSel=document.getElementById('projPayItem');
+  const costItem=itemSel?itemSel.value:'';
   p.history=p.history||[];
   const entry=pay?{type:'charge',amount:rd2(val),note,date:new Date().toISOString()}:{type:'payment',amount:rd2(val),note,date:new Date().toISOString()};
   if(costItem)entry.costItem=costItem;
@@ -1711,16 +1903,31 @@ function showProjectEntryActions(idx){
   const h=p.history[idx];if(!h)return;
   const c=cur(p);
   const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
-  const used=getUsedCategories(p);
+  const costItems=p.costItems||[];
+  const isGroup=p.participants&&p.participants.length>0;
+  const parts=isGroup?p.participants:[];
   const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
-  const catOpts=h.type==='charge'?`<label style="${lbl}">Category</label><select class="dialog-input" id="editCostItem" style="appearance:auto;-webkit-appearance:auto"><option value="">No category</option>${used.map(c=>`<option value="${esc(c)}" ${h.costItem===c?'selected':''}>${esc(c)}</option>`).join('')}<option value="__new__">＋ New category…</option></select><input class="dialog-input" id="editCostItemNew" type="text" placeholder="New category name…" style="display:none">`:'';
+  const itemOpts=costItems.length&&h.type==='charge'?`<label style="${lbl}">Cost Item</label><select class="dialog-input" id="editCostItem" style="appearance:auto;-webkit-appearance:auto"><option value="">Whole project</option>${costItems.map(i=>`<option value="${esc(i.name)}" ${h.costItem===i.name?'selected':''}>${esc(i.name)}</option>`).join('')}</select>`:'';
+
+  // Paid by selector for group entries
+  const paidByHtml=isGroup&&h.type==='charge'?`<label style="${lbl}">Paid By</label><select class="dialog-input" id="editPaidBy" style="appearance:auto;-webkit-appearance:auto">${parts.map(n=>`<option value="${esc(n)}" ${h.paidBy===n?'selected':''}>${esc(n)}</option>`).join('')}</select>`:'';
+
+  // Split among checkboxes for group entries
+  const splitAmong=h.splitAmong||parts;
+  const splitHtml=isGroup&&h.type==='charge'?`<label style="${lbl}">Split Among</label><div id="editSplitChecks" style="margin-bottom:12px">${parts.map(n=>{
+    const checked=splitAmong.includes(n)?'checked':'';
+    return`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px"><input type="checkbox" ${checked} value="${esc(n)}" class="edit-split-cb" style="width:16px;height:16px;accent-color:var(--accent)">${esc(n)}</label>`;
+  }).join('')}</div>`:'';
+
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:320px;max-height:90vh;overflow-y:auto">
     <p class="dialog-title" style="text-align:center">${h.type==='charge'?'Expense':'Payment'}</p>
     <label style="${lbl}">Description</label>
     <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}" onfocus="this.setSelectionRange(0,this.value.length)">
     <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
     <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
-    ${catOpts}
+    ${paidByHtml}
+    ${splitHtml}
+    ${itemOpts}
     <label style="${lbl}">Date</label>
     <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
     <label style="${lbl}">Note</label>
@@ -1731,12 +1938,6 @@ function showProjectEntryActions(idx){
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
-  // Wire up the "new category" toggle
-  const catSel=document.getElementById('editCostItem');
-  if(catSel)catSel.addEventListener('change',function(){
-    const newInp=document.getElementById('editCostItemNew');
-    if(this.value==='__new__'){newInp.style.display='';newInp.focus()}else{newInp.style.display='none';newInp.value=''}
-  });
 }
 
 function doEditProjectEntry(idx){
@@ -1749,12 +1950,13 @@ function doEditProjectEntry(idx){
   h.amount=rd2(newAmt);
   h.note=document.getElementById('editName').value.trim()||h.note;
   const itemSel=document.getElementById('editCostItem');
-  if(itemSel){
-    if(itemSel.value==='__new__'){
-      const newInp=document.getElementById('editCostItemNew');
-      h.costItem=newInp?newInp.value.trim():'';
-    }else{h.costItem=itemSel.value||''}
-  }
+  if(itemSel)h.costItem=itemSel.value||'';
+  // Update paidBy
+  const paidBySel=document.getElementById('editPaidBy');
+  if(paidBySel)h.paidBy=paidBySel.value;
+  // Update splitAmong
+  const splitCbs=document.querySelectorAll('.edit-split-cb:checked');
+  if(splitCbs.length){h.splitAmong=Array.from(splitCbs).map(cb=>cb.value);if(h.customSplit){const newSplit={};h.splitAmong.forEach(n=>{if(h.customSplit[n]!==undefined)newSplit[n]=h.customSplit[n];else newSplit[n]=rd2(h.amount/h.splitAmong.length)});h.customSplit=newSplit}}
   const newDate=document.getElementById('editDate').value;
   if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
   h.comment=document.getElementById('editComment').value.trim()||'';
