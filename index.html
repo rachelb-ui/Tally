@@ -28,6 +28,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;max-width:480px;margin:0 auto;padding:calc(20px + var(--safe-top)) 18px calc(24px + var(--safe-bottom));-webkit-font-smoothing:antialiased}
 button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:var(--font)}
+summary::-webkit-details-marker{display:none}summary::marker{display:none}
 
 .toast{position:fixed;top:calc(16px + var(--safe-top));left:50%;transform:translateX(-50%) translateY(-100px);background:var(--text);color:#fff;padding:11px 26px;border-radius:100px;font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-md);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -250,6 +251,18 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
 .sync-badge.synced .sync-dot{background:var(--green)}.sync-badge.offline .sync-dot{background:var(--text-muted)}
 .sync-badge.syncing .sync-dot{background:var(--accent);animation:pulse 1s ease infinite}
 .sync-badge.error .sync-dot{background:var(--red)}
+.backup-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:100px;cursor:pointer;color:#8b6914;background:linear-gradient(135deg,var(--accent-light),#fdf2e3);border:1px solid var(--accent-border);transition:transform .15s ease,box-shadow .15s ease;letter-spacing:0.2px}
+.backup-pill:active{transform:scale(.95)}
+.backup-pill svg{flex-shrink:0}
+.backup-banner{background:linear-gradient(135deg,var(--accent-light),#fdf2e3);border:1.5px solid var(--accent-border);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.backup-banner-icon{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.backup-banner-content{flex:1;min-width:0}
+.backup-banner-title{font-size:13px;font-weight:700;color:#8b6914;margin-bottom:3px}
+.backup-banner-text{font-size:12px;color:#8b6914;line-height:1.45;opacity:0.85}
+.backup-banner-actions{display:flex;gap:6px;margin-top:10px}
+.backup-banner-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.backup-banner-btn.primary{background:var(--accent);color:#fff}
+.backup-banner-btn.dismiss{background:transparent;color:#8b6914;border:1px solid var(--accent-border)}
 .auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
 .auth-card-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700;margin-bottom:12px}
 .auth-user{display:flex;align-items:center;gap:12px;margin-bottom:12px}
@@ -277,11 +290,11 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <div style="text-align:center;padding:60px 20px 40px">
     <svg width="64" height="64" viewBox="0 0 48 48" style="margin-bottom:16px"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(7.5,8)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>
     <h1 style="font-family:var(--font-display);font-size:32px;color:var(--text);margin-bottom:4px">Welcome to Tally</h1>
-    <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:36px">Track balances across all your activities.<br>Let's start with your name.</p>
+    <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:36px">Track balances across all your activities.<br>Let's start with your first name.</p>
     <div class="form-group" style="text-align:left;max-width:320px;margin:0 auto">
-      <label class="form-label">Your Name</label>
+      <label class="form-label">First Name</label>
       <input class="form-input" id="welcomeName" placeholder="e.g. Rachel, John…" autofocus>
-      <p class="form-hint">This is how you'll appear in your activities and shared screens.</p>
+      <p class="form-hint">Keep it short — this is how you'll appear in shared screens.</p>
     </div>
     <button class="form-submit" style="max-width:320px;margin-top:24px" onclick="completeWelcome()">Get Started</button>
   </div>
@@ -298,12 +311,14 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span id="syncBadge" class="sync-badge offline" onclick="openSettings()" style="display:none"><span class="sync-dot"></span><span id="syncLabel">Offline</span></span>
-        <button onclick="openSettings()" style="background:none;border:none;font-size:20px;color:var(--text-light);padding:6px;margin-top:2px">⚙</button>
+        <button id="backupPill" class="backup-pill" onclick="openSettings()" style="display:none" aria-label="Back up your data"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0 -1.5 -8.74 6 6 0 0 0 -11.5 1.74 4 4 0 0 0 0.5 8h12.5z"/></svg>Back up</button>
+        <button onclick="openSettings()" style="background:none;border:none;padding:6px;margin-top:2px;display:inline-flex;align-items:center;justify-content:center" aria-label="Settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9e9486" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="14" y2="6"/><line x1="18" y1="6" x2="20" y2="6"/><circle cx="16" cy="6" r="2"/><line x1="4" y1="12" x2="6" y2="12"/><line x1="10" y1="12" x2="20" y2="12"/><circle cx="8" cy="12" r="2"/><line x1="4" y1="18" x2="14" y2="18"/><line x1="18" y1="18" x2="20" y2="18"/><circle cx="16" cy="18" r="2"/></svg></button>
       </div>
     </div>
   </div>
   <div id="timersBanner"></div>
   <div id="pendingBanner"></div>
+  <div id="backupBanner"></div>
   <div id="projectsList"></div>
 </div>
 
@@ -432,7 +447,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <div class="balance-card" style="margin-top:16px">
     <span class="balance-label" id="dBalLabel">All settled</span>
     <span class="balance-amount balance-zero" id="dBalAmt">$0</span>
-    <span style="font-size:12px;color:var(--text-muted);margin-top:6px" id="dBalUnits"></span>
+    <span style="font-size:15px;color:var(--text-mid);margin-top:8px;font-weight:600" id="dBalUnits"></span>
   </div>
   <div class="detail-actions">
     <button class="detail-btn btn-add-session" onclick="showAddCharge()">
@@ -629,11 +644,21 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <div id="authContent"></div>
   </div>
   <div class="form-group">
-    <label class="form-label">Your Name / Business Name</label>
-    <input class="form-input" id="sName" placeholder="e.g. John Smith or Smith Tutoring LLC">
-    <p class="form-hint">Shown at the top of PDF exports.</p>
+    <label class="form-label">First Name</label>
+    <input class="form-input" id="sName" placeholder="e.g. Rachel">
+    <p class="form-hint">How you appear in the app — buttons, balances, shared messages.</p>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Display name for exports <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input class="form-input" id="sExportName" placeholder="e.g. Rachel Khoury or Khoury Pilates Studio">
+    <p class="form-hint">Used at the top of PDF exports and invoices. Leave blank to use your first name.</p>
   </div>
   <button class="form-submit" onclick="saveSettings()">Save Settings</button>
+  <div style="margin-top:32px;padding-top:24px;border-top:1.5px solid var(--border)">
+    <div class="form-label" style="margin-bottom:12px">Send Feedback</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Found a bug? Have an idea? I'd love to hear it — your feedback shapes what gets built next.</p>
+    <button class="form-submit" style="background:var(--text);margin-bottom:0" onclick="sendFeedback()">💬 Share Feedback</button>
+  </div>
   <div style="margin-top:32px;padding-top:24px;border-top:1.5px solid var(--border)">
     <div class="form-label" style="margin-bottom:12px">Backup &amp; Restore</div>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Save a copy of all your data to a file, or restore from a previous backup.</p>
@@ -662,7 +687,7 @@ const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAY_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 let projects=[],groups=[],timers={},collapsedGroups={};
-let settings={name:'',email:'',phone:'',address:'',invoiceInfo:''};
+let settings={name:'',exportName:'',email:'',phone:'',address:'',invoiceInfo:''};
 let currentProjectId=null,editingProjectId=null,selectedDays=[];
 let projSplitMode='equal';
 let formDirection='pay',chargeOpen=false,payOpen=false,tickInterval=null;
@@ -701,7 +726,17 @@ let isFirestoreLoaded=false;
 function updateSyncBadge(){
   const badge=document.getElementById('syncBadge');
   const label=document.getElementById('syncLabel');
+  const pill=document.getElementById('backupPill');
   if(!badge)return;
+  // Anonymous (or no user yet) → show "Back up" pill, hide sync badge.
+  // Signed-in users → show sync status, hide pill.
+  const isAnon=!currentUser||currentUser.isAnonymous;
+  if(isAnon){
+    badge.style.display='none';
+    if(pill)pill.style.display='';
+    return;
+  }
+  if(pill)pill.style.display='none';
   badge.className='sync-badge '+syncStatus;
   badge.style.display='';
   if(syncStatus==='synced')label.textContent='Synced';
@@ -715,7 +750,8 @@ function renderAuthCard(){
   if(!el)return;
   if(!currentUser||currentUser.isAnonymous){
     el.innerHTML=`
-      <p style="font-size:13px;color:var(--text-mid);margin-bottom:12px;line-height:1.5">Sign in with Google to sync your data across devices and keep it backed up in the cloud.</p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0 -1.5 -8.74 6 6 0 0 0 -11.5 1.74 4 4 0 0 0 0.5 8h12.5z"/></svg><span style="font-size:15px;font-weight:700;color:var(--text)">Back up &amp; sync your data</span></div>
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.5">Keep your tally safe across devices. Sign in with Google — we only use your account to back up your data.</p>
       <button class="auth-btn auth-btn-google" onclick="signInWithGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Sign in with Google
@@ -1232,6 +1268,26 @@ function formatDuration(input){
 }
 function rd2(n){return Math.round(n*100)/100}
 
+// Convert legacy time labels like "0.79hrs", "1.5 hr", "2.0hrs" inside a note
+// to readable "Xhr Ymin". Only fractional/decimal forms are touched — clean
+// "1hr 30min" and "45min" pass through unchanged.
+function normalizeNote(note){
+  if(!note)return note;
+  return note.replace(/(\d+(?:\.\d+)?)\s*hr?s?\b/gi,(match,numStr)=>{
+    const n=parseFloat(numStr);
+    if(isNaN(n))return match;
+    // If it's a whole number, leave as-is (e.g. "2hrs" stays "2hrs")
+    if(Number.isInteger(n))return match;
+    const totalMin=Math.round(n*60);
+    if(totalMin<=0)return'0min';
+    const h=Math.floor(totalMin/60);
+    const m=totalMin%60;
+    if(h===0)return m+'min';
+    if(m===0)return h+'hr'+(h!==1?'s':'');
+    return h+'hr'+(h!==1?'s':'')+' '+m+'min';
+  });
+}
+
 // Direction-aware helpers
 function isPay(p){return p.direction!=='earn'}
 
@@ -1286,7 +1342,45 @@ function startHomeTick(){stopTick();if(Object.keys(timers).length>0)tickInterval
 function stopTick(){if(tickInterval){clearInterval(tickInterval);tickInterval=null}}
 
 // ===== HOME =====
-function renderHome(){renderTimersBanner();renderPending();renderProjects()}
+function renderHome(){renderTimersBanner();renderPending();renderBackupBanner();renderProjects()}
+
+// Counts total user-created entries across all projects. Used to gate the
+// backup-nudge banner — we don't want to push sign-in until the user has
+// invested enough effort to care about losing it.
+function totalEntryCount(){
+  let n=0;
+  (projects||[]).forEach(p=>{
+    if(!p.archived&&p.history)n+=p.history.filter(h=>h.type==='charge'||h.type==='payment'||h.type==='expense'||h.type==='transfer').length;
+  });
+  return n;
+}
+
+function renderBackupBanner(){
+  const el=document.getElementById('backupBanner');
+  if(!el)return;
+  const isAnon=!currentUser||currentUser.isAnonymous;
+  const dismissed=settings.backupNudgeDismissed;
+  // Show the banner only if: anonymous, not previously dismissed, and the user
+  // has logged enough entries to have something worth backing up.
+  if(!isAnon||dismissed||totalEntryCount()<5){el.innerHTML='';return}
+  el.innerHTML=`<div class="backup-banner">
+    <div class="backup-banner-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0 -1.5 -8.74 6 6 0 0 0 -11.5 1.74 4 4 0 0 0 0.5 8h12.5z"/></svg></div>
+    <div class="backup-banner-content">
+      <div class="backup-banner-title">Back up your data</div>
+      <div class="backup-banner-text">Sign in with Google to keep your tally safe across devices.</div>
+      <div class="backup-banner-actions">
+        <button class="backup-banner-btn primary" onclick="openSettings()">Back up</button>
+        <button class="backup-banner-btn dismiss" onclick="dismissBackupNudge()">Not now</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function dismissBackupNudge(){
+  settings.backupNudgeDismissed=true;
+  db.saveSettings();
+  renderBackupBanner();
+}
 
 // Threshold past which a running timer is considered "stale" (likely
 // forgotten on a closed tab). 24 hours. We don't auto-end — we just warn.
@@ -1360,7 +1454,21 @@ function renderProjects(){
     const currencies=[...new Set(gp.map(p=>cur(p)))];
     const sameCur=currencies.length===1&&currencies[0]!=='';
     let totalHtml='';
-    if(sameCur){const totalBal=gp.reduce((s,p)=>s+(p.balance||0),0);const abs=Math.round(Math.abs(totalBal)),cls=totalBal>0?'owe':totalBal<0?'credit':'zero';totalHtml=`<span class="group-total ${cls}">${currencies[0]}${abs}</span>`}
+    if(sameCur){
+      // For projects/groups, the card displays total expenses (charges only).
+      // For activities/lending, it displays the balance (charges - payments).
+      // The category total must follow the same rule so the sum matches what's visible.
+      const totalBal=gp.reduce((s,p)=>{
+        if(p.type==='project'||p.type==='group'){
+          const hist=getEntriesSinceLastSettlement(p);
+          const totalExp=hist.filter(h=>h.type==='charge').reduce((ss,h)=>ss+h.amount,0);
+          return s+totalExp;
+        }
+        return s+(p.balance||0);
+      },0);
+      const abs=Math.round(Math.abs(totalBal)),cls=totalBal>0?'owe':totalBal<0?'credit':'zero';
+      totalHtml=`<span class="group-total ${cls}">${currencies[0]}${abs}</span>`;
+    }
     html+=`<div class="group-section"><div class="group-header" onclick="toggleGroup('${g.id}')"><div class="group-header-left"><span class="group-chevron ${collapsed?'':'open'}">›</span><span class="group-name">${esc(g.name)}</span><span class="group-count">(${gp.length})</span></div><div style="display:flex;align-items:center;gap:8px">${totalHtml}<button class="group-edit-btn" onclick="event.stopPropagation();editGroup('${g.id}')">⋯</button></div></div><div class="group-items" style="${collapsed?'max-height:0;overflow:hidden':''}">${gp.map(p=>renderProjectCard(p)).join('')}</div></div>`;
   });
   const ungrouped=sortByRecent(active.filter(p=>!p.groupId||!getGroup(p.groupId)));
@@ -1533,12 +1641,14 @@ function saveProjectForm(){
 // ===== SETTINGS =====
 function openSettings(){
   document.getElementById('sName').value=settings.name||'';
+  document.getElementById('sExportName').value=settings.exportName||'';
   renderArchivedList();
   renderAuthCard();
   stopTick();showView('settingsView');
 }
 function saveSettings(){
   settings.name=document.getElementById('sName').value.trim();
+  settings.exportName=document.getElementById('sExportName').value.trim();
   // Clean up legacy fields if they exist on this device — they're no
   // longer collected anywhere in the UI.
   delete settings.email;
@@ -1547,6 +1657,26 @@ function saveSettings(){
   delete settings.invoiceInfo;
   db.saveSettings();
   showToast('Settings saved');goBack();
+}
+
+// ===== FEEDBACK =====
+// Opens the user's email app pre-filled. Cheap, instant, no backend needed.
+// Replace the address below with your real feedback inbox.
+function sendFeedback(){
+  const to='feedback@tally.app';
+  const subject='Tally feedback';
+  // A loose template — gives users a starting point so they're not staring
+  // at a blank email. The "appended automatically" lines help me debug.
+  const ua=(navigator.userAgent||'').slice(0,160);
+  const ver='2026-04-26';
+  const body=
+    'Hi! Here\'s my feedback on Tally:\n\n'+
+    '(Bug? Suggestion? Anything that confused you? Type away.)\n\n\n\n'+
+    '— Sent from Tally —\n'+
+    'Version: '+ver+'\n'+
+    'Device: '+ua;
+  const url='mailto:'+to+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  window.location.href=url;
 }
 
 // ===== BACKUP & RESTORE =====
@@ -1926,7 +2056,7 @@ function renderDetail(){
     }
     const at=h.type==='charge'?'+'+cur(p)+rd2(h.amount):h.type==='payment'?'-'+cur(p)+rd2(h.amount):'—';
     const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
-    return`<div class="history-row" onclick="showEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+    return`<div class="history-row" onclick="showEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(normalizeNote(h.note||''))}</span><span class="row-date">${formatDate(h.date)}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
   }).join('')}
 }
 
@@ -2337,7 +2467,7 @@ function renderProjectDetail(){
     }
 
     // Per-person breakdown (collapsed summary)
-    settlementHtml+='<details style="margin-top:4px"><summary style="font-size:11px;color:var(--text-muted);cursor:pointer;padding:6px 0;font-weight:600;letter-spacing:0.5px">Per-person breakdown</summary><div style="margin-top:4px">';
+    settlementHtml+='<details style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden"><summary style="font-size:13px;color:var(--text);cursor:pointer;padding:13px 14px;font-weight:700;letter-spacing:0.3px;display:flex;align-items:center;justify-content:space-between;list-style:none"><span>👤 Per-person breakdown</span><span style="font-size:11px;color:var(--accent);font-weight:600">Tap to expand ›</span></summary><div style="padding:8px 10px 10px;background:var(--bg)">';
     sorted.forEach(n=>{
       const bal=rd2(balances[n]);
       const paidAmt=rd2(paid[n]);
@@ -2415,7 +2545,7 @@ function renderProjectDetail(){
       const splitInfo=h.customSplit?'Custom split':h.splitAmong&&h.splitAmong.length<(p.participants||[]).length?h.splitAmong.length+' people':'';
       const splitTag=splitInfo?` · ${splitInfo}`:'';
       const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
-      return`<div class="history-row" onclick="showProjectEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${catTag}${paidByTag}${splitTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+      return`<div class="history-row" onclick="showProjectEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(normalizeNote(h.note||''))}</span><span class="row-date">${formatDate(h.date)}${catTag}${paidByTag}${splitTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
     }).join('');
   }
   document.getElementById('projExpenseInput').innerHTML='';
@@ -2791,13 +2921,14 @@ function showShareSummary(){
   const c=cur(p);
   const isGroup=p.participants&&p.participants.length>0;
   const currentHist=getEntriesSinceLastSettlement(p);
-  let text='📊 *Tally* — '+p.name+'\n';
+  let text='📲 *Tally* — '+p.name+'\n';
   if(p.budget)text+='Budget: '+c+p.budget+'\n';
   const totalExp=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
   const totalPaid=rd2(currentHist.filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
-  text+='Total Expenses: '+c+totalExp+'\n';
-  if(totalPaid)text+='Total Paid: '+c+totalPaid+'\n';
   if(isGroup){
+    // Group projects: multiple people pay, "Total Expenses" stays meaningful
+    text+='Total Expenses: '+c+totalExp+'\n';
+    if(totalPaid)text+='Total Paid: '+c+totalPaid+'\n';
     const parts=p.participants;
     const paidMap={};const owesMap={};
     parts.forEach(n=>{paidMap[n]=0;owesMap[n]=0});
@@ -2812,8 +2943,17 @@ function showShareSummary(){
     text+='\n👥 Settle Up:\n';
     if(transfers.length===0)text+='✅ All settled!\n';
     else transfers.forEach(t=>{text+='💸 '+t.from+' → '+t.to+': '+c+rd2(t.amount)+'\n'});
+  }else{
+    // Solo project: user is the one paying, so "Paid" + "Remaining" reads naturally
+    text+='Paid: '+c+totalExp+'\n';
+    if(p.budget){
+      const remaining=rd2(p.budget-totalExp);
+      if(remaining>0)text+='Remaining Balance to Pay: '+c+remaining+'\n';
+      else if(remaining<0)text+='Over Budget by: '+c+rd2(Math.abs(remaining))+'\n';
+      else text+='✅ Budget fully used\n';
+    }
   }
-  text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
+  text+='\n_Tracked with Tally_ 📲\n_The simple balance tracker — try it free!_';
   const encoded=encodeURIComponent(text);
   window.open('https://wa.me/?text='+encoded,'_blank');
 }
@@ -3001,7 +3141,7 @@ function renderLendingDetail(){
       html+='</div>';
 
       // Per-person breakdown
-      html+='<details style="margin-top:4px;margin-bottom:12px"><summary style="font-size:11px;color:var(--text-muted);cursor:pointer;padding:6px 0;font-weight:600;letter-spacing:0.5px">Per-person breakdown</summary><div style="margin-top:4px">';
+      html+='<details style="margin-top:10px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden"><summary style="font-size:13px;color:var(--text);cursor:pointer;padding:13px 14px;font-weight:700;letter-spacing:0.3px;display:flex;align-items:center;justify-content:space-between;list-style:none"><span>👤 Per-person breakdown</span><span style="font-size:11px;color:var(--accent);font-weight:600">Tap to expand ›</span></summary><div style="padding:8px 10px 10px;background:var(--bg)">';
       [...shouldPay,...shouldReceive,...even].forEach(name=>{
         const bal=balances[name];
         let statusColor=bal<-0.01?'var(--red)':bal>0.01?'var(--green)':'var(--text-light)';
@@ -3026,7 +3166,7 @@ function renderLendingDetail(){
       if(h.type==='settlement'){
         return`<div style="display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--border)"><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div><div style="text-align:center;flex-shrink:0"><span style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.5px">✓ ${esc(h.note||'Settlement')}</span><span style="display:block;font-size:11px;color:var(--text-muted);margin-top:2px">${formatDate(h.date)}</span></div><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div></div>`;
       }
-      return`<div class="history-row" onclick="showLendingEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge-earn"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(h.note):''}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt" style="color:var(--text);font-weight:700">${c}${rd2(h.amount)}</span></div>`;
+      return`<div class="history-row" onclick="showLendingEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge-earn"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(normalizeNote(h.note)):''}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt" style="color:var(--text);font-weight:700">${c}${rd2(h.amount)}</span></div>`;
     }).join('');
   }
 
@@ -3177,22 +3317,17 @@ function showActivityShareSummary(){
   const pay=isPay(p);
   const bal=p.balance||0;
   const abs=rd2(Math.abs(bal));
-  let text='📊 *Tally* — '+p.name+'\n';
-  const currentHist=getEntriesSinceLastSettlement(p);
-  const totalCharges=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
-  const totalPayments=rd2(currentHist.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
-  text+='Total Charges: '+c+totalCharges+'\n';
-  text+='Total Payments: '+c+totalPayments+'\n';
+  let text='Hi there, I\'m using the app Tally to track our balance. Below is the balance status:\n\n';
+  text+='📲 *Tally* — '+p.name+'\n';
   const payer=payerName(p),receiver=receiverName(p);
   if(bal===0)text+='\n✅ All settled!\n';
   else if(bal>0){
     // Outstanding balance: payer still owes the receiver.
-    const emoji=pay?'🔴':'🟢';
-    text+='\n'+emoji+' '+payer+' to pay '+receiver+': '+c+abs+'\n';
+    text+='\n💰 '+payer+' to pay '+receiver+': '+c+abs+'\n';
   }else{
-    text+='\n🟢 '+payer+' paid '+c+abs+' in advance\n';
+    text+='\n💰 '+payer+' paid '+c+abs+' in advance\n';
   }
-  text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
+  text+='\n_Tracked with Tally_ 📲\n_The simple balance tracker — try it free!_';
   window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
 }
 
@@ -3275,7 +3410,10 @@ function doExportPDF(){
     return'<tr><td>'+date+'</td><td>'+type+'</td><td>'+note+comment+'</td><td style="text-align:right">'+amt+'</td></tr>';
   }).join('');
 
-  const businessName=settings.name||'';
+  // Prefer the longer "Display name for exports" if the user set one;
+  // otherwise fall back to their first name. PDFs benefit from a more
+  // formal label than "Rachel" alone, but we never want to print "" either.
+  const businessName=(settings.exportName&&settings.exportName.trim())||settings.name||'';
   // Inline SVG logo — same mark used on the home screen, kept as data so
   // the PDF prints standalone without needing network access.
   const logoSvg=`<svg width="36" height="36" viewBox="0 0 48 48" style="flex-shrink:0;vertical-align:middle"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(7.5,8)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>`;
@@ -3333,6 +3471,7 @@ function completeWelcome(){
   document.getElementById('welcomeView').style.display='none';
   document.getElementById('homeView').classList.add('active');
   renderHome();startHomeTick();
+  updateSyncBadge();
   showToast('Welcome, '+name+'!');
 }
 
