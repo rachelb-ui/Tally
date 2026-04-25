@@ -275,7 +275,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
 <!-- WELCOME -->
 <div class="view" id="welcomeView" style="display:none">
   <div style="text-align:center;padding:60px 20px 40px">
-    <svg width="64" height="64" viewBox="0 0 48 48" style="margin-bottom:16px"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>
+    <svg width="64" height="64" viewBox="0 0 48 48" style="margin-bottom:16px"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(7.5,8)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>
     <h1 style="font-family:var(--font-display);font-size:32px;color:var(--text);margin-bottom:4px">Welcome to Tally</h1>
     <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:36px">Track balances across all your activities.<br>Let's start with your name.</p>
     <div class="form-group" style="text-align:left;max-width:320px;margin:0 auto">
@@ -292,7 +292,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <div class="home-header">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div class="home-logo"><svg width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg><span class="home-logo-text">Tally</span></div>
+        <div class="home-logo"><svg width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(7.5,8)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg><span class="home-logo-text">Tally</span></div>
         <p class="home-tagline">The simple balance tracker</p>
         <p class="home-sub" style="font-weight:700">Track balances<br>across all your activities</p>
       </div>
@@ -1216,26 +1216,51 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 function formatDate(iso){return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
 function formatElapsed(ms,html){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;const hm=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');const ss=String(sec).padStart(2,'0');if(html)return hm+'<span style="font-size:0.5em;opacity:0.6">:'+ss+'</span>';return hm+':'+ss}
 function formatHours(ms){return Math.round((ms/(1000*60*60))*100)/100}
+// Human-readable duration for note/log entries. Always shows whole units:
+//   "45min", "2hrs", "1hr 30min" — never "0.6hrs" or "1.3hrs".
+// Accepts total elapsed milliseconds OR a {hrs, mins} object.
+function formatDuration(input){
+  let totalMin;
+  if(typeof input==='number')totalMin=Math.round(input/(1000*60));
+  else totalMin=Math.round((input.hrs||0)*60+(input.mins||0));
+  if(totalMin<=0)return'0min';
+  const h=Math.floor(totalMin/60);
+  const m=totalMin%60;
+  if(h===0)return m+'min';
+  if(m===0)return h+'hr'+(h!==1?'s':'');
+  return h+'hr'+(h!==1?'s':'')+' '+m+'min';
+}
 function rd2(n){return Math.round(n*100)/100}
 
 // Direction-aware helpers
 function isPay(p){return p.direction!=='earn'}
 
 // ===== NAME HELPERS =====
-// Returns the user's name (from settings) and the counterparty name for an activity
+// myName / otherName are pure identity helpers.
+// For payment direction, USE payerName(p) AND receiverName(p) — these are
+// the single source of truth for who is paying whom in any given activity.
+// Defining them in one place means we can never accidentally swap the
+// labels across the dozens of buttons, summary lines, and share strings.
+//
+//   pay activity  (I pay them):    payer = me,    receiver = them
+//   earn activity (they pay me):   payer = them,  receiver = me
 function myName(){return settings.name||'You'}
 function otherName(p){
   if(!p)return'Other';
   if(!isPay(p))return p.counterparty||p.name||'Client';
   return p.counterparty||p.name||'Provider';
 }
+function payerName(p){return isPay(p)?myName():otherName(p)}
+function receiverName(p){return isPay(p)?otherName(p):myName()}
 function balLabel(p){
   const bal=p.balance||0;
-  const me=myName(),them=otherName(p);
   if(p.type==='project'){return bal===0?'No expenses':'Total Spent'}
   if(bal===0)return'All settled';
-  if(isPay(p))return bal>0?me+' to pay '+them:me+' paid in advance';
-  return bal>0?them+' to pay '+me:them+' paid in advance';
+  // bal > 0 means the payer still owes money to the receiver.
+  // bal < 0 means the payer has paid in advance.
+  const payer=payerName(p),receiver=receiverName(p);
+  if(bal>0)return payer+' to pay '+receiver;
+  return payer+' paid in advance';
 }
 function balColorClass(p){
   const bal=p.balance||0;
@@ -1366,7 +1391,7 @@ function renderProjectCard(p){
   const tl=p.type==='fixed'?`${cur(p)}${p.rate}/session`:p.type==='daily'?`${cur(p)}${p.rate}/day`:p.type==='hourly'?`${cur(p)}${p.rate}/hr`:p.type==='customrate'?`${cur(p)}${p.customRateAmt}/${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='lending'?`Lending · ${(p.participants||[]).length} people`:'';
   const dir='';
   const ht=!!timers[p.id],tb=ht?'<div class="project-timer-badge"><span class="pulse-dot"></span>Timer running</div>':'';
-  const dirLabel=(p.type==='project'||p.type==='group'||p.type==='lending')?'':(isPay(p)?' · '+myName()+' pays '+otherName(p):' · '+otherName(p)+' pays '+myName());
+  const dirLabel=(p.type==='project'||p.type==='group'||p.type==='lending')?'':' · '+payerName(p)+' pays '+receiverName(p);
   return`<div class="project-card ${ht?'has-timer':''}" onclick="openProject('${p.id}')"><div class="project-info"><div class="project-name">${dir}${esc(p.name)}</div><div class="project-meta">${typePrefix}${tl}${dirLabel}</div>${tb}</div><span class="project-balance ${cls}">${cur(p)}${displayAmt}</span><span class="project-arrow">›</span></div>`;
 }
 
@@ -1873,7 +1898,8 @@ function renderDetail(){
   document.getElementById('dBalUnits').textContent=unitsText;
 
   document.getElementById('dAddLabel').textContent=p.type==='project'?'Add Expense':'Add Session';
-  document.getElementById('dPayLabel').textContent=pay?esc(otherName(p))+' Paid':esc(otherName(p))+' Paid';
+  // Payment button label = name of the PAYER, derived from payerName().
+  document.getElementById('dPayLabel').textContent=payerName(p)+' Paid';
   document.getElementById('chargeInput').innerHTML='';
   document.getElementById('payInput').innerHTML='';
 
@@ -1912,10 +1938,9 @@ function calcTimeCost(p,ms){
   return 0;
 }
 function calcTimeLabel(p,ms){
-  const mins=ms/(1000*60);
-  const hrsVal=Math.round(mins/60*100)/100;
-  if(p.type==='hourly')return hrsVal+'hrs × '+cur(p)+p.rate;
-  if(p.type==='customrate'){const unit=p.customRateUnit||'min';if(unit==='hr')return rd2(mins/60)+'hrs × '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr';return Math.round(mins)+'min × '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
+  const dur=formatDuration(ms);
+  if(p.type==='hourly')return dur+' × '+cur(p)+p.rate;
+  if(p.type==='customrate'){const unit=p.customRateUnit||'min';if(unit==='hr')return dur+' × '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr';return dur+' × '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
   return '';
 }
 function renderTimerWidget(p){
@@ -1941,12 +1966,12 @@ function endTimer(){
   const p=getProject(currentProjectId);if(!p||!timers[p.id])return;
   const elapsed=Date.now()-timers[p.id];
   const amount=rd2(calcTimeCost(p,elapsed));
-  const mins=Math.round(elapsed/(1000*60));
   const unit=p.customRateUnit||'min';
+  const dur=formatDuration(elapsed);
   let noteText;
-  if(p.type==='hourly')noteText=rd2(formatHours(elapsed))+'hrs @ '+cur(p)+p.rate+' (timed)';
-  else if(unit==='hr')noteText=rd2(mins/60)+'hrs @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr (timed)';
-  else noteText=mins+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min (timed)';
+  if(p.type==='hourly')noteText=dur+' @ '+cur(p)+p.rate+' (timed)';
+  else if(unit==='hr')noteText=dur+' @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr (timed)';
+  else noteText=dur+' @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min (timed)';
   const entry={id:genId(),type:'charge',amount,date:new Date().toISOString(),note:noteText};
   // Append-only safety log — write BEFORE addEntry so the session survives
   // even if save/sync fails or a stale snapshot clobbers in-memory state.
@@ -2065,13 +2090,13 @@ function doEditEntry(entryId){
     if(isTimeBased&&document.getElementById('editHrs')){
       const hrs=parseFloat(document.getElementById('editHrs').value)||0;
       const mins=parseFloat(document.getElementById('editMins').value)||0;
+      const dur=formatDuration({hrs,mins});
       if(p.type==='hourly'){
-        const totalH=rd2(hrs+mins/60);
-        h.note=totalH+'hrs @ '+cur(p)+p.rate;
+        h.note=dur+' @ '+cur(p)+p.rate;
       }else if(p.type==='customrate'){
         const unit=p.customRateUnit||'min';
-        if(unit==='hr'){h.note=rd2(hrs+mins/60)+'hrs @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr'}
-        else{const totalMin=Math.round(hrs*60+mins);h.note=totalMin+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
+        if(unit==='hr')h.note=dur+' @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr';
+        else h.note=dur+' @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min';
       }
     }else if(newName){h.note=newName}
   }
@@ -2163,9 +2188,7 @@ function confirmCharge(){
     }
     // Build natural note text based on what was entered
     const rate=isHourly?cur(p)+p.rate:cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr';
-    if(hrs>0&&mins>0)noteText=hrs+'hr'+(hrs!==1?'s':'')+' '+mins+'min @ '+rate;
-    else if(hrs>0)noteText=hrs+'hr'+(hrs!==1?'s':'')+' @ '+rate;
-    else noteText=mins+'min @ '+rate;
+    noteText=formatDuration({hrs,mins})+' @ '+rate;
   }
   else if(p.type==='customrate'){const unit=p.customRateUnit||'min';const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;amount=rd2((val/p.customRateMin)*p.customRateAmt);noteText=val+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
   else{const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;amount=rd2(val);noteText='Expense'}
@@ -2364,12 +2387,12 @@ function renderProjectDetail(){
     actionsHtml+='<div style="margin-top:8px"><button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectSettleConfirm()"><span class="btn-icon">✓</span> Settle & Reset</button></div>';
   }else if(pay){
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
-    actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> '+esc(myName())+' Paid '+esc(otherName(p))+'</button>';
+    actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> '+esc(payerName(p))+' Paid '+esc(receiverName(p))+'</button>';
     actionsHtml+='</div>';
   }else{
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
-    actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> '+esc(otherName(p))+' Paid</button>';
+    actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> '+esc(payerName(p))+' Paid</button>';
     actionsHtml+='</div>';
   }
   document.getElementById('projActions').innerHTML=actionsHtml;
@@ -2595,7 +2618,7 @@ function showProjectPayInput(){
     <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projPayAmt" autofocus></div>
     ${catPicker}
     <div class="input-row"><input class="input-field" type="text" placeholder="Description (optional)" id="projPayNote" style="font-size:14px"></div>
-    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${pay?esc(myName())+' Paid':esc(otherName(p))+' Paid'}</button>
+    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${esc(payerName(p))} Paid</button>
   </div>`;
   document.getElementById('projPayAmt').focus();
 }
@@ -3160,12 +3183,14 @@ function showActivityShareSummary(){
   const totalPayments=rd2(currentHist.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
   text+='Total Charges: '+c+totalCharges+'\n';
   text+='Total Payments: '+c+totalPayments+'\n';
-  const me=myName(),them=otherName(p);
+  const payer=payerName(p),receiver=receiverName(p);
   if(bal===0)text+='\n✅ All settled!\n';
-  else if(pay){
-    text+=bal>0?'\n🔴 '+me+' to pay '+them+': '+c+abs+'\n':'\n🟢 '+me+' paid '+c+abs+' in advance\n';
+  else if(bal>0){
+    // Outstanding balance: payer still owes the receiver.
+    const emoji=pay?'🔴':'🟢';
+    text+='\n'+emoji+' '+payer+' to pay '+receiver+': '+c+abs+'\n';
   }else{
-    text+=bal>0?'\n🟢 '+them+' to pay '+me+': '+c+abs+'\n':'\n🟢 '+them+' paid '+c+abs+' in advance\n';
+    text+='\n🟢 '+payer+' paid '+c+abs+' in advance\n';
   }
   text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
   window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
@@ -3253,7 +3278,7 @@ function doExportPDF(){
   const businessName=settings.name||'';
   // Inline SVG logo — same mark used on the home screen, kept as data so
   // the PDF prints standalone without needing network access.
-  const logoSvg=`<svg width="36" height="36" viewBox="0 0 48 48" style="flex-shrink:0;vertical-align:middle"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>`;
+  const logoSvg=`<svg width="36" height="36" viewBox="0 0 48 48" style="flex-shrink:0;vertical-align:middle"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(7.5,8)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>`;
 
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(p.name)} — Export</title>
 <style>body{font-family:-apple-system,sans-serif;max-width:700px;margin:40px auto;color:#2c2418;padding:0 20px}
@@ -3261,6 +3286,7 @@ function doExportPDF(){
 .brand-text{display:flex;flex-direction:column;line-height:1.2}
 .brand-name{font-size:18px;font-weight:700;color:#2c2418}
 .brand-tally{font-size:11px;color:#9e9486;text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.brand-tagline{font-size:11px;color:#b8ada0;font-style:italic;margin-top:2px}
 h1{font-size:22px;margin-bottom:4px;margin-top:0}
 .sub{color:#9e9486;font-size:13px;margin-bottom:24px}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -3278,6 +3304,7 @@ td:last-child{text-align:right;font-weight:600;white-space:nowrap}
   <div class="brand-text">
     ${businessName?`<span class="brand-name">${esc(businessName)}</span>`:''}
     <span class="brand-tally">Tracked with Tally</span>
+    <span class="brand-tagline">The simple balance tracker</span>
   </div>
 </div>
 <h1>${esc(p.name)}</h1>
@@ -3286,7 +3313,7 @@ td:last-child{text-align:right;font-weight:600;white-space:nowrap}
 <div class="summary">
 <div class="summary-row"><span>Total Charges</span><span>+${c}${totalCharges}</span></div>
 <div class="summary-row"><span>Total Payments</span><span>-${c}${totalPayments}</span></div>
-<div class="summary-row total"><span>${net>=0?(pay?esc(myName())+' To Pay':''+esc(otherName(p))+' To Pay'):(pay?esc(myName())+' Paid in Advance':esc(otherName(p))+' Paid in Advance')}</span><span>${c}${rd2(Math.abs(net))}</span></div>
+<div class="summary-row total"><span>${net>=0?esc(payerName(p))+' To Pay':esc(payerName(p))+' Paid in Advance'}</span><span>${c}${rd2(Math.abs(net))}</span></div>
 </div>
 <script>window.print()<\/script>
 </body></html>`;
