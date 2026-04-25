@@ -195,6 +195,13 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
 .dialog-cancel:active,.dialog-confirm:active{transform:scale(.97)}
 .dialog-input{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:15px;background:var(--bg);color:var(--text);outline:none;margin-bottom:16px;text-align:left;font-family:var(--font);box-sizing:border-box;min-width:0}
 .dialog-input:focus{border-color:var(--accent)}
+/* type=date inputs need explicit overrides — WebKit sizes the inner
+   date-and-time-value field to its content and ignores width:100% on iOS,
+   which causes the input to overflow narrow dialogs. These rules force
+   the input to behave like a normal block-level field. */
+.dialog-input[type="date"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%}
+.dialog-input[type="date"]::-webkit-date-and-time-value{text-align:left;width:100%;min-width:0}
+.dialog-input[type="date"]::-webkit-calendar-picker-indicator{margin-left:auto;cursor:pointer}
 .dialog-actions-col{display:flex;flex-direction:column;gap:8px}
 .dialog-btn-save{width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--text);color:#fff;font-weight:600;font-size:14px}
 .dialog-btn-delete{width:100%;padding:13px;border-radius:var(--radius-sm);border:1.5px solid var(--red);background:transparent;color:var(--red);font-weight:600;font-size:14px}
@@ -235,12 +242,50 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 1.5s ease infinite}
+.sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;cursor:pointer}
+.sync-badge.synced{color:var(--green);background:#e8f5ed}.sync-badge.offline{color:var(--text-muted);background:var(--border)}
+.sync-badge.syncing{color:var(--accent);background:var(--accent-light)}
+.sync-badge.error{color:var(--red);background:#fde8e8}
+.sync-dot{width:6px;height:6px;border-radius:50%}
+.sync-badge.synced .sync-dot{background:var(--green)}.sync-badge.offline .sync-dot{background:var(--text-muted)}
+.sync-badge.syncing .sync-dot{background:var(--accent);animation:pulse 1s ease infinite}
+.sync-badge.error .sync-dot{background:var(--red)}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.auth-card-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);font-weight:700;margin-bottom:12px}
+.auth-user{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.auth-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--accent)}
+.auth-info{flex:1;min-width:0}
+.auth-name{font-size:14px;font-weight:600;color:var(--text)}
+.auth-email{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.auth-btn{width:100%;padding:12px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:transform .15s ease}
+.auth-btn:active{transform:scale(.97)}
+.auth-btn-google{background:#fff;border:1.5px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px}
+.auth-btn-signout{background:transparent;border:1.5px solid var(--border);color:var(--text-mid);margin-top:8px}
 </style>
+<!-- Firebase SDK (compat for single-file usage) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
 <div id="overlay"></div>
+
+<!-- WELCOME -->
+<div class="view" id="welcomeView" style="display:none">
+  <div style="text-align:center;padding:60px 20px 40px">
+    <svg width="64" height="64" viewBox="0 0 48 48" style="margin-bottom:16px"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>
+    <h1 style="font-family:var(--font-display);font-size:32px;color:var(--text);margin-bottom:4px">Welcome to Tally</h1>
+    <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:36px">Track balances across all your activities.<br>Let's start with your name.</p>
+    <div class="form-group" style="text-align:left;max-width:320px;margin:0 auto">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="welcomeName" placeholder="e.g. Rachel, John…" autofocus>
+      <p class="form-hint">This is how you'll appear in your activities and shared screens.</p>
+    </div>
+    <button class="form-submit" style="max-width:320px;margin-top:24px" onclick="completeWelcome()">Get Started</button>
+  </div>
+</div>
 
 <!-- HOME -->
 <div class="view active" id="homeView">
@@ -251,8 +296,10 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
         <p class="home-tagline">The simple balance tracker</p>
         <p class="home-sub" style="font-weight:700">Track balances<br>across all your activities</p>
       </div>
-      <button onclick="openSettings()" style="background:none;border:none;font-size:20px;color:var(--text-light);padding:6px;margin-top:2px">⚙</button>
-    </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="syncBadge" class="sync-badge offline" onclick="openSettings()" style="display:none"><span class="sync-dot"></span><span id="syncLabel">Offline</span></span>
+        <button onclick="openSettings()" style="background:none;border:none;font-size:20px;color:var(--text-light);padding:6px;margin-top:2px">⚙</button>
+      </div>
   </div>
   <div id="timersBanner"></div>
   <div id="pendingBanner"></div>
@@ -271,13 +318,18 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   </div>
   <div id="fDirSection">
   <div class="form-group">
-    <label class="form-label">I am…</label>
+    <label class="form-label">Direction</label>
     <div class="dir-toggle" id="fDirToggle">
       <button class="dir-option selected" onclick="setDirection('pay')">Paying for this</button>
       <button class="dir-option" onclick="setDirection('earn')">Earning from this</button>
     </div>
     <p class="form-hint" id="fDirHint">Track what you owe someone (e.g. tutor, trainer, contractor)</p>
   </div>
+  </div>
+  <div class="form-group" id="fCounterpartySection">
+    <label class="form-label" id="fCounterpartyLabel">Who are you paying?</label>
+    <input class="form-input" id="fCounterparty" placeholder="e.g. Rita, Coach Mike, ABC Studio…">
+    <p class="form-hint" id="fCounterpartyHint">The person or business on the other side of this activity.</p>
   </div>
   <div class="form-group">
     <label class="form-label">Category <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
@@ -334,34 +386,6 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
       <select class="form-select" id="fCustomRateUnit" style="width:auto;min-width:110px"><option value="min">minutes</option><option value="hr">hours</option></select>
     </div>
   </div>
-  <div id="fInvoiceSection">
-  <div class="form-group">
-    <label class="form-label">Invoicing <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <div class="toggle-row">
-      <div><div class="toggle-text">Enable Invoicing</div><div class="toggle-sub">Generate invoices from session history</div></div>
-      <button class="toggle-switch" id="fInvoiceToggle" onclick="toggleInvoiceSetting()"><div class="toggle-knob"></div></button>
-    </div>
-  </div>
-  <div id="fInvoiceFields" style="display:none">
-    <div class="form-group">
-      <label class="form-label">Client Name</label>
-      <input class="form-input" id="fClientName" placeholder="e.g. Sarah Johnson">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Client Email <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <input class="form-input" id="fClientEmail" type="email" placeholder="e.g. sarah@example.com">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Client Address <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <input class="form-input" id="fClientAddress" placeholder="e.g. 456 Oak Ave, City">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Invoice Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <textarea class="form-input" id="fInvoiceNotes" rows="3" style="resize:vertical;min-height:60px;font-size:14px" placeholder="e.g. Payment due within 15 days&#10;Late fee: 2% per month"></textarea>
-      <p class="form-hint">Specific to this client — shown at the bottom of their invoices.</p>
-    </div>
-  </div>
-  </div>
   <div id="fDaysSection">
   <div class="form-group">
     <label class="form-label">Scheduled Days <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
@@ -372,66 +396,13 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   <button class="form-submit" id="formSubmitBtn" onclick="saveProject()">Create Activity</button>
 </div>
 
-<!-- GROUP ACTIVITY FORM -->
-<div class="view" id="groupFormView">
-  <div class="page-header">
-    <button class="back-btn" onclick="goBack()">‹</button>
-    <span class="page-title" id="groupFormTitle">New Group Activity</span>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Name</label>
-    <input class="form-input" id="gfName" placeholder="e.g. Dinner Party, NYE Trip, Ski Weekend…">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Category <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <select class="form-select" id="gfGroup" onchange="onGfGroupSelectChange()"><option value="">No category</option></select>
-    <div id="gfNewGroupRow"></div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Currency</label>
-    <select class="form-select" id="gfCurrency">
-      <option value="">No currency</option>
-      <option value="$" selected>$ — USD</option>
-      <option value="€">€ — EUR</option>
-      <option value="£">£ — GBP</option>
-      <option value="AED">AED — Dirham</option>
-      <option value="SAR">SAR — Riyal</option>
-      <option value="CA$">CA$ — CAD</option>
-      <option value="A$">A$ — AUD</option>
-      <option value="¥">¥ — JPY / CNY</option>
-      <option value="CHF">CHF — Swiss Franc</option>
-      <option value="₹">₹ — INR</option>
-      <option value="₺">₺ — TRY</option>
-      <option value="R$">R$ — BRL</option>
-      <option value="kr">kr — SEK / NOK / DKK</option>
-      <option value="zł">zł — PLN</option>
-      <option value="₱">₱ — PHP</option>
-      <option value="฿">฿ — THB</option>
-      <option value="RM">RM — MYR</option>
-      <option value="S$">S$ — SGD</option>
-      <option value="R">R — ZAR</option>
-      <option value="KSh">KSh — KES</option>
-      <option value="₦">₦ — NGN</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Participants</label>
-    <div id="gfParticipantsList"></div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <input class="form-input" id="gfNewParticipant" placeholder="Name…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addGfParticipant()}">
-      <button style="padding:12px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-weight:600;font-size:13px;flex-shrink:0" onclick="addGfParticipant()">Add</button>
-    </div>
-    <p class="form-hint">Add everyone involved — including yourself</p>
-  </div>
-  <button class="form-submit" id="groupFormSubmitBtn" onclick="saveGroupActivity()">Create Group Activity</button>
-</div>
-
 <!-- PROJECT DETAIL -->
 <div class="view" id="projectDetailView">
   <div class="page-header">
     <button class="back-btn" onclick="goBack()">‹</button>
     <span class="page-title" id="projDetailTitle">—</span>
     <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
+    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Remove</button>
   </div>
   <div id="projBudgetSummary"></div>
   <div id="projCategoryRollups"></div>
@@ -454,19 +425,20 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <button class="back-btn" onclick="goBack()">‹</button>
     <span class="page-title" id="detailTitle">—</span>
     <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
-    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Archive</button>
+    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Remove</button>
   </div>
   <p class="detail-type" id="detailType"></p>
   <div class="balance-card" style="margin-top:16px">
     <span class="balance-label" id="dBalLabel">All settled</span>
     <span class="balance-amount balance-zero" id="dBalAmt">$0</span>
+    <span style="font-size:12px;color:var(--text-muted);margin-top:6px" id="dBalUnits"></span>
   </div>
   <div class="detail-actions">
     <button class="detail-btn btn-add-session" onclick="showAddCharge()">
       <span class="btn-icon">＋</span> <span id="dAddLabel">Add Session</span>
     </button>
     <button class="detail-btn btn-add-payment" onclick="showPayInput()">
-      <span class="btn-icon">$</span> <span id="dPayLabel">I Paid</span>
+      <span class="btn-icon">$</span> <span id="dPayLabel">Record Payment</span>
     </button>
   </div>
   <div id="chargeInput"></div>
@@ -481,36 +453,6 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     </div>
   </div>
   <div id="detailHistory"></div>
-</div>
-
-<!-- GROUP DETAIL -->
-<div class="view" id="groupDetailView">
-  <div class="page-header">
-    <button class="back-btn" onclick="goBack()">‹</button>
-    <span class="page-title" id="groupDetailTitle">—</span>
-    <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
-    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Archive</button>
-  </div>
-  <div id="groupSummary"></div>
-  <div style="display:flex;gap:10px;margin:16px 0">
-    <button class="detail-btn btn-add-session" style="flex:1" onclick="showGroupExpenseInput()">
-      <span class="btn-icon">＋</span> Add Expense
-    </button>
-    <button class="detail-btn" style="flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text)" onclick="showGroupPaymentInput()">
-      <span class="btn-icon">↔</span> Record Payment
-    </button>
-  </div>
-  <div style="margin-bottom:10px">
-    <button class="detail-btn btn-add-payment" style="width:100%" onclick="showSettleConfirm()">
-      <span class="btn-icon">✓</span> Settle & Reset
-    </button>
-  </div>
-  <div id="groupExpenseInput"></div>
-  <div class="history-header">
-    <span class="history-title">Expenses</span>
-    <button class="edit-project-btn" onclick="showGroupShareSummary()">Share</button>
-  </div>
-  <div id="groupHistory"></div>
 </div>
 
 <!-- PROJECT FORM -->
@@ -532,11 +474,16 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
   </div>
   <div id="pfDirSection">
   <div class="form-group">
-    <label class="form-label">I am…</label>
+    <label class="form-label">Direction</label>
     <div class="dir-toggle" id="pfDirToggle">
       <button class="dir-option selected" onclick="setPfDirection('pay')">Paying for this</button>
       <button class="dir-option" onclick="setPfDirection('earn')">Earning from this</button>
     </div>
+  </div>
+  <div class="form-group" id="pfCounterpartySection">
+    <label class="form-label" id="pfCounterpartyLabel">Who are you paying?</label>
+    <input class="form-input" id="pfCounterparty" placeholder="e.g. Contractor, Supplier…">
+    <p class="form-hint" id="pfCounterpartyHint">The person or business on the other side of this project.</p>
   </div>
   </div>
   <div id="pfParticipantsSection" style="display:none">
@@ -651,7 +598,7 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <button class="back-btn" onclick="goBack()">‹</button>
     <span class="page-title" id="lendingDetailTitle">—</span>
     <button style="background:none;border:none;font-size:13px;color:var(--accent);font-weight:600" onclick="editCurrentProject()">Edit</button>
-    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Archive</button>
+    <button style="background:none;border:none;font-size:13px;color:var(--text-muted);font-weight:600" onclick="archiveCurrentProject()">Remove</button>
   </div>
   <div id="lendingSummary"></div>
   <div style="display:flex;gap:10px;margin:16px 0">
@@ -676,28 +623,32 @@ button{font-family:var(--font);cursor:pointer}input,select,textarea{font-family:
     <button class="back-btn" onclick="goBack()">‹</button>
     <span class="page-title">Settings</span>
   </div>
+  <div class="auth-card" id="authCard">
+    <div class="auth-card-title">Cloud Sync</div>
+    <div id="authContent"></div>
+  </div>
   <div class="form-group">
     <label class="form-label">Your Name / Business Name</label>
     <input class="form-input" id="sName" placeholder="e.g. John Smith or Smith Tutoring LLC">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Email <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional, shown on invoices)</span></label>
-    <input class="form-input" id="sEmail" type="email" placeholder="e.g. john@example.com">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Phone <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <input class="form-input" id="sPhone" type="tel" placeholder="e.g. +1 555 123 4567">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Address <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <input class="form-input" id="sAddress" placeholder="e.g. 123 Main St, City">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Additional Invoice Info <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <textarea class="form-input" id="sInvoiceInfo" rows="4" style="resize:vertical;min-height:80px;font-size:14px" placeholder="Anything else to show on invoices, e.g.&#10;Tax ID: 123456789&#10;Bank: IBAN XX1234...&#10;Payment Terms: Net 30 days"></textarea>
-    <p class="form-hint">This appears on every invoice you generate. Add tax numbers, bank details, payment terms — whatever your business needs.</p>
+    <p class="form-hint">Shown at the top of PDF exports.</p>
   </div>
   <button class="form-submit" onclick="saveSettings()">Save Settings</button>
+  <div style="margin-top:32px;padding-top:24px;border-top:1.5px solid var(--border)">
+    <div class="form-label" style="margin-bottom:12px">Backup &amp; Restore</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Save a copy of all your data to a file, or restore from a previous backup.</p>
+    <button class="form-submit" style="background:var(--text);margin-bottom:10px" onclick="doBackupExport()">⬇ Export Backup</button>
+    <label class="form-submit" style="background:var(--accent);display:block;text-align:center;cursor:pointer;margin-bottom:0">
+      ⬆ Import Backup
+      <input type="file" accept=".json,.tally" id="backupFileInput" onchange="handleBackupImport(event)" style="display:none">
+    </label>
+    <p id="backupInfo" style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center"></p>
+  </div>
+  <div style="margin-top:32px;padding-top:24px;border-top:1.5px solid var(--border)">
+    <div class="form-label" style="margin-bottom:12px">Recover Lost Sessions</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">If a timed session ever goes missing after sync, recover it here. Tally keeps a private log of every session you end and can restore any that aren't in your history.</p>
+    <button class="form-submit" style="background:var(--text);margin-bottom:0" onclick="openRecoverSessions()">🛟 Check for Lost Sessions</button>
+    <p id="recoverInfo" style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:center"></p>
+  </div>
   <div style="margin-top:32px">
     <div class="form-label">Archived Activities</div>
     <div id="archivedList"></div>
@@ -713,16 +664,548 @@ let projects=[],groups=[],timers={},collapsedGroups={};
 let settings={name:'',email:'',phone:'',address:'',invoiceInfo:''};
 let currentProjectId=null,editingProjectId=null,selectedDays=[];
 let projSplitMode='equal';
-let invoiceEnabled=false,formDirection='pay',chargeOpen=false,payOpen=false,tickInterval=null;
+let formDirection='pay',chargeOpen=false,payOpen=false,tickInterval=null;
 let navStack=[];
 
-function load(){
-  try{const r=localStorage.getItem(STORAGE_KEY);if(r){const d=JSON.parse(r);projects=d.projects||d||[];groups=d.groups||[];collapsedGroups=d.collapsedGroups||{};if(Array.isArray(d))groups=[]}}catch(e){projects=[];groups=[]}
-  try{const r=localStorage.getItem(TIMER_KEY);if(r)timers=JSON.parse(r)||{}}catch(e){timers={}}
-  try{const r=localStorage.getItem(SETTINGS_KEY);if(r)settings=JSON.parse(r)||settings}catch(e){}
+// ===== FIREBASE INIT =====
+const firebaseConfig={
+  apiKey:"AIzaSyBDwBiBxA7EcZn4jqCl709mmUyouFEdKs4",
+  authDomain:"tally-app-c82c6.firebaseapp.com",
+  projectId:"tally-app-c82c6",
+  storageBucket:"tally-app-c82c6.firebasestorage.app",
+  messagingSenderId:"1024834850773",
+  appId:"1:1024834850773:web:1ae89250b397085c07375c"
+};
+
+const firebaseAvailable=typeof firebase!=='undefined'&&firebase.initializeApp;
+let auth=null,firestore=null;
+
+if(firebaseAvailable){
+  firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  firestore=firebase.firestore();
+  firestore.enablePersistence({synchronizeTabs:true}).catch(e=>{
+    if(e.code==='failed-precondition')console.log('Firestore persistence: multiple tabs open, only one can enable.');
+    else if(e.code==='unimplemented')console.log('Firestore persistence: browser does not support it.');
+  });
+}else{
+  console.warn('Firebase SDK not loaded — running in local-only mode');
 }
-function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({projects,groups,collapsedGroups}))}catch(e){}}
-function saveTimers(){try{localStorage.setItem(TIMER_KEY,JSON.stringify(timers))}catch(e){}}
+
+let currentUser=null;
+let syncStatus='offline'; // 'offline','syncing','synced','error'
+let firestoreUnsubscribe=null;
+let isFirestoreLoaded=false;
+
+function updateSyncBadge(){
+  const badge=document.getElementById('syncBadge');
+  const label=document.getElementById('syncLabel');
+  if(!badge)return;
+  badge.className='sync-badge '+syncStatus;
+  badge.style.display='';
+  if(syncStatus==='synced')label.textContent='Synced';
+  else if(syncStatus==='syncing')label.textContent='Syncing…';
+  else if(syncStatus==='error')label.textContent='Sync error';
+  else{label.textContent='Local only';badge.className='sync-badge offline'}
+}
+
+function renderAuthCard(){
+  const el=document.getElementById('authContent');
+  if(!el)return;
+  if(!currentUser||currentUser.isAnonymous){
+    el.innerHTML=`
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:12px;line-height:1.5">Sign in with Google to sync your data across devices and keep it backed up in the cloud.</p>
+      <button class="auth-btn auth-btn-google" onclick="signInWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+      ${currentUser?`<p style="font-size:11px;color:var(--text-light);margin-top:8px;text-align:center">Currently using as guest — your data is saved locally</p>`:''}
+    `;
+  }else{
+    const name=currentUser.displayName||'';
+    const email=currentUser.email||'';
+    const initial=(name||email||'?')[0].toUpperCase();
+    el.innerHTML=`
+      <div class="auth-user">
+        ${currentUser.photoURL?`<img src="${esc(currentUser.photoURL)}" style="width:36px;height:36px;border-radius:50%">`:`<div class="auth-avatar">${initial}</div>`}
+        <div class="auth-info">
+          <div class="auth-name">${esc(name||'Signed In')}</div>
+          <div class="auth-email">${esc(email)}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;margin-bottom:8px">
+        <span class="sync-dot" style="width:8px;height:8px;border-radius:50%;background:${syncStatus==='synced'?'var(--green)':syncStatus==='syncing'?'var(--accent)':'var(--text-muted)'}"></span>
+        <span style="font-size:13px;font-weight:600;color:${syncStatus==='synced'?'var(--green)':syncStatus==='syncing'?'var(--accent)':'var(--text-mid)'}">${syncStatus==='synced'?'All data synced to cloud':syncStatus==='syncing'?'Syncing…':'Offline — changes saved locally'}</span>
+      </div>
+      <button class="auth-btn auth-btn-signout" onclick="signOutUser()">Sign Out</button>
+    `;
+  }
+}
+
+async function signInWithGoogle(){
+  if(!firebaseAvailable){showToast('Cloud sync not available offline');return}
+  try{
+    const provider=new firebase.auth.GoogleAuthProvider();
+    // If currently anonymous, link the account
+    if(currentUser&&currentUser.isAnonymous){
+      try{
+        await currentUser.linkWithPopup(provider);
+        showToast('Account linked! Your data is now synced.');
+      }catch(linkErr){
+        if(linkErr.code==='auth/credential-already-in-use'){
+          // Google account already exists — sign in to it and merge data
+          const cred=linkErr.credential;
+          const localProjects=JSON.parse(JSON.stringify(projects));
+          const localGroups=JSON.parse(JSON.stringify(groups));
+          const localSettings=JSON.parse(JSON.stringify(settings));
+          await auth.signInWithCredential(cred);
+          // After sign-in, merge local data with cloud data
+          await mergeLocalDataToCloud(localProjects,localGroups,localSettings);
+          showToast('Signed in! Data merged.');
+        }else throw linkErr;
+      }
+    }else{
+      await auth.signInWithPopup(provider);
+      showToast('Signed in with Google!');
+    }
+  }catch(e){
+    console.error('Sign in error:',e);
+    if(e.code!=='auth/popup-closed-by-user')showToast('Sign in failed — try again');
+  }
+}
+
+async function signOutUser(){
+  if(!firebaseAvailable)return;
+  try{
+    if(firestoreUnsubscribe){firestoreUnsubscribe();firestoreUnsubscribe=null}
+    await auth.signOut();
+    // After sign-out, sign in anonymously so app keeps working
+    await auth.signInAnonymously();
+    showToast('Signed out');
+  }catch(e){
+    console.error('Sign out error:',e);
+    showToast('Sign out failed');
+  }
+}
+
+async function mergeLocalDataToCloud(localProjects,localGroups,localSettings){
+  if(!currentUser||currentUser.isAnonymous)return;
+  const uid=currentUser.uid;
+  const docRef=firestore.collection('users').doc(uid);
+  const snap=await docRef.get();
+  const stamp=Date.now();
+  db.setLocalUpdatedAt(stamp);
+  if(snap.exists){
+    const cloud=snap.data();
+    const cloudProjects=cloud.projects||[];
+    const cloudGroups=cloud.groups||[];
+    // Merge: add local projects that don't exist in cloud (by id)
+    const cloudIds=new Set(cloudProjects.map(p=>p.id));
+    const merged=[...cloudProjects];
+    localProjects.forEach(p=>{if(!cloudIds.has(p.id))merged.push(p)});
+    // Merge groups (categories) the same way
+    const cloudGIds=new Set(cloudGroups.map(g=>g.id));
+    const mergedGroups=[...cloudGroups];
+    localGroups.forEach(g=>{if(!cloudGIds.has(g.id))mergedGroups.push(g)});
+    await docRef.set({
+      projects:merged,
+      groups:mergedGroups,
+      settings:cloud.settings||localSettings,
+      clientUpdatedAt:stamp,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  }else{
+    await docRef.set({
+      projects:localProjects,
+      groups:localGroups,
+      settings:localSettings,
+      clientUpdatedAt:stamp,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
+
+// Listen for auth state changes
+if(firebaseAvailable){
+  auth.onAuthStateChanged(async user=>{
+    currentUser=user;
+    renderAuthCard();
+    // Load the LOCAL layer (timers, collapsedGroups) on every auth change.
+    // This is the fix for the "timer disappears then reappears days later"
+    // bug: local state must be hydrated unconditionally, never gated on
+    // Firestore readiness.
+    db.loadLocal();
+    if(user&&!user.isAnonymous){
+      // Signed in — start Firestore sync. The synced layer will be loaded
+      // by the snapshot handler (or from offline cache if Firestore fails).
+      startFirestoreSync(user.uid);
+    }else if(user&&user.isAnonymous){
+      // Anonymous — synced layer comes from offline cache only.
+      syncStatus='offline';
+      updateSyncBadge();
+      if(firestoreUnsubscribe){firestoreUnsubscribe();firestoreUnsubscribe=null}
+      if(!isFirestoreLoaded){
+        db.loadSyncedFromLocalCache();
+        isFirestoreLoaded=true;
+        startApp();
+      }
+    }else{
+      // No user — sign in anonymously.
+      syncStatus='offline';
+      updateSyncBadge();
+      try{await auth.signInAnonymously()}catch(e){
+        console.error('Anonymous auth failed:',e);
+        if(!isFirestoreLoaded){
+          db.loadSyncedFromLocalCache();
+          isFirestoreLoaded=true;
+          startApp();
+        }
+      }
+    }
+  });
+}else{
+  // No Firebase — run in local-only mode (deferred until after db is defined)
+  syncStatus='offline';
+  isFirestoreLoaded=true;
+  window._localOnlyBoot=true;
+}
+
+
+
+function startFirestoreSync(uid){
+  syncStatus='syncing';
+  updateSyncBadge();
+  if(firestoreUnsubscribe)firestoreUnsubscribe();
+  const docRef=firestore.collection('users').doc(uid);
+  let firstLoad=true;
+  firestoreUnsubscribe=docRef.onSnapshot(snap=>{
+    if(snap.exists){
+      // GUARD 1: Ignore snapshots that reflect our own un-confirmed writes.
+      // Firestore fires the listener locally before the server confirms our
+      // push; without this guard, the echo can carry pre-write state and
+      // overwrite freshly saved data.
+      if(snap.metadata && snap.metadata.hasPendingWrites)return;
+      const data=snap.data();
+      // GUARD 2: Drop snapshots older than the last local save. cloudStamp
+      // is the clientUpdatedAt we wrote during the last push.
+      const cloudStamp=(data && typeof data.clientUpdatedAt==='number')?data.clientUpdatedAt:0;
+      const localStamp=db.getLocalUpdatedAt();
+      if(cloudStamp && localStamp && cloudStamp < localStamp){
+        // Cloud is behind. Re-push our local state and skip applying.
+        if(!isFirestoreLoaded){
+          db.loadSyncedFromLocalCache();
+          migrateData();
+          isFirestoreLoaded=true;
+          startApp();
+        }
+        db._pushSyncedToFirestore();
+        return;
+      }
+      // GUARD 3: After first load, ignore cache-only snapshots. The offline
+      // queue can replay stale data on reconnect.
+      if(isFirestoreLoaded && snap.metadata && snap.metadata.fromCache)return;
+      // Apply the snapshot to the SYNCED layer only. Local layer (timers,
+      // sessionLog, collapsedGroups, freshness stamps) is never touched here.
+      db.applyCloudSnapshot(data);
+      if(cloudStamp)db.setLocalUpdatedAt(cloudStamp);
+      migrateData();
+      syncStatus='synced';
+      updateSyncBadge();
+      if(!isFirestoreLoaded){
+        isFirestoreLoaded=true;
+        startApp();
+      }else{
+        refreshCurrentView();
+      }
+    }else if(firstLoad){
+      // No cloud document yet — push our local synced data up to seed it.
+      db.loadSyncedFromLocalCache();
+      migrateData();
+      const stamp=Date.now();
+      db.setLocalUpdatedAt(stamp);
+      docRef.set({
+        projects,groups,settings,
+        clientUpdatedAt:stamp,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }).then(()=>{syncStatus='synced';updateSyncBadge()})
+        .catch(e=>{console.error('Initial push failed:',e);syncStatus='error';updateSyncBadge()});
+      if(!isFirestoreLoaded){
+        isFirestoreLoaded=true;
+        startApp();
+      }
+    }
+    firstLoad=false;
+  },err=>{
+    console.error('Firestore listen error:',err);
+    syncStatus='error';
+    updateSyncBadge();
+    if(!isFirestoreLoaded){
+      db.loadSyncedFromLocalCache();
+      isFirestoreLoaded=true;
+      startApp();
+    }
+  });
+}
+
+function refreshCurrentView(){
+  const active=document.querySelector('.view.active');
+  if(!active)return;
+  if(active.id==='homeView'){renderHome();startHomeTick()}
+  else if(active.id==='detailView')renderDetail();
+  else if(active.id==='projectDetailView')renderProjectDetail();
+  else if(active.id==='lendingDetailView')renderLendingDetail();
+  else if(active.id==='settingsView'){renderArchivedList();renderAuthCard()}
+}
+
+// ===== DATA ACCESS LAYER =====
+// ARCHITECTURE: Two strictly independent layers.
+//
+//   LOCAL (device-only, never synced):
+//     - timers          — running timer state, keyed by project id
+//     - sessionLog      — append-only safety log of ended sessions
+//     - localUpdatedAt  — freshness stamp for sync conflict detection
+//     - collapsedGroups — UI state (which categories are collapsed)
+//
+//   SYNCED (cloud + offline cache):
+//     - projects        — the ledger
+//     - groups          — categories
+//     - settings        — user profile
+//
+// The two layers MUST NEVER touch each other's storage keys. Cloud snapshots
+// never mutate local state; local saves never trigger Firestore writes.
+// This separation is what prevents the "timer disappears then reappears"
+// class of bug — local state is hydrated unconditionally on every boot.
+
+// Storage keys (centralized so it's obvious what's local vs synced)
+const LOCAL_KEYS={
+  timers:TIMER_KEY,                  // 'ledger-timers'
+  sessionLog:'tally_session_log',
+  localUpdatedAt:'tally_local_updated',
+  collapsedGroups:'tally_collapsed_groups'
+};
+const SYNCED_KEYS={
+  data:STORAGE_KEY,                  // 'ledger-app-data'  (offline cache of cloud)
+  settings:SETTINGS_KEY              // 'ledger-settings'  (offline cache of cloud)
+};
+
+// Cap the session log so it can't grow without bound
+const SESSION_LOG_MAX=500;
+
+const db={
+  // ---------- LOCAL LAYER (device-only) ----------
+  loadLocal(){
+    // Always safe to call. Hydrates timers, sessionLog metadata, UI state.
+    // Never touches projects/groups/settings.
+    try{const r=localStorage.getItem(LOCAL_KEYS.timers);timers=r?(JSON.parse(r)||{}):{}}catch(e){timers={}}
+    try{const r=localStorage.getItem(LOCAL_KEYS.collapsedGroups);collapsedGroups=r?(JSON.parse(r)||{}):{}}catch(e){collapsedGroups={}}
+  },
+  saveTimers(){
+    try{localStorage.setItem(LOCAL_KEYS.timers,JSON.stringify(timers))}catch(e){}
+  },
+  saveCollapsedGroups(){
+    try{localStorage.setItem(LOCAL_KEYS.collapsedGroups,JSON.stringify(collapsedGroups))}catch(e){}
+  },
+  // Append-only safety log. Used by endTimer for recovery.
+  appendSessionLog(entry){
+    try{
+      let log=JSON.parse(localStorage.getItem(LOCAL_KEYS.sessionLog)||'[]');
+      log.push(entry);
+      // Bound the log so localStorage can't fill up. Drops oldest entries.
+      if(log.length>SESSION_LOG_MAX)log=log.slice(-SESSION_LOG_MAX);
+      localStorage.setItem(LOCAL_KEYS.sessionLog,JSON.stringify(log));
+    }catch(e){console.warn('Session log write failed',e)}
+  },
+  readSessionLog(){
+    try{return JSON.parse(localStorage.getItem(LOCAL_KEYS.sessionLog)||'[]')}catch(e){return[]}
+  },
+  // Freshness stamps for the sync conflict check
+  getLocalUpdatedAt(){
+    try{const v=localStorage.getItem(LOCAL_KEYS.localUpdatedAt);return v?parseInt(v,10):0}catch(e){return 0}
+  },
+  setLocalUpdatedAt(t){
+    try{localStorage.setItem(LOCAL_KEYS.localUpdatedAt,String(t))}catch(e){}
+  },
+
+  // ---------- SYNCED LAYER (cloud + offline cache) ----------
+  loadSyncedFromLocalCache(){
+    // Read the offline cache of synced data. Used only when Firestore is
+    // unavailable or before the first snapshot arrives.
+    try{
+      const r=localStorage.getItem(SYNCED_KEYS.data);
+      if(r){
+        const d=JSON.parse(r);
+        projects=d.projects||(Array.isArray(d)?d:[])||[];
+        groups=d.groups||[];
+      }
+    }catch(e){projects=[];groups=[]}
+    try{const r=localStorage.getItem(SYNCED_KEYS.settings);if(r)settings=JSON.parse(r)||settings}catch(e){}
+  },
+  // Persist the synced layer to BOTH the local offline cache AND Firestore.
+  // This is what every "save" call lands on after the local-vs-synced split.
+  persistSynced(){
+    this._cacheSyncedLocally();
+    this._pushSyncedToFirestore();
+  },
+  persistSettings(){
+    this._cacheSettingsLocally();
+    this._pushSyncedToFirestore();
+  },
+  _cacheSyncedLocally(){
+    try{localStorage.setItem(SYNCED_KEYS.data,JSON.stringify({projects,groups}))}catch(e){}
+  },
+  _cacheSettingsLocally(){
+    try{localStorage.setItem(SYNCED_KEYS.settings,JSON.stringify(settings))}catch(e){}
+  },
+  _pushSyncedToFirestore(){
+    if(!firebaseAvailable||!currentUser||currentUser.isAnonymous)return;
+    const uid=currentUser.uid;
+    const stamp=Date.now();
+    this.setLocalUpdatedAt(stamp);
+    firestore.collection('users').doc(uid).set({
+      projects,groups,settings,
+      clientUpdatedAt:stamp,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).then(()=>{
+      syncStatus='synced';updateSyncBadge();
+    }).catch(e=>{
+      console.error('Firestore write error:',e);
+      syncStatus='error';updateSyncBadge();
+    });
+  },
+  // Apply a Firestore snapshot to the synced layer in memory + offline cache.
+  // Caller is responsible for freshness checks (see startFirestoreSync).
+  applyCloudSnapshot(data){
+    projects=data.projects||[];
+    groups=data.groups||[];
+    if(data.settings)settings={...settings,...data.settings};
+    this._cacheSyncedLocally();
+    this._cacheSettingsLocally();
+  },
+
+  // ---------- PUBLIC API (compatibility shims for existing call sites) ----------
+  // Existing code calls db.saveAll(), db.saveProject(p), db.saveGroups(),
+  // db.saveSettings(), db.loadAll(). Map them to the new methods.
+  loadAll(){
+    // Local layer is loaded eagerly elsewhere. This handles the synced layer.
+    if(!currentUser||currentUser.isAnonymous||!isFirestoreLoaded){
+      this.loadSyncedFromLocalCache();
+    }
+    migrateData();
+  },
+  saveProject(p){
+    if(p)p.updatedAt=new Date().toISOString();
+    this.persistSynced();
+  },
+  saveAll(){this.persistSynced()},
+  saveGroups(){this.persistSynced()},
+  saveSettings(){this.persistSettings()},
+
+  // ---------- DEPRECATED (kept only to avoid breaking unknown call sites) ----------
+  // These should not be called from new code. Each routes to the correct layer.
+  _loadFromLocal(){this.loadLocal();this.loadSyncedFromLocalCache()},
+  _loadTimersFromLocal(){this.loadLocal()},
+  _persistToLocal(){this._cacheSyncedLocally()},
+  _persistSettingsLocal(){this._cacheSettingsLocally()},
+  _persistAll(){this.persistSynced()},
+  _pushToFirestore(){this._pushSyncedToFirestore()}
+};
+
+// Module-level helpers (keep names for compatibility with existing call sites)
+function getLocalUpdatedAt(){return db.getLocalUpdatedAt()}
+function setLocalUpdatedAt(t){db.setLocalUpdatedAt(t)}
+
+// Deferred local-only boot (when Firebase SDK isn't available)
+if(window._localOnlyBoot){
+  db.loadLocal();              // timers, collapsedGroups
+  db.loadSyncedFromLocalCache(); // projects, groups, settings (from cache)
+  migrateData();
+  startApp();
+  delete window._localOnlyBoot;
+}
+
+// ===== MIGRATION =====
+// Runs once on load — adds IDs to history entries that lack them,
+// adds createdAt to projects, removes stale p.balance (now computed).
+function migrateData(){
+  let changed=false;
+  projects.forEach(p=>{
+    if(!p.createdAt){p.createdAt=new Date().toISOString();changed=true}
+    (p.history||[]).forEach(h=>{
+      if(!h.id){h.id=genId();changed=true}
+      if(!h.createdAt){h.createdAt=h.date||new Date().toISOString();changed=true}
+    });
+  });
+  if(changed)db.saveAll();
+}
+
+// ===== COMPUTED BALANCE =====
+// Replaces the old p.balance field. Always derived from history.
+function calcBalance(p){
+  if(!p)return 0;
+  const hist=getEntriesSinceLastSettlement(p);
+  // Group activities (type==='group') use calcGroupSettlement separately
+  // Lending circles use calcLendingSettlement separately
+  // For group/lending, p.balance is informational (total spent); computed here too
+  if(p.type==='group'||p.type==='lending'){
+    // For these types, balance = total of all charges/expenses/transfers
+    return rd2(hist.reduce((s,h)=>{
+      if(h.type==='charge'||h.type==='expense'||h.type==='transfer')return s+h.amount;
+      return s;
+    },0));
+  }
+  // For activities and projects: balance = charges - payments
+  return rd2(hist.reduce((s,h)=>{
+    if(h.type==='charge')return s+h.amount;
+    if(h.type==='payment')return s-h.amount;
+    return s;
+  },0));
+}
+
+// Backward-compat shim: anything that reads p.balance still works.
+// But we no longer manually increment it — it's always recomputed on render.
+function syncBalance(p){if(p)p.balance=calcBalance(p)}
+
+// ===== ENTRY HELPERS =====
+// Find a history entry by its ID (not array index)
+function findEntry(p,entryId){
+  if(!p||!p.history)return{entry:null,index:-1};
+  const index=p.history.findIndex(h=>h.id===entryId);
+  return{entry:index>=0?p.history[index]:null,index};
+}
+// Add a new history entry with auto-generated ID and metadata
+function addEntry(p,entry){
+  if(!entry.id)entry.id=genId();
+  if(!entry.createdAt)entry.createdAt=new Date().toISOString();
+  entry.updatedAt=new Date().toISOString();
+  p.history=p.history||[];
+  p.history.unshift(entry);
+  syncBalance(p);
+  db.saveProject(p);
+}
+// Update an existing entry by ID
+function updateEntry(p,entryId,updates){
+  const{entry}=findEntry(p,entryId);
+  if(!entry)return false;
+  Object.assign(entry,updates,{updatedAt:new Date().toISOString()});
+  syncBalance(p);
+  db.saveProject(p);
+  return true;
+}
+// Delete an entry by ID
+function deleteEntry(p,entryId){
+  const{index}=findEntry(p,entryId);
+  if(index<0)return false;
+  p.history.splice(index,1);
+  syncBalance(p);
+  db.saveProject(p);
+  return true;
+}
+
+// Legacy compatibility wrappers
+function load(){db.loadAll()}
+function save(){db.saveAll()}
+function saveTimers(){db.saveTimers()}
+
 function getProject(id){return projects.find(p=>p.id===id)}
 function getGroup(id){return groups.find(g=>g.id===id)}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
@@ -736,12 +1219,22 @@ function rd2(n){return Math.round(n*100)/100}
 
 // Direction-aware helpers
 function isPay(p){return p.direction!=='earn'}
+
+// ===== NAME HELPERS =====
+// Returns the user's name (from settings) and the counterparty name for an activity
+function myName(){return settings.name||'You'}
+function otherName(p){
+  if(!p)return'Other';
+  if(!isPay(p))return p.counterparty||p.name||'Client';
+  return p.counterparty||p.name||'Provider';
+}
 function balLabel(p){
   const bal=p.balance||0;
+  const me=myName(),them=otherName(p);
   if(p.type==='project'){return bal===0?'No expenses':'Total Spent'}
   if(bal===0)return'All settled';
-  if(isPay(p))return bal>0?'You owe':'Credit (paid ahead)';
-  return bal>0?'They owe you':'Overpaid';
+  if(isPay(p))return bal>0?me+' to pay '+them:me+' paid in advance';
+  return bal>0?them+' to pay '+me:them+' paid in advance';
 }
 function balColorClass(p){
   const bal=p.balance||0;
@@ -759,7 +1252,7 @@ function cardBalClass(p){
 }
 
 function showView(id){const cur=document.querySelector('.view.active');if(cur&&cur.id!==id)navStack.push(cur.id);document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function goBack(){chargeOpen=false;payOpen=false;stopTick();if(navStack.length>0){const prev=navStack.pop();document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(prev).classList.add('active');if(prev==='homeView'){renderHome();startHomeTick()}else if(prev==='groupDetailView'){renderGroupDetail()}else if(prev==='lendingDetailView'){renderLendingDetail()}else if(prev==='projectDetailView'){renderProjectDetail()}else if(prev==='detailView'){renderDetail();const p=getProject(currentProjectId);if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[currentProjectId])startTick()}}else{goHome()}}
+function goBack(){chargeOpen=false;payOpen=false;stopTick();if(navStack.length>0){const prev=navStack.pop();document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(prev).classList.add('active');if(prev==='homeView'){renderHome();startHomeTick()}else if(prev==='lendingDetailView'){renderLendingDetail()}else if(prev==='projectDetailView'){renderProjectDetail()}else if(prev==='detailView'){renderDetail();const p=getProject(currentProjectId);if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[currentProjectId])startTick()}}else{goHome()}}
 function goHome(){chargeOpen=false;payOpen=false;stopTick();navStack=[];document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('homeView').classList.add('active');renderHome();startHomeTick()}
 
 function startTick(){stopTick();tickInterval=setInterval(()=>{const p=getProject(currentProjectId);if(p&&timers[p.id])updateTimerDisplay(p)},1000)}
@@ -769,12 +1262,23 @@ function stopTick(){if(tickInterval){clearInterval(tickInterval);tickInterval=nu
 // ===== HOME =====
 function renderHome(){renderTimersBanner();renderPending();renderProjects()}
 
+// Threshold past which a running timer is considered "stale" (likely
+// forgotten on a closed tab). 24 hours. We don't auto-end — we just warn.
+const STALE_TIMER_MS=24*60*60*1000;
+
 function renderTimersBanner(){
   const el=document.getElementById('timersBanner');
   const active=Object.keys(timers).filter(id=>getProject(id));
   if(!active.length){el.innerHTML='';return}
   const now=Date.now();
-  el.innerHTML=`<div class="timers-banner"><div class="timers-title"><span class="pulse-dot"></span> Active Timers</div>${active.map(id=>{const p=getProject(id);return`<div class="timer-home-item" onclick="openProject('${id}')"><span class="timer-home-name">${esc(p.name)}</span><span class="timer-home-elapsed">${formatElapsed(now-timers[id])} ›</span></div>`}).join('')}</div>`;
+  const items=active.map(id=>{
+    const p=getProject(id);
+    const elapsed=now-timers[id];
+    const isStale=elapsed>STALE_TIMER_MS;
+    const staleHint=isStale?` <span style="color:var(--red);font-size:11px;font-weight:600;margin-left:6px">⚠ over ${Math.floor(elapsed/(60*60*1000))}h — still running?</span>`:'';
+    return`<div class="timer-home-item" onclick="openProject('${id}')"><span class="timer-home-name">${esc(p.name)}${staleHint}</span><span class="timer-home-elapsed">${formatElapsed(elapsed)} ›</span></div>`;
+  }).join('');
+  el.innerHTML=`<div class="timers-banner"><div class="timers-title"><span class="pulse-dot"></span> Active Timers</div>${items}</div>`;
 }
 
 function renderPending(){
@@ -793,15 +1297,14 @@ function renderPending(){
 function quickLog(id){
   const p=getProject(id);if(!p)return;
   if(p.type==='fixed'||p.type==='daily'){
-    p.balance=(p.balance||0)+p.rate;p.history=p.history||[];
-    p.history.unshift({type:'charge',amount:p.rate,date:new Date().toISOString(),note:DAY_FULL[new Date().getDay()]+' session'});
-    save();renderHome();showToast(cur(p)+p.rate+' added to '+p.name);
+    addEntry(p,{type:'charge',amount:p.rate,date:new Date().toISOString(),note:DAY_FULL[new Date().getDay()]+' session'});
+    renderHome();showToast(cur(p)+p.rate+' added to '+p.name);
   }else{openProject(id);showAddCharge()}
 }
 function quickSkip(id){
-  const p=getProject(id);if(!p)return;p.history=p.history||[];
-  p.history.unshift({type:'skipped',amount:0,date:new Date().toISOString(),note:DAY_FULL[new Date().getDay()]+' skipped'});
-  save();renderHome();showToast(`${p.name} skipped`);
+  const p=getProject(id);if(!p)return;
+  addEntry(p,{type:'skipped',amount:0,date:new Date().toISOString(),note:DAY_FULL[new Date().getDay()]+' skipped'});
+  renderHome();showToast(`${p.name} skipped`);
 }
 
 function getLastActivityDate(p){
@@ -845,16 +1348,28 @@ function renderProjects(){
 }
 
 function renderProjectCard(p){
-  const bal=p.balance||0,abs=Math.round(Math.abs(bal)),cls=cardBalClass(p);
-  const typePrefix=p.type==='fixed'||p.type==='daily'||p.type==='hourly'||p.type==='customrate'?'Activity · ':p.type==='project'?(p.participants&&p.participants.length?'Group Project · ':'Project'):p.type==='group'?(p.participants&&p.participants.length?'Group Project · ':'Project'):'Lending · ';
-  const tl=p.type==='fixed'?`${cur(p)}${p.rate}/session`:p.type==='daily'?`${cur(p)}${p.rate}/day`:p.type==='hourly'?`${cur(p)}${p.rate}/hr`:p.type==='customrate'?`${cur(p)}${p.customRateAmt}/${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='group'?`${(p.participants||[]).length} people`:p.type==='lending'?`Lending · ${(p.participants||[]).length} people`:'';
+  syncBalance(p);
+  let displayAmt,cls;
+  if(p.type==='project'||p.type==='group'){
+    // Show total expenses for current round only, not net of payments
+    const currentHist=getEntriesSinceLastSettlement(p);
+    const totalExp=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+    displayAmt=Math.round(totalExp);
+    cls=totalExp===0?'bal-zero':'bal-owe';
+  }else{
+    const bal=p.balance||0;
+    displayAmt=Math.round(Math.abs(bal));
+    cls=cardBalClass(p);
+  }
+  const typePrefix=p.type==='fixed'||p.type==='daily'||p.type==='hourly'||p.type==='customrate'?'Activity · ':(p.type==='project'||p.type==='group')?(p.participants&&p.participants.length?'Project · '+p.participants.length+' people · ':'Project · '):'Lending · ';
+  const tl=p.type==='fixed'?`${cur(p)}${p.rate}/session`:p.type==='daily'?`${cur(p)}${p.rate}/day`:p.type==='hourly'?`${cur(p)}${p.rate}/hr`:p.type==='customrate'?`${cur(p)}${p.customRateAmt}/${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='lending'?`Lending · ${(p.participants||[]).length} people`:'';
   const dir='';
   const ht=!!timers[p.id],tb=ht?'<div class="project-timer-badge"><span class="pulse-dot"></span>Timer running</div>':'';
-  const dirLabel=(p.type==='project'||p.type==='group'||p.type==='lending')?'':(' · '+(isPay(p)?'I pay':'I earn'));
-  return`<div class="project-card ${ht?'has-timer':''}" onclick="openProject('${p.id}')"><div class="project-info"><div class="project-name">${dir}${esc(p.name)}</div><div class="project-meta">${typePrefix}${tl}${dirLabel}</div>${tb}</div><span class="project-balance ${cls}">${cur(p)}${abs}</span><span class="project-arrow">›</span></div>`;
+  const dirLabel=(p.type==='project'||p.type==='group'||p.type==='lending')?'':(isPay(p)?' · '+myName()+' pays '+otherName(p):' · '+otherName(p)+' pays '+myName());
+  return`<div class="project-card ${ht?'has-timer':''}" onclick="openProject('${p.id}')"><div class="project-info"><div class="project-name">${dir}${esc(p.name)}</div><div class="project-meta">${typePrefix}${tl}${dirLabel}</div>${tb}</div><span class="project-balance ${cls}">${cur(p)}${displayAmt}</span><span class="project-arrow">›</span></div>`;
 }
 
-function toggleGroup(gid){collapsedGroups[gid]=!collapsedGroups[gid];save();renderProjects()}
+function toggleGroup(gid){collapsedGroups[gid]=!collapsedGroups[gid];db.saveCollapsedGroups();renderProjects()}
 
 // ===== GROUPS =====
 function openNewGroup(){
@@ -868,7 +1383,7 @@ function editGroup(gid){
   setTimeout(()=>{const i=document.getElementById('editGroupName');if(i){i.focus();i.select()}},100);
 }
 function saveEditGroup(gid){const g=getGroup(gid);if(!g)return;const name=document.getElementById('editGroupName').value.trim();if(!name){showToast('Please enter a name');return}g.name=name;save();closeOverlay();renderHome();showToast('Category renamed')}
-function deleteGroup(gid){projects.forEach(p=>{if(p.groupId===gid)p.groupId=null});groups=groups.filter(g=>g.id!==gid);delete collapsedGroups[gid];save();closeOverlay();renderHome();showToast('Category deleted')}
+function deleteGroup(gid){projects.forEach(p=>{if(p.groupId===gid)p.groupId=null});groups=groups.filter(g=>g.id!==gid);delete collapsedGroups[gid];db.saveCollapsedGroups();save();closeOverlay();renderHome();showToast('Category deleted')}
 
 // ===== FORM =====
 function setDirection(dir){
@@ -877,8 +1392,9 @@ function setDirection(dir){
   btns[0].className='dir-option'+(dir==='pay'?' selected':'');
   btns[1].className='dir-option'+(dir==='earn'?' selected':'');
   document.getElementById('fDirHint').textContent=dir==='pay'?'Track what you owe someone (e.g. tutor, trainer, contractor)':'Track what someone owes you (e.g. your tutoring clients)';
-  document.getElementById('fInvoiceSection').style.display=dir==='earn'?'':'none';
-  if(dir==='pay'){invoiceEnabled=false;updateInvoiceToggle()}
+  document.getElementById('fCounterpartyLabel').textContent=dir==='pay'?'Who are you paying?':'Who is your client?';
+  document.getElementById('fCounterparty').placeholder=dir==='pay'?'e.g. Rita, Coach Mike, ABC Studio…':'e.g. Sarah Johnson, Alex…';
+  document.getElementById('fCounterpartyHint').textContent=dir==='pay'?'The person or business on the other side of this activity.':'The person you\'re providing services to.';
 }
 function populateGroupSelect(selectedGroupId){
   const sel=document.getElementById('fGroup');
@@ -910,6 +1426,9 @@ function setPfMode(mode){
 function setPfDirection(dir){
   pfDirection=dir;
   document.querySelectorAll('#pfDirToggle .dir-option').forEach((b,i)=>{b.classList.toggle('selected',i===(dir==='pay'?0:1))});
+  document.getElementById('pfCounterpartyLabel').textContent=dir==='pay'?'Who are you paying?':'Who is your client?';
+  document.getElementById('pfCounterparty').placeholder=dir==='pay'?'e.g. Contractor, Supplier…':'e.g. Client name…';
+  document.getElementById('pfCounterpartyHint').textContent=dir==='pay'?'The person or business on the other side of this project.':'The person you\'re providing services to.';
 }
 function renderPfParticipants(){
   const el=document.getElementById('pfParticipantsList');
@@ -945,6 +1464,7 @@ function openNewProjectForm(){
   document.getElementById('pfName').value='';
   document.getElementById('pfCurrency').value='$';
   document.getElementById('pfBudget').value='';
+  document.getElementById('pfCounterparty').value='';
   renderPfParticipants();
   setPfMode('solo');setPfDirection('pay');
   populatePfGroupSelect('');showView('projectFormView');
@@ -960,6 +1480,7 @@ function editProjectForm(id){
   document.getElementById('pfName').value=p.name;
   document.getElementById('pfCurrency').value=p.currency||'';
   document.getElementById('pfBudget').value=p.budget||'';
+  document.getElementById('pfCounterparty').value=p.counterparty||'';
   renderPfParticipants();
   setPfMode(pfMode);setPfDirection(pfDirection);
   populatePfGroupSelect(p.groupId||'');showView('projectFormView');
@@ -968,114 +1489,241 @@ function saveProjectForm(){
   const name=document.getElementById('pfName').value.trim();
   const currency=document.getElementById('pfCurrency').value;
   const groupId=document.getElementById('pfGroup').value;
+  const counterparty=document.getElementById('pfCounterparty').value.trim();
   if(!name){showToast('Please enter a name');return}
   if(pfMode==='group'&&pfParticipants.length<2){showToast('Add at least 2 participants');return}
   if(groupId==='__new__'){showToast('Please save the new category first');return}
   const budget=parseFloat(document.getElementById('pfBudget').value)||0;
   if(editingProjId){
     const p=getProject(editingProjId);
-    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.direction=pfMode==='group'?'pay':pfDirection;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
+    if(p){p.name=name;p.currency=currency;p.groupId=groupId||null;p.budget=budget;p.direction=pfMode==='group'?'pay':pfDirection;p.counterparty=counterparty;p.participants=pfMode==='group'?[...pfParticipants]:[];save();showToast('Project updated');currentProjectId=p.id;goBack()}
   }else{
-    const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,budget,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
+    const p={id:genId(),name,type:'project',currency,groupId:groupId||null,direction:pfMode==='group'?'pay':pfDirection,counterparty,budget,participants:pfMode==='group'?[...pfParticipants]:[],balance:0,history:[]};
     projects.push(p);save();showToast('Project created');goHome();
   }
 }
 
-// ===== GROUP ACTIVITY FORM =====
-let gfParticipants=[];
-let editingGroupId=null;
-function renderGfParticipants(){
-  const el=document.getElementById('gfParticipantsList');
-  if(!gfParticipants.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:8px 0">No participants added yet</p>';return}
-  el.innerHTML=gfParticipants.map((name,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px"><span style="font-size:14px;font-weight:600">${esc(name)}</span><button onclick="removeGfParticipant(${i})" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 4px;cursor:pointer">×</button></div>`).join('');
-}
-function addGfParticipant(){
-  const inp=document.getElementById('gfNewParticipant');
-  const name=inp.value.trim();
-  if(!name){showToast('Please enter a name');return}
-  if(gfParticipants.includes(name)){showToast('Already added');return}
-  gfParticipants.push(name);
-  inp.value='';renderGfParticipants();inp.focus();
-}
-function removeGfParticipant(i){gfParticipants.splice(i,1);renderGfParticipants()}
-function populateGfGroupSelect(selectedGroupId){
-  const sel=document.getElementById('gfGroup');
-  sel.innerHTML='<option value="">No category</option>'+groups.map(g=>`<option value="${g.id}" ${g.id===selectedGroupId?'selected':''}>${esc(g.name)}</option>`).join('')+'<option value="__new__">＋ Create new category…</option>';
-  document.getElementById('gfNewGroupRow').innerHTML='';
-}
-function onGfGroupSelectChange(){
-  const sel=document.getElementById('gfGroup');
-  if(sel.value==='__new__'){
-    document.getElementById('gfNewGroupRow').innerHTML=`<div class="new-group-row"><input class="new-group-input" id="gfInlineGroupName" placeholder="Category name…"><button class="new-group-save" onclick="saveGfInlineGroup()">Add</button></div>`;
-    setTimeout(()=>{const i=document.getElementById('gfInlineGroupName');if(i)i.focus()},50);
-  }else{document.getElementById('gfNewGroupRow').innerHTML=''}
-}
-function saveGfInlineGroup(){const name=document.getElementById('gfInlineGroupName').value.trim();if(!name){showToast('Please enter a name');return}const g={id:genId(),name};groups.push(g);save();populateGfGroupSelect(g.id);showToast('Category created')}
-
-function openNewGroupActivity(){
-  editingGroupId=null;gfParticipants=[];
-  document.getElementById('groupFormTitle').textContent='New Group Activity';
-  document.getElementById('groupFormSubmitBtn').textContent='Create Group Activity';
-  document.getElementById('gfName').value='';
-  document.getElementById('gfCurrency').value='$';
-  renderGfParticipants();populateGfGroupSelect('');showView('groupFormView');
-}
-function editGroupActivity(id){
-  const p=getProject(id);if(!p)return;
-  editingGroupId=p.id;gfParticipants=[...(p.participants||[])];
-  document.getElementById('groupFormTitle').textContent='Edit Group Activity';
-  document.getElementById('groupFormSubmitBtn').textContent='Save Changes';
-  document.getElementById('gfName').value=p.name;
-  document.getElementById('gfCurrency').value=p.currency||'';
-  renderGfParticipants();populateGfGroupSelect(p.groupId||'');showView('groupFormView');
-}
-function saveGroupActivity(){
-  const name=document.getElementById('gfName').value.trim();
-  const currency=document.getElementById('gfCurrency').value;
-  const groupId=document.getElementById('gfGroup').value;
-  if(!name){showToast('Please enter a name');return}
-  if(gfParticipants.length<2){showToast('Add at least 2 participants');return}
-  if(groupId==='__new__'){showToast('Please save the new group first');return}
-  if(editingGroupId){
-    const p=getProject(editingGroupId);
-    if(p){p.name=name;p.currency=currency;p.participants=[...gfParticipants];p.groupId=groupId||null;save();showToast('Group activity updated');currentProjectId=p.id;goBack()}
-  }else{
-    const p={id:genId(),name,type:'group',currency,participants:[...gfParticipants],groupId:groupId||null,direction:'pay',balance:0,history:[],createdAt:new Date().toISOString()};
-    projects.push(p);save();showToast('Group activity created');goHome();
-  }
-}
 
 // ===== SETTINGS =====
 function openSettings(){
   document.getElementById('sName').value=settings.name||'';
-  document.getElementById('sEmail').value=settings.email||'';
-  document.getElementById('sPhone').value=settings.phone||'';
-  document.getElementById('sAddress').value=settings.address||'';
-  document.getElementById('sInvoiceInfo').value=settings.invoiceInfo||'';
   renderArchivedList();
+  renderAuthCard();
   stopTick();showView('settingsView');
 }
 function saveSettings(){
   settings.name=document.getElementById('sName').value.trim();
-  settings.email=document.getElementById('sEmail').value.trim();
-  settings.phone=document.getElementById('sPhone').value.trim();
-  settings.address=document.getElementById('sAddress').value.trim();
-  settings.invoiceInfo=document.getElementById('sInvoiceInfo').value.trim();
-  try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}catch(e){}
+  // Clean up legacy fields if they exist on this device — they're no
+  // longer collected anywhere in the UI.
+  delete settings.email;
+  delete settings.phone;
+  delete settings.address;
+  delete settings.invoiceInfo;
+  db.saveSettings();
   showToast('Settings saved');goBack();
 }
 
-// ===== ARCHIVE =====
-function archiveCurrentProject(){
-  const p=getProject(currentProjectId);if(!p)return;
-  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
-    <p class="dialog-title">Archive "${esc(p.name)}"?</p>
-    <p class="dialog-text">This will hide it from the home screen. You can restore it anytime from Settings.</p>
+// ===== BACKUP & RESTORE =====
+function doBackupExport(){
+  const backup={
+    _tally_backup:true,
+    version:1,
+    exportedAt:new Date().toISOString(),
+    projects:projects,
+    groups:groups,
+    collapsedGroups:collapsedGroups,
+    settings:settings,
+    timers:timers
+  };
+  const json=JSON.stringify(backup,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().split('T')[0];
+  a.href=url;
+  a.download='tally-backup-'+date+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  const count=projects.length;
+  document.getElementById('backupInfo').textContent='Backup exported — '+count+' activit'+(count===1?'y':'ies')+' saved.';
+  showToast('Backup exported');
+}
+
+function handleBackupImport(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      // Validate it looks like a Tally backup
+      if(!data._tally_backup&&!Array.isArray(data.projects)){
+        showToast('Not a valid Tally backup file');return;
+      }
+      const count=(data.projects||[]).length;
+      const dateStr=data.exportedAt?new Date(data.exportedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
+      document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+        <p class="dialog-title">Restore Backup?</p>
+        <p class="dialog-text">This backup from <b>${esc(dateStr)}</b> contains <b>${count}</b> activit${count===1?'y':'ies'}.<br><br>⚠ This will <b>replace all current data</b>. This cannot be undone.</p>
+        <div class="dialog-btns">
+          <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
+          <button class="dialog-confirm" style="background:var(--red)" onclick="doRestoreBackup()">Replace &amp; Restore</button>
+        </div>
+      </div></div>`;
+      // Store parsed data temporarily for restore
+      window._pendingRestore=data;
+    }catch(err){
+      showToast('Could not read backup file');
+    }
+  };
+  reader.readAsText(file);
+  // Reset file input so same file can be selected again
+  e.target.value='';
+}
+
+function doRestoreBackup(){
+  const data=window._pendingRestore;
+  if(!data){closeOverlay();return}
+  projects=data.projects||[];
+  groups=data.groups||[];
+  collapsedGroups=data.collapsedGroups||{};
+  if(data.settings)settings={...settings,...data.settings};
+  if(data.timers)timers=data.timers;
+  // Persist synced layer (projects/groups/settings) AND local layer (timers, collapsedGroups)
+  db.saveAll();
+  db.saveTimers();
+  db.saveCollapsedGroups();
+  db.saveSettings();
+  migrateData();
+  delete window._pendingRestore;
+  closeOverlay();
+  const count=projects.length;
+  document.getElementById('backupInfo').textContent='Restored '+count+' activit'+(count===1?'y':'ies')+' from backup.';
+  showToast('Data restored from backup');
+  // Refresh settings form
+  openSettings();
+}
+
+// ===== SESSION RECOVERY =====
+// Scans the append-only safety log (tally_session_log) for any timer
+// session that isn't present in current history, and offers to restore them.
+// The log is written by endTimer BEFORE the entry hits projects/sync, so
+// even if a stale Firestore snapshot clobbers a session, the log survives.
+function findLostSessions(){
+  const log=db.readSessionLog();
+  if(!log.length)return[];
+  const lost=[];
+  log.forEach(s=>{
+    const p=getProject(s.projectId);
+    if(!p){
+      // Project was deleted — skip rather than resurrect
+      return;
+    }
+    const exists=(p.history||[]).some(h=>h.id===s.id);
+    if(!exists)lost.push(s);
+  });
+  return lost;
+}
+function openRecoverSessions(){
+  const lost=findLostSessions();
+  const info=document.getElementById('recoverInfo');
+  if(!lost.length){
+    if(info)info.textContent='No lost sessions found — your history matches the safety log.';
+    showToast('Nothing to recover');
+    return;
+  }
+  // Group by project name for the dialog
+  const byProject={};
+  lost.forEach(s=>{(byProject[s.projectName]=byProject[s.projectName]||[]).push(s)});
+  const lines=Object.keys(byProject).map(name=>{
+    const items=byProject[name];
+    const total=items.reduce((sum,s)=>sum+(s.amount||0),0);
+    return`<div style="padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <div style="font-size:14px;font-weight:600">${esc(name)}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${items.length} session${items.length===1?'':'s'} · ${rd2(total)} total</div>
+    </div>`;
+  }).join('');
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px">
+    <p class="dialog-title" style="text-align:center">Recover Lost Sessions?</p>
+    <p class="dialog-text">Found <b>${lost.length}</b> session${lost.length===1?'':'s'} in the safety log that ${lost.length===1?'is':'are'} missing from your history:</p>
+    <div style="margin-bottom:16px;max-height:240px;overflow-y:auto">${lines}</div>
     <div class="dialog-btns">
       <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
-      <button class="dialog-confirm" style="background:var(--text)" onclick="doArchive()">Archive</button>
+      <button class="dialog-confirm" onclick="doRecoverSessions()">Restore ${lost.length}</button>
     </div>
   </div></div>`;
+  // Stash for the confirm handler
+  window._pendingRecover=lost;
+}
+function doRecoverSessions(){
+  const lost=window._pendingRecover||[];
+  if(!lost.length){closeOverlay();return}
+  let restored=0;
+  lost.forEach(s=>{
+    const p=getProject(s.projectId);
+    if(!p)return;
+    p.history=p.history||[];
+    // Rebuild the entry from the log. Use the original id so re-runs are idempotent.
+    p.history.unshift({
+      id:s.id,
+      type:s.type||'charge',
+      amount:s.amount,
+      date:s.date,
+      note:s.note||'',
+      createdAt:s.date||new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
+      recovered:true
+    });
+    restored++;
+  });
+  if(restored)db.saveAll();
+  delete window._pendingRecover;
+  closeOverlay();
+  const info=document.getElementById('recoverInfo');
+  if(info)info.textContent='Restored '+restored+' session'+(restored===1?'':'s')+' from the safety log.';
+  showToast(restored+' session'+(restored===1?'':'s')+' recovered');
+}
+
+function archiveCurrentProject(){
+  const p=getProject(currentProjectId);if(!p)return;
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left">
+    <p class="dialog-title" style="text-align:center">Archive or Delete "${esc(p.name)}"?</p>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">📦 Archive</div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.45;margin:0">Hides it from the home screen but keeps all data. You can restore it anytime from Settings.</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px;color:var(--red)">🗑 Delete Permanently</div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.45;margin:0">Removes it and all its history forever. <b>This cannot be undone.</b> If you might want this data later, archive instead.</p>
+    </div>
+    <div class="dialog-btns" style="flex-direction:column;gap:8px">
+      <button class="dialog-confirm" style="background:var(--text);width:100%" onclick="doArchive()">📦 Archive</button>
+      <button class="dialog-confirm" style="background:var(--red);width:100%" onclick="confirmDeleteCurrentProject()">🗑 Delete Permanently</button>
+      <button class="dialog-cancel" style="width:100%" onclick="closeOverlay()">Cancel</button>
+    </div>
+  </div></div>`;
+}
+function confirmDeleteCurrentProject(){
+  const p=getProject(currentProjectId);if(!p)return;
+  // Second-step confirmation. Once you delete, history is unrecoverable
+  // (not even the session safety log can rebuild a deleted project's
+  // entries — they have no project to attach to).
+  const entries=(p.history||[]).length;
+  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
+    <p class="dialog-title">Delete "${esc(p.name)}" forever?</p>
+    <p class="dialog-text">You're about to permanently delete this ${p.type==='lending'?'lending circle':p.type==='group'||p.type==='project'?'project':'activity'} and ${entries===0?'its history':'<b>'+entries+' history entr'+(entries===1?'y':'ies')+'</b>'}.<br><br>This <b>cannot be undone</b>. There is no recovery.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="archiveCurrentProject()">Back</button>
+      <button class="dialog-confirm" style="background:var(--red)" onclick="doDeleteCurrentProject()">Yes, delete forever</button>
+    </div>
+  </div></div>`;
+}
+function doDeleteCurrentProject(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const name=p.name;
+  projects=projects.filter(x=>x.id!==p.id);
+  if(timers[p.id]){delete timers[p.id];saveTimers()}
+  save();closeOverlay();goHome();showToast(name+' deleted');
 }
 function doArchive(){
   const p=getProject(currentProjectId);if(!p)return;
@@ -1106,7 +1754,7 @@ function renderArchivedList(){
   const archived=projects.filter(p=>p.archived);
   if(!archived.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);padding:8px 0">No archived activities</p>';return}
   el.innerHTML=archived.map(p=>{
-    const typeLabel=p.type==='group'?'Group':p.type==='lending'?'Lending':p.type==='project'?'Project':'Activity';
+    const typeLabel=p.type==='group'?'Project':p.type==='lending'?'Lending':p.type==='project'?'Project':'Activity';
     return`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
       <div><div style="font-size:14px;font-weight:600">${esc(p.name)}</div><div style="font-size:11px;color:var(--text-muted)">${typeLabel}</div></div>
       <div style="display:flex;gap:8px">
@@ -1118,42 +1766,29 @@ function renderArchivedList(){
 }
 
 // ===== INVOICE TOGGLE =====
-function toggleInvoiceSetting(){
-  invoiceEnabled=!invoiceEnabled;
-  updateInvoiceToggle();
-}
-function updateInvoiceToggle(){
-  const b=document.getElementById('fInvoiceToggle');
-  if(invoiceEnabled)b.classList.add('on');else b.classList.remove('on');
-  document.getElementById('fInvoiceFields').style.display=invoiceEnabled?'':'none';
-}
-
 // ===== FORM =====
 function openNewProject(){
-  editingProjectId=null;selectedDays=[];formDirection='pay';invoiceEnabled=false;
+  editingProjectId=null;selectedDays=[];formDirection='pay';
   document.getElementById('formTitle').textContent='New Activity';
   document.getElementById('formSubmitBtn').textContent='Create Activity';
   document.getElementById('fName').value='';document.getElementById('fType').value='fixed';document.getElementById('fRate').value='';
   document.getElementById('fCustomRateAmt').value='';document.getElementById('fCustomRateMin').value='';
   document.getElementById('fCurrency').value='$';
-  document.getElementById('fClientName').value='';document.getElementById('fClientEmail').value='';document.getElementById('fClientAddress').value='';document.getElementById('fInvoiceNotes').value='';
-  updateInvoiceToggle();
+  document.getElementById('fCounterparty').value='';
   setDirection('pay');populateGroupSelect('');onTypeChange();renderDayChips();showView('formView');
 }
 function editCurrentProject(){
   const p=getProject(currentProjectId);if(!p)return;
-  if(p.type==='group'){if(p.budget||p.type==='project'){editProjectForm(currentProjectId);return}editGroupActivity(currentProjectId);return}
+  if(p.type==='group'||p.type==='project'){editProjectForm(currentProjectId);return}
   if(p.type==='lending'){editLendingCircle(currentProjectId);return}
-  if(p.type==='project'){editProjectForm(currentProjectId);return}
-  editingProjectId=p.id;selectedDays=[...(p.days||[])];formDirection=p.direction||'pay';invoiceEnabled=!!p.invoiceEnabled;
+  editingProjectId=p.id;selectedDays=[...(p.days||[])];formDirection=p.direction||'pay';
   document.getElementById('formTitle').textContent='Edit Activity';
   document.getElementById('formSubmitBtn').textContent='Save Changes';
   document.getElementById('fName').value=p.name;document.getElementById('fType').value=p.type;document.getElementById('fRate').value=p.rate||'';
   document.getElementById('fCustomRateAmt').value=p.customRateAmt||'';document.getElementById('fCustomRateMin').value=p.customRateMin||'';
   document.getElementById('fCurrency').value=p.currency||'';
   try{document.getElementById('fCustomRateUnit').value=p.customRateUnit||'min'}catch(e){}
-  document.getElementById('fClientName').value=p.clientName||'';document.getElementById('fClientEmail').value=p.clientEmail||'';document.getElementById('fClientAddress').value=p.clientAddress||'';document.getElementById('fInvoiceNotes').value=p.invoiceNotes||'';
-  updateInvoiceToggle();
+  document.getElementById('fCounterparty').value=p.counterparty||'';
   setDirection(formDirection);populateGroupSelect(p.groupId||'');onTypeChange();renderDayChips();showView('formView');
 }
 function onTypeChange(){
@@ -1181,46 +1816,63 @@ function saveProject(){
   const customRateMin=parseFloat(document.getElementById('fCustomRateMin').value)||0;
   const groupId=document.getElementById('fGroup').value;
   const currency=document.getElementById('fCurrency').value;
-  const clientName=document.getElementById('fClientName').value.trim();
-  const clientEmail=document.getElementById('fClientEmail').value.trim();
-  const clientAddress=document.getElementById('fClientAddress').value.trim();
-  const invoiceNotes=document.getElementById('fInvoiceNotes').value.trim();
+  const counterparty=document.getElementById('fCounterparty').value.trim();
   if(!name){showToast('Please enter a name');return}
   if((type==='fixed'||type==='daily')&&rate<=0){showToast('Please enter a rate');return}
   if(type==='hourly'&&rate<=0){showToast('Please enter an hourly rate');return}
   if(type==='customrate'&&(customRateAmt<=0||customRateMin<=0)){showToast('Please enter both rate and minutes');return}
-  if(invoiceEnabled&&!clientName){showToast('Please enter a client name for invoicing');return}
   if(groupId==='__new__'){showToast('Please save the new group first');return}
   if(editingProjectId){
     const p=getProject(editingProjectId);
-    if(p){p.name=name;p.type=type;p.rate=rate;p.days=[...selectedDays];p.groupId=groupId||null;p.direction=formDirection;p.customRateAmt=customRateAmt;p.customRateMin=customRateMin;p.customRateUnit=document.getElementById('fCustomRateUnit').value;p.currency=currency;p.invoiceEnabled=invoiceEnabled;p.clientName=clientName;p.clientEmail=clientEmail;p.clientAddress=clientAddress;p.invoiceNotes=invoiceNotes;save();showToast('Activity updated');currentProjectId=p.id;goBack()}
+    if(p){
+      p.name=name;p.type=type;p.rate=rate;p.days=[...selectedDays];p.groupId=groupId||null;
+      p.direction=formDirection;p.counterparty=counterparty;
+      p.customRateAmt=customRateAmt;p.customRateMin=customRateMin;
+      p.customRateUnit=document.getElementById('fCustomRateUnit').value;p.currency=currency;
+      // Clean up legacy invoice fields if they exist on this project.
+      delete p.invoiceEnabled;delete p.clientName;delete p.clientEmail;delete p.clientAddress;delete p.invoiceNotes;
+      save();showToast('Activity updated');currentProjectId=p.id;goBack();
+    }
   }else{
-    const p={id:genId(),name,type,rate,days:[...selectedDays],groupId:groupId||null,direction:formDirection,customRateAmt,customRateMin,customRateUnit:document.getElementById('fCustomRateUnit').value,currency,invoiceEnabled,clientName,clientEmail,clientAddress,invoiceNotes,balance:0,history:[],createdAt:new Date().toISOString()};
+    const p={id:genId(),name,type,rate,days:[...selectedDays],groupId:groupId||null,direction:formDirection,counterparty,customRateAmt,customRateMin,customRateUnit:document.getElementById('fCustomRateUnit').value,currency,balance:0,history:[],createdAt:new Date().toISOString()};
     projects.push(p);save();showToast('Activity created');goHome();
   }
 }
 
 // ===== DETAIL =====
-function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&p.type==='group'){if(p.budget){renderProjectDetail();showView('projectDetailView')}else{renderGroupDetail();showView('groupDetailView')}}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else if(p&&p.type==='project'){renderProjectDetail();showView('projectDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
+function openProject(id){currentProjectId=id;chargeOpen=false;payOpen=false;stopTick();const p=getProject(id);if(p&&(p.type==='group'||p.type==='project')){renderProjectDetail();showView('projectDetailView')}else if(p&&p.type==='lending'){renderLendingDetail();showView('lendingDetailView')}else{renderDetail();showView('detailView');if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[id])startTick()}}
 
 function renderDetail(){
   const p=getProject(currentProjectId);if(!p)return;
   const pay=isPay(p);
   document.getElementById('detailTitle').textContent=p.name;
-  const tl=p.type==='fixed'?`${cur(p)}${p.rate} / session`:p.type==='daily'?`${cur(p)}${p.rate} / day`:p.type==='hourly'?`${cur(p)}${p.rate} / hour`:p.type==='customrate'?`${cur(p)}${p.customRateAmt} / ${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='group'?`${(p.participants||[]).length} people`:p.type==='lending'?`${(p.participants||[]).length} people`:'Project';
+  const tl=p.type==='fixed'?`${cur(p)}${p.rate} / session`:p.type==='daily'?`${cur(p)}${p.rate} / day`:p.type==='hourly'?`${cur(p)}${p.rate} / hour`:p.type==='customrate'?`${cur(p)}${p.customRateAmt} / ${p.customRateMin}${p.customRateUnit==='hr'?'hr':'min'}`:p.type==='lending'?`${(p.participants||[]).length} people`:'Project';
   const ds=p.days&&p.days.length?' · '+p.days.map(d=>DAY_NAMES[d]).join(', '):'';
   const gName=p.groupId&&getGroup(p.groupId)?getGroup(p.groupId).name+' · ':'';
-  const dirBadge=p.type==='project'?'':pay?'<span class="detail-dir-badge badge-pay">I PAY</span>':'<span class="detail-dir-badge badge-earn">I EARN</span>';
+  const dirBadge=p.type==='project'?'':pay?'<span class="detail-dir-badge badge-pay">'+esc(myName())+' PAYS</span>':'<span class="detail-dir-badge badge-earn">'+esc(myName())+' EARNS</span>';
   document.getElementById('detailType').innerHTML=gName+tl+ds+' '+dirBadge;
 
-  const bal=p.balance||0,abs=Math.abs(bal);
+  syncBalance(p);
+  const bal=p.balance||0,abs=rd2(Math.abs(bal));
   const lbl=document.getElementById('dBalLabel'),amt=document.getElementById('dBalAmt');
   lbl.textContent=balLabel(p);
   amt.textContent=cur(p)+abs;
   amt.className='balance-amount '+balColorClass(p);
 
+  // Calculate total units (sessions, hours, days)
+  const currentCharges=getEntriesSinceLastSettlement(p).filter(h=>h.type==='charge');
+  const totalCharged=rd2(currentCharges.reduce((s,h)=>s+h.amount,0));
+  let unitsText='';
+  if(currentCharges.length>0&&totalCharged>0){
+    if(p.type==='fixed'&&p.rate>0){const n=rd2(totalCharged/p.rate);unitsText=n+' session'+(n!==1?'s':'')}
+    else if(p.type==='daily'&&p.rate>0){const n=rd2(totalCharged/p.rate);unitsText=n+' day'+(n!==1?'s':'')}
+    else if(p.type==='hourly'&&p.rate>0){const n=rd2(totalCharged/p.rate);unitsText=n+' hour'+(n!==1?'s':'')}
+    else if(p.type==='customrate'&&p.customRateAmt>0){const n=rd2(totalCharged/p.customRateAmt*p.customRateMin);const u=p.customRateUnit==='hr'?'hour':'min';unitsText=n+' '+u+(n!==1?'s':'')}
+  }
+  document.getElementById('dBalUnits').textContent=unitsText;
+
   document.getElementById('dAddLabel').textContent=p.type==='project'?'Add Expense':'Add Session';
-  document.getElementById('dPayLabel').textContent=p.type==='project'?'I Got Paid':pay?'I Paid':'I Got Paid';
+  document.getElementById('dPayLabel').textContent=pay?esc(otherName(p))+' Paid':esc(otherName(p))+' Paid';
   document.getElementById('chargeInput').innerHTML='';
   document.getElementById('payInput').innerHTML='';
 
@@ -1231,6 +1883,9 @@ function renderDetail(){
   else{
     const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
     hEl.innerHTML=tapHint+hist.map((h,i)=>{
+    if(h.type==='settlement'){
+      return`<div style="display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--border)"><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div><div style="text-align:center;flex-shrink:0"><span style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.5px">✓ ${esc(h.note||'Settlement')}</span><span style="display:block;font-size:11px;color:var(--text-muted);margin-top:2px">${formatDate(h.date)}</span></div><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div></div>`;
+    }
     let dc,ac;
     if(p.type==='project'){
       // Projects: expenses always red, payments always green
@@ -1244,7 +1899,7 @@ function renderDetail(){
     }
     const at=h.type==='charge'?'+'+cur(p)+rd2(h.amount):h.type==='payment'?'-'+cur(p)+rd2(h.amount):'—';
     const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
-    return`<div class="history-row" onclick="showEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+    return`<div class="history-row" onclick="showEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
   }).join('')}
 }
 
@@ -1291,10 +1946,14 @@ function endTimer(){
   if(p.type==='hourly')noteText=rd2(formatHours(elapsed))+'hrs @ '+cur(p)+p.rate+' (timed)';
   else if(unit==='hr')noteText=rd2(mins/60)+'hrs @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr (timed)';
   else noteText=mins+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min (timed)';
+  const entry={id:genId(),type:'charge',amount,date:new Date().toISOString(),note:noteText};
+  // Append-only safety log — write BEFORE addEntry so the session survives
+  // even if save/sync fails or a stale snapshot clobbers in-memory state.
+  // This log lives in the LOCAL layer and is never read by the sync code.
+  db.appendSessionLog({projectId:p.id,projectName:p.name,...entry,startedAt:timers[p.id],endedAt:Date.now()});
   delete timers[p.id];saveTimers();stopTick();
-  p.balance=(p.balance||0)+amount;p.history=p.history||[];
-  p.history.unshift({type:'charge',amount,date:new Date().toISOString(),note:noteText});
-  save();renderDetail();showToast('+'+cur(p)+amount+' session logged');
+  addEntry(p,entry);
+  renderDetail();showToast('+'+cur(p)+amount+' session logged');
 }
 function cancelTimer(){
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()"><p class="dialog-title">Cancel Timer?</p><p class="dialog-text">This will discard the current session. No charge will be recorded.</p><div class="dialog-btns"><button class="dialog-cancel" onclick="closeOverlay()">Keep Running</button><button class="dialog-confirm" onclick="doCancelTimer()">Cancel Timer</button></div></div></div>`;
@@ -1303,74 +1962,141 @@ function doCancelTimer(){const p=getProject(currentProjectId);if(p){delete timer
 function closeOverlay(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('overlay').innerHTML=''}
 
 // ===== ENTRY ACTIONS =====
-function showEntryActions(idx){
+function showEntryActions(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   const c=cur(p);
   const typeLabel=h.type==='charge'?(p.type==='project'?'Expense':'Session/Charge'):h.type==='payment'?'Payment':'Skipped';
   const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
   const isSkipped=h.type==='skipped';
+  const isTimeBased=h.type==='charge'&&(p.type==='hourly'||p.type==='customrate');
   const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
+
+  // For time-based entries, extract hours/mins from the note or calculate from amount
+  let editHrs=0,editMins=0;
+  if(isTimeBased&&h.amount>0){
+    let totalHrs=0;
+    if(p.type==='hourly'&&p.rate>0){totalHrs=h.amount/p.rate}
+    else if(p.type==='customrate'&&p.customRateAmt>0){
+      const unit=p.customRateUnit||'min';
+      if(unit==='hr')totalHrs=(h.amount/p.customRateAmt)*p.customRateMin;
+      else totalHrs=((h.amount/p.customRateAmt)*p.customRateMin)/60;
+    }
+    editHrs=Math.floor(totalHrs);
+    editMins=Math.round((totalHrs-editHrs)*60);
+  }
+
+  let timeFields='';
+  if(isTimeBased){
+    timeFields=`
+    <label style="${lbl}">Time</label>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="flex:1"><input class="dialog-input" id="editHrs" type="number" inputmode="decimal" value="${editHrs}" placeholder="0" style="margin-bottom:0" oninput="recalcEditFromTime()"><span style="font-size:10px;color:var(--text-muted);margin-top:2px;display:block">Hours</span></div>
+      <div style="flex:1"><input class="dialog-input" id="editMins" type="number" inputmode="decimal" value="${editMins}" placeholder="0" style="margin-bottom:0" oninput="recalcEditFromTime()"><span style="font-size:10px;color:var(--text-muted);margin-top:2px;display:block">Minutes</span></div>
+    </div>`;
+  }
+
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:320px">
     <p class="dialog-title" style="text-align:center">${typeLabel}</p>
     ${!isSkipped?`
     <label style="${lbl}">Description</label>
     <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}">
+    ${timeFields}
     <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
-    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
+    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}" ${isTimeBased?'oninput="recalcEditFromAmt()"':''}>
     `:''}
     <label style="${lbl}">Date</label>
     <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
     <label style="${lbl}">Note</label>
     <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
     <div class="dialog-actions-col">
-      <button class="dialog-btn-save" onclick="doEditEntry(${idx})">Save</button>
-      <button class="dialog-btn-delete" onclick="showDeleteConfirm(${idx})">Delete Entry</button>
+      <button class="dialog-btn-save" onclick="doEditEntry('${entryId}')">Save</button>
+      <button class="dialog-btn-delete" onclick="showDeleteConfirm('${entryId}')">Delete Entry</button>
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
 }
 
-function doEditEntry(idx){
+// Recalc amount from time fields when editing hourly/customrate entries
+function recalcEditFromTime(){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const hrs=parseFloat(document.getElementById('editHrs').value)||0;
+  const mins=parseFloat(document.getElementById('editMins').value)||0;
+  const totalHrs=hrs+mins/60;
+  let amount=0;
+  if(p.type==='hourly')amount=rd2(totalHrs*p.rate);
+  else if(p.type==='customrate'){
+    const unit=p.customRateUnit||'min';
+    if(unit==='hr')amount=rd2((totalHrs/p.customRateMin)*p.customRateAmt);
+    else amount=rd2(((totalHrs*60)/p.customRateMin)*p.customRateAmt);
+  }
+  document.getElementById('editAmt').value=amount;
+}
+
+// Recalc time from amount field when editing hourly/customrate entries
+function recalcEditFromAmt(){
+  const p=getProject(currentProjectId);if(!p)return;
+  const amount=parseFloat(document.getElementById('editAmt').value)||0;
+  let totalHrs=0;
+  if(p.type==='hourly'&&p.rate>0)totalHrs=amount/p.rate;
+  else if(p.type==='customrate'&&p.customRateAmt>0){
+    const unit=p.customRateUnit||'min';
+    if(unit==='hr')totalHrs=(amount/p.customRateAmt)*p.customRateMin;
+    else totalHrs=((amount/p.customRateAmt)*p.customRateMin)/60;
+  }
+  const hrs=Math.floor(totalHrs);
+  const mins=Math.round((totalHrs-hrs)*60);
+  document.getElementById('editHrs').value=hrs;
+  document.getElementById('editMins').value=mins;
+}
+
+function doEditEntry(entryId){
+  const p=getProject(currentProjectId);if(!p)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   const isSkipped=h.type==='skipped';
+  const isTimeBased=h.type==='charge'&&(p.type==='hourly'||p.type==='customrate');
   if(!isSkipped){
     const newAmt=parseFloat(document.getElementById('editAmt').value);
     const newName=document.getElementById('editName').value.trim();
     if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
-    const diff=newAmt-(h.amount||0);
-    if(h.type==='charge')p.balance=(p.balance||0)+diff;
-    else if(h.type==='payment')p.balance=(p.balance||0)-diff;
     h.amount=rd2(newAmt);
-    if(newName)h.note=newName;
+    // For time-based entries, rebuild the note with updated time
+    if(isTimeBased&&document.getElementById('editHrs')){
+      const hrs=parseFloat(document.getElementById('editHrs').value)||0;
+      const mins=parseFloat(document.getElementById('editMins').value)||0;
+      if(p.type==='hourly'){
+        const totalH=rd2(hrs+mins/60);
+        h.note=totalH+'hrs @ '+cur(p)+p.rate;
+      }else if(p.type==='customrate'){
+        const unit=p.customRateUnit||'min';
+        if(unit==='hr'){h.note=rd2(hrs+mins/60)+'hrs @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr'}
+        else{const totalMin=Math.round(hrs*60+mins);h.note=totalMin+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
+      }
+    }else if(newName){h.note=newName}
   }
   const newDate=document.getElementById('editDate').value;
   if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
   const comment=document.getElementById('editComment').value.trim();
   h.comment=comment||'';
-  save();closeOverlay();renderDetail();showToast('Entry updated');
+  syncBalance(p);db.saveProject(p);closeOverlay();renderDetail();showToast('Entry updated');
 }
 
-function showDeleteConfirm(idx){
+function showDeleteConfirm(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
     <p class="dialog-title">Delete Entry?</p>
     <p class="dialog-text">This will remove the entry and correct the balance automatically.</p>
     <div class="dialog-btns">
-      <button class="dialog-cancel" onclick="showEntryActions(${idx})">Back</button>
-      <button class="dialog-confirm" onclick="doDeleteEntry(${idx})">Delete</button>
+      <button class="dialog-cancel" onclick="showEntryActions('${entryId}')">Back</button>
+      <button class="dialog-confirm" onclick="doDeleteEntry('${entryId}')">Delete</button>
     </div>
   </div></div>`;
 }
-function doDeleteEntry(idx){
+function doDeleteEntry(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  if(h.type==='charge')p.balance=(p.balance||0)-h.amount;
-  else if(h.type==='payment')p.balance=(p.balance||0)+h.amount;
-  p.history.splice(idx,1);
-  save();closeOverlay();renderDetail();showToast('Entry deleted');
+  deleteEntry(p,entryId);
+  closeOverlay();renderDetail();showToast('Entry deleted');
 }
 
 function showClearAllConfirm(){
@@ -1387,9 +2113,9 @@ function showClearAllConfirm(){
 }
 function doClearAll(){
   const p=getProject(currentProjectId);if(!p)return;
-  p.history=[];p.balance=0;
-  save();closeOverlay();
-  if(p.type==='group')renderGroupDetail();else if(p.type==='lending')renderLendingDetail();else if(p.type==='project')renderProjectDetail();else renderDetail();
+  p.history=[];syncBalance(p);
+  db.saveProject(p);closeOverlay();
+  if(p.type==='lending')renderLendingDetail();else if(p.type==='project'||p.type==='group')renderProjectDetail();else renderDetail();
   showToast('All entries cleared');
 }
 
@@ -1399,9 +2125,8 @@ function showAddCharge(){
   payOpen=false;document.getElementById('payInput').innerHTML='';
   if(p.type==='fixed'||p.type==='daily'){
     const defNote=p.type==='daily'?'Day charge':'Session';
-    p.balance=(p.balance||0)+p.rate;p.history=p.history||[];
-    p.history.unshift({type:'charge',amount:p.rate,date:new Date().toISOString(),note:defNote});
-    save();renderDetail();showToast('+'+cur(p)+p.rate+' added');return;
+    addEntry(p,{type:'charge',amount:p.rate,date:new Date().toISOString(),note:defNote});
+    renderDetail();showToast('+'+cur(p)+p.rate+' added');return;
   }
   chargeOpen=!chargeOpen;
   if(!chargeOpen){document.getElementById('chargeInput').innerHTML='';return}
@@ -1409,46 +2134,66 @@ function showAddCharge(){
     document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="chargeVal" autofocus></div><div class="input-row"><input class="input-field" type="text" placeholder="What was this for?" id="chargeNote" style="font-size:14px"><button class="input-confirm" onclick="confirmProjectCharge()">Add</button></div>`;
     document.getElementById('chargeVal').focus();return;
   }
-  const ph=p.type==='hourly'?'Hours…':p.type==='customrate'?(p.customRateUnit==='hr'?'Hours…':'Minutes…'):'Amount…';
-  document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="${ph}" id="chargeVal" autofocus><button class="input-confirm" onclick="confirmCharge()">Add</button></div>`;
-  document.getElementById('chargeVal').focus();
+  const isHourly=p.type==='hourly';
+  const isCustomHr=p.type==='customrate'&&(p.customRateUnit||'min')==='hr';
+  if(isHourly||isCustomHr){
+    document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Hours…" id="chargeHrs" style="flex:1" autofocus><input class="input-field" type="number" inputmode="decimal" placeholder="Minutes…" id="chargeMins" style="flex:1"><button class="input-confirm" onclick="confirmCharge()">Add</button></div>`;
+    document.getElementById('chargeHrs').focus();
+  }else{
+    const ph=p.type==='customrate'?'Minutes…':'Amount…';
+    document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="${ph}" id="chargeVal" autofocus><button class="input-confirm" onclick="confirmCharge()">Add</button></div>`;
+    document.getElementById('chargeVal').focus();
+  }
 }
 function confirmCharge(){
   const p=getProject(currentProjectId);if(!p)return;
-  const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;
+  const isHourly=p.type==='hourly';
+  const isCustomHr=p.type==='customrate'&&(p.customRateUnit||'min')==='hr';
   let amount,noteText;
-  if(p.type==='hourly'){amount=rd2(val*p.rate);noteText=val+'hr'+(val!==1?'s':'')+' @ '+cur(p)+p.rate}
-  else if(p.type==='customrate'){const unit=p.customRateUnit||'min';amount=rd2((val/p.customRateMin)*p.customRateAmt);noteText=val+(unit==='hr'?'hrs':'min')+' @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+(unit==='hr'?'hr':'min')}
-  else{amount=rd2(val);noteText='Expense'}
-  p.balance=(p.balance||0)+amount;p.history=p.history||[];
-  p.history.unshift({type:'charge',amount,date:new Date().toISOString(),note:noteText});
-  save();chargeOpen=false;renderDetail();showToast('+'+cur(p)+amount+' added');
+  if(isHourly||isCustomHr){
+    const hrs=parseFloat(document.getElementById('chargeHrs').value)||0;
+    const mins=parseFloat(document.getElementById('chargeMins').value)||0;
+    if(hrs<=0&&mins<=0)return;
+    const totalHrs=hrs+mins/60;
+    if(isHourly){
+      amount=rd2(totalHrs*p.rate);
+    }else{
+      amount=rd2((totalHrs/p.customRateMin)*p.customRateAmt);
+    }
+    // Build natural note text based on what was entered
+    const rate=isHourly?cur(p)+p.rate:cur(p)+p.customRateAmt+'/'+p.customRateMin+'hr';
+    if(hrs>0&&mins>0)noteText=hrs+'hr'+(hrs!==1?'s':'')+' '+mins+'min @ '+rate;
+    else if(hrs>0)noteText=hrs+'hr'+(hrs!==1?'s':'')+' @ '+rate;
+    else noteText=mins+'min @ '+rate;
+  }
+  else if(p.type==='customrate'){const unit=p.customRateUnit||'min';const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;amount=rd2((val/p.customRateMin)*p.customRateAmt);noteText=val+'min @ '+cur(p)+p.customRateAmt+'/'+p.customRateMin+'min'}
+  else{const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;amount=rd2(val);noteText='Expense'}
+  addEntry(p,{type:'charge',amount,date:new Date().toISOString(),note:noteText});
+  chargeOpen=false;renderDetail();showToast('+'+cur(p)+amount+' added');
 }
 function confirmProjectCharge(){
   const p=getProject(currentProjectId);if(!p)return;
   const val=parseFloat(document.getElementById('chargeVal').value);if(!val||val<=0)return;
   const note=document.getElementById('chargeNote').value.trim()||'Expense';
   const amount=rd2(val);
-  p.balance=(p.balance||0)+amount;p.history=p.history||[];
-  p.history.unshift({type:'charge',amount,date:new Date().toISOString(),note});
-  save();chargeOpen=false;renderDetail();showToast('+'+cur(p)+amount+' added');
+  addEntry(p,{type:'charge',amount,date:new Date().toISOString(),note});
+  chargeOpen=false;renderDetail();showToast('+'+cur(p)+amount+' added');
 }
 function showPayInput(){
   const p=getProject(currentProjectId);if(!p)return;
   chargeOpen=false;document.getElementById('chargeInput').innerHTML='';
   payOpen=!payOpen;
   if(!payOpen){document.getElementById('payInput').innerHTML='';return}
-  const label=isPay(p)?'Amount I paid…':'Amount I received…';
+  const label=isPay(p)?'Amount '+myName()+' paid…':'Amount '+myName()+' received…';
   document.getElementById('payInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="${label}" id="payVal" autofocus><button class="input-confirm" onclick="confirmPay()">Confirm</button></div>`;
   document.getElementById('payVal').focus();
 }
 function confirmPay(){
   const p=getProject(currentProjectId);if(!p)return;
   const val=parseFloat(document.getElementById('payVal').value);if(!val||val<=0)return;
-  const defaultNote=isPay(p)?'Payment':'Receipt';
-  p.balance=(p.balance||0)-val;p.history=p.history||[];
-  p.history.unshift({type:'payment',amount:rd2(val),date:new Date().toISOString(),note:defaultNote});
-  save();payOpen=false;renderDetail();showToast('-'+cur(p)+rd2(val)+(isPay(p)?' paid':' received'));
+  const defaultNote=isPay(p)?myName()+' paid':'Payment from '+otherName(p);
+  addEntry(p,{type:'payment',amount:rd2(val),date:new Date().toISOString(),note:defaultNote});
+  payOpen=false;renderDetail();showToast(cur(p)+rd2(val)+' payment recorded');
 }
 
 // ===== PROJECT DETAIL =====
@@ -1475,8 +2220,9 @@ function renderProjectDetail(){
   const p=getProject(currentProjectId);if(!p)return;
   document.getElementById('projDetailTitle').textContent=p.name;
   const c=cur(p);
-  const totalExpenses=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
-  const totalPaid=rd2((p.history||[]).filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const totalExpenses=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPaid=rd2(currentHist.filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
   const budget=p.budget||0;
   const isGroup=p.participants&&p.participants.length>0;
   const pay=isPay(p);
@@ -1494,7 +2240,7 @@ function renderProjectDetail(){
     html+=`<div class="balance-card" style="margin-top:0;margin-bottom:8px;padding:24px 20px"><span class="balance-label">Budget</span><span class="balance-amount" style="color:var(--text);font-size:42px">${c}${budget}</span></div>`;
     html+=`<div style="display:flex;justify-content:space-between;margin-bottom:6px">`;
     html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--text)">${c}${spent}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Spent</div></div>`;
-    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${overBudget?'var(--red)':'var(--accent)'}">${c}${Math.abs(remaining)}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${overBudget?'Over Budget':'Remaining'}</div></div>`;
+    html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:${overBudget?'var(--red)':'var(--accent)'}">${c}${rd2(Math.abs(remaining))}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${overBudget?'Over Budget':'Remaining'}</div></div>`;
     if(!pay&&!isGroup&&totalIn>0){
       html+=`<div style="text-align:center;flex:1"><div style="font-size:20px;font-weight:800;color:var(--green)">${c}${totalIn}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Received</div></div>`;
     }
@@ -1519,6 +2265,79 @@ function renderProjectDetail(){
   html+=`<div style="text-align:center;margin-bottom:14px"><button onclick="showEditBudget()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">${budget?'Edit Budget':'Set Budget'}</button></div>`;
   document.getElementById('projBudgetSummary').innerHTML=html;
 
+  // Group settlement — per-person cards ABOVE categories and history
+  let settlementHtml='';
+  if(isGroup){
+    const parts=p.participants;
+    const paid={};const owes={};
+    parts.forEach(n=>{paid[n]=0;owes[n]=0});
+    const currentHist=getEntriesSinceLastSettlement(p);
+    const expenses=currentHist.filter(h=>h.type==='charge');
+    const payments=currentHist.filter(h=>h.type==='payment'&&h.from&&h.to);
+    expenses.forEach(h=>{
+      if(h.paidBy&&paid[h.paidBy]!==undefined)paid[h.paidBy]+=h.amount;
+      if(h.customSplit){Object.keys(h.customSplit).forEach(n=>{if(owes[n]!==undefined)owes[n]+=h.customSplit[n]})}
+      else{const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;const share=rd2(h.amount/among.length);among.forEach(n=>{if(owes[n]!==undefined)owes[n]+=share})}
+    });
+    payments.forEach(h=>{if(paid[h.from]!==undefined)paid[h.from]+=h.amount;if(paid[h.to]!==undefined)paid[h.to]-=h.amount});
+    const balances={};parts.forEach(n=>{balances[n]=rd2(paid[n]-owes[n])});
+
+    // Sort: people who should pay first, then who should receive, then settled
+    const sorted=[...parts].sort((a,b)=>{
+      const ba=balances[a],bb=balances[b];
+      if(ba<-0.01&&bb>=-0.01)return -1;
+      if(bb<-0.01&&ba>=-0.01)return 1;
+      if(ba>0.01&&bb<=0.01)return -1;
+      if(bb>0.01&&ba<=0.01)return 1;
+      return 0;
+    });
+
+    const transfers=calcTransfers(balances);
+    const allSettled=transfers.length===0;
+
+    settlementHtml+='<div style="margin-bottom:16px">';
+    if(allSettled){
+      settlementHtml+='<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px;text-align:center;box-shadow:var(--shadow-sm)"><span style="font-size:15px;font-weight:600;color:var(--text-light)">✅ All settled up!</span></div>';
+    }else{
+      settlementHtml+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:10px">Settle Up</div>';
+      transfers.forEach(t=>{
+        settlementHtml+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:8px;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+            <span style="font-size:14px;font-weight:700;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.from)}</span>
+            <span style="font-size:16px;color:var(--text-light);flex-shrink:0">→</span>
+            <span style="font-size:14px;font-weight:700;color:var(--green);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.to)}</span>
+          </div>
+          <span style="font-size:16px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;margin-left:12px;flex-shrink:0">${c}${rd2(t.amount)}</span>
+        </div>`;
+      });
+    }
+
+    // Per-person breakdown (collapsed summary)
+    settlementHtml+='<details style="margin-top:4px"><summary style="font-size:11px;color:var(--text-muted);cursor:pointer;padding:6px 0;font-weight:600;letter-spacing:0.5px">Per-person breakdown</summary><div style="margin-top:4px">';
+    sorted.forEach(n=>{
+      const bal=rd2(balances[n]);
+      const paidAmt=rd2(paid[n]);
+      const shareAmt=rd2(owes[n]);
+      let statusText,statusColor;
+      if(bal<-0.01){statusText='Remaining to pay: '+c+rd2(Math.abs(bal));statusColor='var(--red)'}
+      else if(bal>0.01){statusText='Remaining to receive: '+c+rd2(bal);statusColor='var(--green)'}
+      else{statusText='All settled';statusColor='var(--text-light)'}
+      settlementHtml+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:14px;font-weight:700;color:var(--text)">${esc(n)}</span>
+          <span style="font-size:14px;font-weight:800;color:${statusColor};font-variant-numeric:tabular-nums">${bal<-0.01?c+rd2(Math.abs(bal)):bal>0.01?c+rd2(bal):''}</span>
+        </div>
+        <div style="display:flex;gap:16px;font-size:12px;color:var(--text-muted)">
+          <span>Total to pay: <strong style="color:var(--text)">${c}${shareAmt}</strong></span>
+          <span>Paid: <strong style="color:var(--text)">${c}${paidAmt}</strong></span>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:${statusColor};margin-top:4px">${statusText}</div>
+      </div>`;
+    });
+    settlementHtml+='</div></details>';
+    settlementHtml+='</div>';
+  }
+
   // Category rollups
   const categories=getProjectCategories(p);
   let catHtml='';
@@ -1532,7 +2351,7 @@ function renderProjectDetail(){
     });
     catHtml+='</div>';
   }
-  document.getElementById('projCategoryRollups').innerHTML=catHtml;
+  document.getElementById('projCategoryRollups').innerHTML=settlementHtml+catHtml;
 
   // Action buttons
   let actionsHtml='';
@@ -1544,48 +2363,15 @@ function renderProjectDetail(){
     actionsHtml+='<div style="margin-top:8px"><button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectSettleConfirm()"><span class="btn-icon">✓</span> Settle & Reset</button></div>';
   }else if(pay){
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
-    actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Paid</button>';
+    actionsHtml+='<button class="detail-btn btn-add-payment" style="width:100%" onclick="showProjectPayInput()"><span class="btn-icon">$</span> '+esc(myName())+' Paid '+esc(otherName(p))+'</button>';
     actionsHtml+='</div>';
   }else{
     actionsHtml+='<div class="detail-actions" style="margin-top:16px">';
     actionsHtml+='<button class="detail-btn btn-add-session" onclick="showProjectExpenseInput()"><span class="btn-icon">＋</span> Add Expense</button>';
-    actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> I Got Paid</button>';
+    actionsHtml+='<button class="detail-btn btn-add-payment" onclick="showProjectPayInput()"><span class="btn-icon">$</span> '+esc(otherName(p))+' Paid</button>';
     actionsHtml+='</div>';
   }
   document.getElementById('projActions').innerHTML=actionsHtml;
-
-  // Group settlement
-  if(isGroup){
-    const parts=p.participants;
-    const paid={};const owes={};
-    parts.forEach(n=>{paid[n]=0;owes[n]=0});
-    const expenses=(p.history||[]).filter(h=>h.type==='charge');
-    const payments=(p.history||[]).filter(h=>h.type==='payment'&&h.from&&h.to);
-    expenses.forEach(h=>{
-      if(h.paidBy&&paid[h.paidBy]!==undefined)paid[h.paidBy]+=h.amount;
-      if(h.customSplit){Object.keys(h.customSplit).forEach(n=>{if(owes[n]!==undefined)owes[n]+=h.customSplit[n]})}
-      else{const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;const share=rd2(h.amount/among.length);among.forEach(n=>{if(owes[n]!==undefined)owes[n]+=share})}
-    });
-    payments.forEach(h=>{if(paid[h.from]!==undefined)paid[h.from]+=h.amount;if(paid[h.to]!==undefined)paid[h.to]-=h.amount});
-    const balances={};parts.forEach(n=>{balances[n]=rd2(paid[n]-owes[n])});
-    const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
-    const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
-    if(shouldPay.length||shouldReceive.length){
-      let sHtml='<div class="settle-section" style="margin-top:16px">';
-      if(shouldPay.length){
-        sHtml+='<div class="settle-block"><div class="settle-header settle-header-pay">Should Pay</div>';
-        shouldPay.forEach(n=>{const amt=rd2(Math.abs(balances[n]));sHtml+=`<div class="settle-row"><div><span class="settle-name">${esc(n)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${rd2(paid[n])} · Share ${c}${rd2(owes[n])}</span></div><span class="settle-amt settle-owes">${c}${amt}</span></div>`});
-        sHtml+='</div>';
-      }
-      if(shouldReceive.length){
-        sHtml+='<div class="settle-block"><div class="settle-header settle-header-receive">Should Receive</div>';
-        shouldReceive.forEach(n=>{const amt=rd2(balances[n]);sHtml+=`<div class="settle-row"><div><span class="settle-name">${esc(n)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${rd2(paid[n])} · Share ${c}${rd2(owes[n])}</span></div><span class="settle-amt settle-gets">${c}${amt}</span></div>`});
-        sHtml+='</div>';
-      }
-      sHtml+='</div>';
-      document.getElementById('projCategoryRollups').innerHTML+=sHtml;
-    }
-  }
 
   // History
   const hist=p.history||[],hEl=document.getElementById('projHistory');
@@ -1593,6 +2379,9 @@ function renderProjectDetail(){
   else{
     const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
     hEl.innerHTML=tapHint+hist.map((h,i)=>{
+      if(h.type==='settlement'){
+        return`<div style="display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--border)"><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div><div style="text-align:center;flex-shrink:0"><span style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.5px">✓ ${esc(h.note||'Settlement')}</span><span style="display:block;font-size:11px;color:var(--text-muted);margin-top:2px">${formatDate(h.date)}</span></div><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div></div>`;
+      }
       const isCharge=h.type==='charge';
       const dc=isCharge?'dot-charge':'dot-payment';
       const ac=isCharge?'amt-charge':'amt-payment';
@@ -1602,7 +2391,7 @@ function renderProjectDetail(){
       const splitInfo=h.customSplit?'Custom split':h.splitAmong&&h.splitAmong.length<(p.participants||[]).length?h.splitAmong.length+' people':'';
       const splitTag=splitInfo?` · ${splitInfo}`:'';
       const commentHtml=h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:'';
-      return`<div class="history-row" onclick="showProjectEntryActions(${i})" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${catTag}${paidByTag}${splitTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
+      return`<div class="history-row" onclick="showProjectEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot ${dc}"></span><div><span class="row-note">${esc(h.note||'')}</span><span class="row-date">${formatDate(h.date)}${catTag}${paidByTag}${splitTag}</span>${commentHtml}</div></div><span class="row-amt ${ac}">${at}</span></div>`;
     }).join('');
   }
   document.getElementById('projExpenseInput').innerHTML='';
@@ -1655,7 +2444,7 @@ function showProjectExpenseInput(){
   const parts=isGroup?p.participants:[];
   projSplitMode='equal';
 
-  const paidByOpts=isGroup?`<div class="input-row"><select class="form-select" id="projExpPaidBy" style="flex:1">${parts.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div><p style="font-size:11px;color:var(--text-muted);margin-top:2px;margin-bottom:8px">Who paid for this?</p>`:'';
+  const paidByOpts=isGroup?`<p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px">Who paid for this?</p><div class="input-row"><select class="form-select" id="projExpPaidBy" style="flex:1">${parts.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></div>`:'';
   const catPicker=buildCategoryPicker(p,'projExpCat');
 
   let splitHtml='';
@@ -1791,9 +2580,8 @@ function confirmProjectExpense(){
     if(customSplit)entry.customSplit=customSplit;
   }
 
-  p.history.unshift(entry);
-  p.balance=rd2((p.balance||0)+val);
-  save();document.getElementById('projExpenseInput').innerHTML='';projSplitMode='equal';renderProjectDetail();showToast(cur(p)+rd2(val)+' added');
+  addEntry(p,entry);
+  document.getElementById('projExpenseInput').innerHTML='';projSplitMode='equal';renderProjectDetail();showToast(cur(p)+rd2(val)+' added');
 }
 
 function showProjectPayInput(){
@@ -1806,7 +2594,7 @@ function showProjectPayInput(){
     <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="projPayAmt" autofocus></div>
     ${catPicker}
     <div class="input-row"><input class="input-field" type="text" placeholder="Description (optional)" id="projPayNote" style="font-size:14px"></div>
-    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${pay?'Record Payment':'Record Payment Received'}</button>
+    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmProjectPay()">${pay?esc(myName())+' Paid':esc(otherName(p))+' Paid'}</button>
   </div>`;
   document.getElementById('projPayAmt').focus();
 }
@@ -1816,18 +2604,17 @@ function confirmProjectPay(){
   const val=parseFloat(document.getElementById('projPayAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
   const pay=isPay(p);
   const costItem=pay?getCategoryValue('projPayCat'):'';
-  const note=document.getElementById('projPayNote').value.trim()||costItem||(pay?'Payment':'Payment received');
+  const note=document.getElementById('projPayNote').value.trim()||costItem||(pay?myName()+' paid':'Payment from '+otherName(p));
   p.history=p.history||[];
   const entry=pay?{type:'charge',amount:rd2(val),note,date:new Date().toISOString()}:{type:'payment',amount:rd2(val),note,date:new Date().toISOString()};
   if(costItem)entry.costItem=costItem;
-  if(pay)p.balance=rd2((p.balance||0)+val);
-  p.history.unshift(entry);
-  save();document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+(pay?' paid':' received'));
+  addEntry(p,entry);
+  document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+(pay?' paid':' received'));
 }
 
-function showProjectEntryActions(idx){
+function showProjectEntryActions(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   const c=cur(p);
   const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
   const used=getUsedCategories(p);
@@ -1858,8 +2645,8 @@ function showProjectEntryActions(idx){
     <label style="${lbl}">Note</label>
     <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
     <div class="dialog-actions-col">
-      <button class="dialog-btn-save" onclick="doEditProjectEntry(${idx})">Save</button>
-      <button class="dialog-btn-delete" onclick="doDeleteProjectEntry(${idx})">Delete</button>
+      <button class="dialog-btn-save" onclick="doEditProjectEntry('${entryId}')">Save</button>
+      <button class="dialog-btn-delete" onclick="doDeleteProjectEntry('${entryId}')">Delete</button>
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
@@ -1870,13 +2657,11 @@ function showProjectEntryActions(idx){
   });
 }
 
-function doEditProjectEntry(idx){
+function doEditProjectEntry(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   const newAmt=parseFloat(document.getElementById('editAmt').value);
   if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
-  const diff=newAmt-(h.amount||0);
-  if(h.type==='charge')p.balance=rd2((p.balance||0)+diff);
   h.amount=rd2(newAmt);
   h.note=document.getElementById('editName').value.trim()||h.note;
   const itemSel=document.getElementById('editCostItem');
@@ -1893,7 +2678,7 @@ function doEditProjectEntry(idx){
   const newDate=document.getElementById('editDate').value;
   if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
   h.comment=document.getElementById('editComment').value.trim()||'';
-  save();closeOverlay();renderProjectDetail();showToast('Entry updated');
+  syncBalance(p);db.saveProject(p);closeOverlay();renderProjectDetail();showToast('Entry updated');
 }
 
 function showProjectGroupPaymentInput(){
@@ -1919,20 +2704,20 @@ function confirmProjectGroupPayment(){
   if(from===to){showToast('Pick two different people');return}
   const val=parseFloat(document.getElementById('projGpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
   const note=document.getElementById('projGpNote').value.trim();
-  p.history=p.history||[];
-  p.history.unshift({type:'payment',from,to,amount:rd2(val),note:note||from+' paid '+to,date:new Date().toISOString()});
-  save();document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+' payment recorded');
+  addEntry(p,{type:'payment',from,to,amount:rd2(val),note:note||from+' paid '+to,date:new Date().toISOString()});
+  document.getElementById('projExpenseInput').innerHTML='';renderProjectDetail();showToast(cur(p)+rd2(val)+' payment recorded');
 }
 
 function showProjectSettleConfirm(){
   const p=getProject(currentProjectId);if(!p)return;
-  const expenses=(p.history||[]).filter(h=>h.type==='charge');
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const expenses=currentHist.filter(h=>h.type==='charge');
   if(!expenses.length){showToast('No expenses to settle');return}
   const c=cur(p);
   const total=rd2(expenses.reduce((s,h)=>s+h.amount,0));
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
     <p class="dialog-title">Settle & Reset?</p>
-    <p class="dialog-text">This marks the current round as settled (${c}${total} total) and clears all expenses so you can start fresh. The settlement will be noted in the history.</p>
+    <p class="dialog-text">This marks the current round as settled (${c}${total} total). A settlement line will be added to the history and balances will reset to zero.</p>
     <div class="dialog-btns">
       <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
       <button class="dialog-confirm" style="background:var(--green-btn)" onclick="doProjectSettle()">Settle</button>
@@ -1942,61 +2727,85 @@ function showProjectSettleConfirm(){
 function doProjectSettle(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
-  const total=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const isGroup=p.participants&&p.participants.length>0;
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const total=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
   const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  const oldSettlements=(p.history||[]).filter(h=>h.type==='settlement');
-  p.history=[{type:'settlement',amount:total,note:'Settled on '+dateStr+' — Total was '+c+total,date:new Date().toISOString()},...oldSettlements];
-  p.balance=0;
-  save();closeOverlay();renderProjectDetail();showToast('Settled! Starting fresh');
+  const now=new Date().toISOString();
+  // Build settlement entry lines
+  const settlementEntries=[];
+  if(isGroup){
+    // Calculate who owes whom and add a line per transfer
+    const parts=p.participants;
+    const paid={};const owes={};
+    parts.forEach(n=>{paid[n]=0;owes[n]=0});
+    currentHist.filter(h=>h.type==='charge').forEach(h=>{
+      if(h.paidBy&&paid[h.paidBy]!==undefined)paid[h.paidBy]+=h.amount;
+      if(h.customSplit){Object.keys(h.customSplit).forEach(n=>{if(owes[n]!==undefined)owes[n]+=h.customSplit[n]})}
+      else{const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;const share=rd2(h.amount/among.length);among.forEach(n=>{if(owes[n]!==undefined)owes[n]+=share})}
+    });
+    currentHist.filter(h=>h.type==='payment'&&h.from&&h.to).forEach(h=>{if(paid[h.from]!==undefined)paid[h.from]+=h.amount;if(paid[h.to]!==undefined)paid[h.to]-=h.amount});
+    const balances={};parts.forEach(n=>{balances[n]=rd2(paid[n]-owes[n])});
+    const transfers=calcTransfers(balances);
+    transfers.forEach(t=>{
+      settlementEntries.push({id:genId(),type:'settlement',amount:rd2(t.amount),note:'Settlement: '+t.from+' paid '+t.to+' '+c+rd2(t.amount),from:t.from,to:t.to,date:now,createdAt:now});
+    });
+    if(!transfers.length){
+      settlementEntries.push({id:genId(),type:'settlement',amount:0,note:'Settlement: All even — no payments needed',date:now,createdAt:now});
+    }
+  }else{
+    settlementEntries.push({id:genId(),type:'settlement',amount:total,note:'Settled on '+dateStr+' — Total was '+c+total,date:now,createdAt:now});
+  }
+  // Keep all old entries, prepend settlement lines
+  p.history=[...settlementEntries,...(p.history||[])];
+  syncBalance(p);
+  db.saveProject(p);closeOverlay();renderProjectDetail();showToast('Settled! History preserved');
 }
 
 function showShareSummary(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
   const isGroup=p.participants&&p.participants.length>0;
+  const currentHist=getEntriesSinceLastSettlement(p);
   let text='📊 *Tally* — '+p.name+'\n';
   if(p.budget)text+='Budget: '+c+p.budget+'\n';
-  const totalExp=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
-  const totalPaid=rd2((p.history||[]).filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
+  const totalExp=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPaid=rd2(currentHist.filter(h=>h.type==='payment'&&!h.from).reduce((s,h)=>s+h.amount,0));
   text+='Total Expenses: '+c+totalExp+'\n';
   if(totalPaid)text+='Total Paid: '+c+totalPaid+'\n';
   if(isGroup){
     const parts=p.participants;
     const paidMap={};const owesMap={};
     parts.forEach(n=>{paidMap[n]=0;owesMap[n]=0});
-    (p.history||[]).filter(h=>h.type==='charge').forEach(h=>{
+    currentHist.filter(h=>h.type==='charge').forEach(h=>{
       if(h.paidBy&&paidMap[h.paidBy]!==undefined)paidMap[h.paidBy]+=h.amount;
       if(h.customSplit){Object.keys(h.customSplit).forEach(n=>{if(owesMap[n]!==undefined)owesMap[n]+=h.customSplit[n]})}
       else{const among=h.splitAmong&&h.splitAmong.length?h.splitAmong:parts;const share=rd2(h.amount/among.length);among.forEach(n=>{if(owesMap[n]!==undefined)owesMap[n]+=share})}
     });
-    (p.history||[]).filter(h=>h.type==='payment'&&h.from&&h.to).forEach(h=>{if(paidMap[h.from]!==undefined)paidMap[h.from]+=h.amount;if(paidMap[h.to]!==undefined)paidMap[h.to]-=h.amount});
-    text+='\n👥 Settlement:\n';
-    parts.forEach(n=>{
-      const bal=rd2(paidMap[n]-owesMap[n]);
-      if(bal<-0.01)text+='🔴 '+n+' should pay '+c+rd2(Math.abs(bal))+'\n';
-      else if(bal>0.01)text+='🟢 '+n+' should receive '+c+rd2(bal)+'\n';
-      else text+='⚪ '+n+' — even\n';
-    });
+    currentHist.filter(h=>h.type==='payment'&&h.from&&h.to).forEach(h=>{if(paidMap[h.from]!==undefined)paidMap[h.from]+=h.amount;if(paidMap[h.to]!==undefined)paidMap[h.to]-=h.amount});
+    const bals={};parts.forEach(n=>{bals[n]=rd2(paidMap[n]-owesMap[n])});
+    const transfers=calcTransfers(bals);
+    text+='\n👥 Settle Up:\n';
+    if(transfers.length===0)text+='✅ All settled!\n';
+    else transfers.forEach(t=>{text+='💸 '+t.from+' → '+t.to+': '+c+rd2(t.amount)+'\n'});
   }
   text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
   const encoded=encodeURIComponent(text);
   window.open('https://wa.me/?text='+encoded,'_blank');
 }
 
-function doDeleteProjectEntry(idx){
+function doDeleteProjectEntry(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  if(h.type==='charge')p.balance=rd2((p.balance||0)-h.amount);
-  p.history.splice(idx,1);
-  save();closeOverlay();renderProjectDetail();showToast('Entry deleted');
+  deleteEntry(p,entryId);
+  closeOverlay();renderProjectDetail();showToast('Entry deleted');
 }
 
 // ===== GROUP DETAIL =====
 function calcGroupSettlement(p){
   const parts=p.participants||[];
-  const hist=p.history||[];
-  const expenses=hist.filter(h=>h.type==='expense');
-  const payments=hist.filter(h=>h.type==='payment'&&h.from&&h.to);
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const expenses=currentHist.filter(h=>h.type==='expense');
+  const payments=currentHist.filter(h=>h.type==='payment'&&h.from&&h.to);
   const totalExpenses=rd2(expenses.reduce((s,h)=>s+h.amount,0));
   const paid={};
   const owes={};
@@ -2023,385 +2832,28 @@ function calcGroupSettlement(p){
   return{totalExpenses,fairShare,paid,owes,balances,parts};
 }
 
-function renderGroupDetail(){
-  const p=getProject(currentProjectId);if(!p)return;
-  document.getElementById('groupDetailTitle').textContent=p.name;
-  const c=cur(p);
-  const{totalExpenses,fairShare,paid,owes,balances,parts}=calcGroupSettlement(p);
-
-  // Total card
-  let html=`<div class="balance-card" style="margin-top:0;margin-bottom:16px"><span class="balance-label">Total Expenses</span><span class="balance-amount" style="color:var(--text)">${c}${totalExpenses}</span><span style="font-size:12px;color:var(--text-muted);margin-top:6px">${parts.length} people</span></div>`;
-
-  // Combined: people sorted by who should pay first, then who should receive
-  const shouldPay=parts.filter(n=>balances[n]<-0.01).sort((a,b)=>balances[a]-balances[b]);
-  const shouldReceive=parts.filter(n=>balances[n]>0.01).sort((a,b)=>balances[b]-balances[a]);
-  const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
-
-  if(shouldPay.length||shouldReceive.length||even.length){
-    html+='<div class="settle-section">';
-    if(shouldPay.length){
-      html+='<div class="settle-block"><div class="settle-header settle-header-pay">Should Pay</div>';
-      html+=shouldPay.map(name=>{
-        const p2=rd2(paid[name]||0);const ow=rd2(owes[name]||0);const amt=rd2(Math.abs(balances[name]));
-        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${p2} · Share ${c}${ow}</span></div><span class="settle-amt settle-owes">${c}${amt}</span></div>`;
-      }).join('')+'</div>';
-    }
-    if(shouldReceive.length){
-      html+='<div class="settle-block"><div class="settle-header settle-header-receive">Should Receive</div>';
-      html+=shouldReceive.map(name=>{
-        const p2=rd2(paid[name]||0);const ow=rd2(owes[name]||0);const amt=rd2(balances[name]);
-        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${p2} · Share ${c}${ow}</span></div><span class="settle-amt settle-gets">${c}${amt}</span></div>`;
-      }).join('')+'</div>';
-    }
-    if(even.length){
-      html+='<div class="settle-block"><div class="settle-header settle-header-even">All Settled</div>';
-      html+=even.map(name=>{
-        const p2=rd2(paid[name]||0);const ow=rd2(owes[name]||0);
-        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Paid ${c}${p2} · Share ${c}${ow}</span></div><span class="settle-amt settle-even">Even</span></div>`;
-      }).join('')+'</div>';
-    }
-    html+='</div>';
-  }
-
-  document.getElementById('groupSummary').innerHTML=html;
-
-  // Expense history
-  const hist=p.history||[],hEl=document.getElementById('groupHistory');
-  if(!hist.length){hEl.innerHTML='<p class="empty-history">No expenses yet.<br>Add the first one to start splitting.</p>'}
-  else{
-    const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
-    const expenseRows=hist.filter(h=>h.type==='expense').map(h=>{
-      const realIdx=hist.indexOf(h);
-      const splitInfo=h.customSplit?'Custom split':h.splitAmong&&h.splitAmong.length<(p.participants||[]).length?h.splitAmong.length+' people':'Everyone';
-      return`<div class="history-row" onclick="showGroupEntryActions(${realIdx})" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge"></span><div><span class="row-note">${esc(h.note||'Expense')}</span><span class="row-date">${formatDate(h.date)} · ${esc(h.paidBy||'?')} paid · ${splitInfo}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt amt-charge">${c}${rd2(h.amount)}</span></div>`;
-    }).join('');
-    const paymentRows=hist.filter(h=>h.type==='payment'&&h.from&&h.to).map(h=>{
-      const realIdx=hist.indexOf(h);
-      return`<div class="history-row" onclick="showGroupPaymentActions(${realIdx})" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-payment"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(h.note):''}</span></div></div><span class="row-amt amt-payment">${c}${rd2(h.amount)}</span></div>`;
-    }).join('');
-    const settlementRows=hist.filter(h=>h.type==='settlement').map(h=>{
-      return`<div class="history-row" style="opacity:0.6"><div class="row-left"><span class="row-dot" style="background:var(--accent)"></span><div><span class="row-note" style="font-weight:500;color:var(--text-mid)">${esc(h.note)}</span><span class="row-date">${formatDate(h.date)}</span></div></div><span class="row-amt" style="color:var(--text-muted)">${c}${rd2(h.amount)}</span></div>`;
-    }).join('');
-    hEl.innerHTML=tapHint+expenseRows+paymentRows+settlementRows;
-  }
-
-  document.getElementById('groupExpenseInput').innerHTML='';
-}
-
-let groupSplitMode='equal';
-function showSettleConfirm(){
-  const p=getProject(currentProjectId);if(!p)return;
-  const expenses=(p.history||[]).filter(h=>h.type==='expense');
-  if(!expenses.length){showToast('No expenses to settle');return}
-  const c=cur(p);
-  const{totalExpenses}=calcGroupSettlement(p);
-  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
-    <p class="dialog-title">Settle & Reset?</p>
-    <p class="dialog-text">This marks the current round as settled (${c}${totalExpenses} total) and clears all expenses so you can start fresh. The settlement will be noted in the history.</p>
-    <div class="dialog-btns">
-      <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
-      <button class="dialog-confirm" style="background:var(--green-btn)" onclick="doSettle()">Settle</button>
-    </div>
-  </div></div>`;
-}
-function doSettle(){
-  const p=getProject(currentProjectId);if(!p)return;
-  const c=cur(p);
-  const{totalExpenses}=calcGroupSettlement(p);
-  const date=new Date().toISOString();
-  const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  // Remove all expense entries, keep settlement markers
-  const oldSettlements=(p.history||[]).filter(h=>h.type==='settlement');
-  p.history=[{type:'settlement',amount:totalExpenses,note:'Settled on '+dateStr+' — Total was '+c+totalExpenses,date},...oldSettlements];
-  p.balance=0;
-  save();closeOverlay();renderGroupDetail();showToast('Settled! Starting fresh');
-}
-
-function showGroupExpenseInput(){
-  const p=getProject(currentProjectId);if(!p)return;
-  const parts=p.participants||[];
-  const opts=parts.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  const el=document.getElementById('groupExpenseInput');
-  if(el.innerHTML){el.innerHTML='';groupSplitMode='equal';return}
-  groupSplitMode='equal';
-  const checks=parts.map(n=>`<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;font-weight:500"><input type="checkbox" checked value="${esc(n)}" class="grp-split-cb" onchange="updateGroupSplitPreview()" style="width:18px;height:18px;accent-color:var(--accent)">${esc(n)}<span class="grp-share-mult" style="margin-left:auto;display:flex;align-items:center;gap:4px"><select class="grp-mult-select" data-name="${esc(n)}" onchange="updateGroupSplitPreview()" style="padding:4px 6px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--card);color:var(--text)"><option value="1" selected>×1</option><option value="2">×2</option><option value="3">×3</option><option value="0.5">×½</option></select></span><span class="grp-custom-amt" style="display:none;margin-left:4px"><input type="number" inputmode="decimal" class="grp-custom-input" data-name="${esc(n)}" data-manual="false" oninput="this.dataset.manual=&apos;true&apos;;updateGroupSplitPreview()" style="width:70px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);font-size:13px;text-align:right" onchange="updateGroupSplitPreview()"></span></label>`).join('');
-  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
-    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="groupExpAmt" autofocus onchange="updateGroupSplitPreview()" oninput="updateGroupSplitPreview()"></div>
-    <div class="input-row"><input class="input-field" type="text" placeholder="What was it for?" id="groupExpNote" style="font-size:14px"></div>
-    <div class="input-row"><select class="form-select" id="groupExpPaidBy" style="flex:1">${opts}</select></div>
-    <p style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:12px">Who paid for this?</p>
-    <div style="display:flex;gap:0;border-radius:8px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:10px">
-      <button id="splitEqBtn" onclick="setGroupSplitMode('equal')" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:600;background:var(--accent);color:#fff;cursor:pointer">Split equally</button>
-      <button id="splitCustBtn" onclick="setGroupSplitMode('custom')" style="flex:1;padding:10px;border:none;border-left:1px solid var(--border);font-size:13px;font-weight:600;background:var(--card);color:var(--text-mid);cursor:pointer">Custom split</button>
-    </div>
-    <div id="groupSplitParticipants" style="padding:4px 0">${checks}</div>
-    <p id="groupSplitPreview" style="font-size:12px;color:var(--text-muted);margin:8px 0"></p>
-    <button class="input-confirm" style="width:100%;padding:14px" onclick="confirmGroupExpense()">Add Expense</button>
-  </div>`;
-  document.getElementById('groupExpAmt').focus();
-  updateGroupSplitPreview();
-}
-
-function setGroupSplitMode(mode){
-  groupSplitMode=mode;
-  document.getElementById('splitEqBtn').style.background=mode==='equal'?'var(--accent)':'var(--card)';
-  document.getElementById('splitEqBtn').style.color=mode==='equal'?'#fff':'var(--text-mid)';
-  document.getElementById('splitCustBtn').style.background=mode==='custom'?'var(--accent)':'var(--card)';
-  document.getElementById('splitCustBtn').style.color=mode==='custom'?'#fff':'var(--text-mid)';
-  document.querySelectorAll('.grp-custom-amt').forEach(el=>{el.style.display=mode==='custom'?'':'none'});
-  document.querySelectorAll('.grp-share-mult').forEach(el=>{el.style.display=mode==='equal'?'':'none'});
-  if(mode==='custom')prefillCustomAmounts();
-  updateGroupSplitPreview();
-}
-
-function prefillCustomAmounts(){
-  const amt=parseFloat(document.getElementById('groupExpAmt').value)||0;
-  const cbs=document.querySelectorAll('.grp-split-cb:checked');
-  const share=cbs.length?rd2(amt/cbs.length):0;
-  document.querySelectorAll('.grp-custom-input').forEach(inp=>{
-    const cb=inp.closest('label').querySelector('.grp-split-cb');
-    if(cb&&cb.checked&&!inp.value)inp.value=share;
+// Compute minimum person-to-person transfers to settle all balances
+function calcTransfers(balances){
+  const debtors=[];const creditors=[];
+  Object.keys(balances).forEach(n=>{
+    const b=balances[n];
+    if(b<-0.01)debtors.push({name:n,amount:rd2(Math.abs(b))});
+    else if(b>0.01)creditors.push({name:n,amount:rd2(b)});
   });
-}
-
-function updateGroupSplitPreview(){
-  const el=document.getElementById('groupSplitPreview');if(!el)return;
-  const amt=parseFloat(document.getElementById('groupExpAmt').value)||0;
-  const p=getProject(currentProjectId);if(!p)return;
-  const c=cur(p);
-  if(groupSplitMode==='equal'){
-    const cbs=document.querySelectorAll('.grp-split-cb:checked');
-    let totalShares=0;
-    cbs.forEach(cb=>{const mult=document.querySelector('.grp-mult-select[data-name="'+cb.value+'"]');totalShares+=mult?parseFloat(mult.value)||1:1});
-    if(totalShares&&amt){el.textContent=c+rd2(amt/totalShares)+' per share ('+totalShares+' shares)'}
-    else{el.textContent=''}
-  }else{
-    autoRecalcCustomSplits();
-    const inputs=document.querySelectorAll('.grp-custom-input');
-    let total=0;
-    inputs.forEach(inp=>{const cb=inp.closest('label').querySelector('.grp-split-cb');if(cb&&cb.checked)total+=parseFloat(inp.value)||0});
-    if(amt&&total){
-      const diff=rd2(amt-total);
-      if(Math.abs(diff)<0.01)el.innerHTML='<span style="color:var(--green)">Splits add up correctly</span>';
-      else el.innerHTML='<span style="color:var(--red)">Splits total '+c+rd2(total)+' — off by '+c+Math.abs(diff)+'</span>';
-    }else{el.textContent=''}
+  debtors.sort((a,b)=>b.amount-a.amount);
+  creditors.sort((a,b)=>b.amount-a.amount);
+  const transfers=[];
+  let di=0,ci=0;
+  while(di<debtors.length&&ci<creditors.length){
+    const d=debtors[di],cr=creditors[ci];
+    const amt=rd2(Math.min(d.amount,cr.amount));
+    if(amt>0.01)transfers.push({from:d.name,to:cr.name,amount:amt});
+    d.amount=rd2(d.amount-amt);
+    cr.amount=rd2(cr.amount-amt);
+    if(d.amount<0.01)di++;
+    if(cr.amount<0.01)ci++;
   }
-}
-
-function autoRecalcCustomSplits(){
-  const amt=parseFloat(document.getElementById('groupExpAmt').value)||0;
-  if(!amt)return;
-  const inputs=document.querySelectorAll('.grp-custom-input');
-  const checkedInputs=[];
-  let manualTotal=0;
-  let manualCount=0;
-  inputs.forEach(inp=>{
-    const cb=inp.closest('label').querySelector('.grp-split-cb');
-    if(!cb||!cb.checked)return;
-    checkedInputs.push(inp);
-    if(inp.dataset.manual==='true'){manualTotal+=parseFloat(inp.value)||0;manualCount++}
-  });
-  const autoInputs=checkedInputs.filter(inp=>inp.dataset.manual!=='true');
-  if(autoInputs.length>0){
-    const remaining=rd2(amt-manualTotal);
-    const each=rd2(remaining/autoInputs.length);
-    autoInputs.forEach(inp=>{inp.value=each});
-  }
-}
-
-function confirmGroupExpense(){
-  const p=getProject(currentProjectId);if(!p)return;
-  const val=parseFloat(document.getElementById('groupExpAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
-  const note=document.getElementById('groupExpNote').value.trim()||'Expense';
-  const paidBy=document.getElementById('groupExpPaidBy').value;
-  if(!paidBy){showToast('Select who paid');return}
-  const cbs=document.querySelectorAll('.grp-split-cb:checked');
-  if(!cbs.length){showToast('Select at least one person to split with');return}
-  const splitAmong=Array.from(cbs).map(cb=>cb.value);
-  let customSplit=null;
-  // For equal with multipliers, convert to customSplit
-  if(groupSplitMode==='equal'){
-    let totalShares=0;
-    cbs.forEach(cb=>{const mult=document.querySelector('.grp-mult-select[data-name="'+cb.value+'"]');totalShares+=mult?parseFloat(mult.value)||1:1});
-    const hasNonOne=Array.from(document.querySelectorAll('.grp-mult-select')).some(s=>s.value!=='1');
-    if(hasNonOne&&totalShares>0){
-      customSplit={};
-      const perShare=rd2(val/totalShares);
-      cbs.forEach(cb=>{const mult=document.querySelector('.grp-mult-select[data-name="'+cb.value+'"]');const m=mult?parseFloat(mult.value)||1:1;customSplit[cb.value]=rd2(perShare*m)});
-    }
-  }
-  if(groupSplitMode==='custom'){
-    customSplit={};
-    let total=0;
-    document.querySelectorAll('.grp-custom-input').forEach(inp=>{
-      const cb=inp.closest('label').querySelector('.grp-split-cb');
-      if(cb&&cb.checked){const v=parseFloat(inp.value)||0;customSplit[inp.dataset.name]=rd2(v);total+=v}
-    });
-    if(Math.abs(total-val)>0.01){showToast('Split amounts don\'t add up to total');return}
-  }
-  p.history=p.history||[];
-  const entry={type:'expense',amount:rd2(val),paidBy,note,date:new Date().toISOString(),splitAmong};
-  if(customSplit)entry.customSplit=customSplit;
-  p.history.unshift(entry);
-  p.balance=rd2((p.balance||0)+val);
-  save();document.getElementById('groupExpenseInput').innerHTML='';groupSplitMode='equal';renderGroupDetail();showToast(cur(p)+rd2(val)+' added');
-}
-
-function showGroupPaymentInput(){
-  const p=getProject(currentProjectId);if(!p)return;
-  const parts=p.participants||[];
-  const fromOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===0?' selected':''}>${esc(n)}</option>`).join('');
-  const toOpts=parts.map((n,i)=>`<option value="${esc(n)}"${i===1?' selected':''}>${esc(n)}</option>`).join('');
-  const el=document.getElementById('groupExpenseInput');
-  if(el.innerHTML){el.innerHTML='';return}
-  el.innerHTML=`<div style="animation:slideDown .25s ease;margin-bottom:16px">
-    <p style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Record a payment between members</p>
-    <div class="input-row" style="gap:6px;align-items:center"><select class="form-select" id="groupPayFrom" style="flex:1">${fromOpts}</select><span style="font-size:13px;color:var(--text-muted);font-weight:600;padding:0 2px">paid</span><select class="form-select" id="groupPayTo" style="flex:1">${toOpts}</select></div>
-    <div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Amount…" id="groupPayAmt" autofocus></div>
-    <div class="input-row"><input class="input-field" type="text" placeholder="Note (optional)" id="groupPayNote" style="font-size:14px"><button class="input-confirm" onclick="confirmGroupPayment()">Add</button></div>
-  </div>`;
-  document.getElementById('groupPayAmt').focus();
-}
-
-function confirmGroupPayment(){
-  const p=getProject(currentProjectId);if(!p)return;
-  const from=document.getElementById('groupPayFrom').value;
-  const to=document.getElementById('groupPayTo').value;
-  if(from===to){showToast('Pick two different people');return}
-  const val=parseFloat(document.getElementById('groupPayAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
-  const note=document.getElementById('groupPayNote').value.trim();
-  p.history=p.history||[];
-  p.history.unshift({type:'payment',from,to,amount:rd2(val),note:note||from+' paid '+to,date:new Date().toISOString()});
-  save();document.getElementById('groupExpenseInput').innerHTML='';renderGroupDetail();showToast(cur(p)+rd2(val)+' payment recorded');
-}
-
-function showGroupEntryActions(idx){
-  const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  const c=cur(p);
-  const parts=p.participants||[];
-  const opts=parts.map(n=>`<option value="${esc(n)}" ${n===h.paidBy?'selected':''}>${esc(n)}</option>`).join('');
-  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
-  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
-  const splitAmong=h.splitAmong||parts;
-  const isCustom=!!h.customSplit;
-  const splitChecks=parts.map(n=>{
-    const checked=splitAmong.includes(n)?'checked':'';
-    const custVal=isCustom&&h.customSplit[n]?h.customSplit[n]:'';
-    return`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px"><input type="checkbox" ${checked} value="${esc(n)}" class="edit-split-cb" style="width:16px;height:16px;accent-color:var(--accent)">${esc(n)}<span class="edit-custom-amt" style="display:${isCustom?'':'none'};margin-left:auto"><input type="number" inputmode="decimal" class="edit-custom-input" data-name="${esc(n)}" value="${custVal}" style="width:70px;padding:5px 6px;border-radius:6px;border:1px solid var(--border);font-size:12px;text-align:right"></span></label>`;
-  }).join('');
-  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
-    <p class="dialog-title" style="text-align:center">Expense</p>
-    <label style="${lbl}">Description</label>
-    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}" onfocus="this.setSelectionRange(0,this.value.length)">
-    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
-    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
-    <label style="${lbl}">Paid By</label>
-    <select class="dialog-input" id="editPaidBy" style="appearance:auto;-webkit-appearance:auto">${opts}</select>
-    <label style="${lbl}">Split</label>
-    <div style="display:flex;gap:0;border-radius:6px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px">
-      <button id="editSplitEqBtn" onclick="setEditSplitMode('equal')" style="flex:1;padding:8px;border:none;font-size:12px;font-weight:600;background:${isCustom?'var(--card)':'var(--accent)'};color:${isCustom?'var(--text-mid)':'#fff'};cursor:pointer">Equal</button>
-      <button id="editSplitCustBtn" onclick="setEditSplitMode('custom')" style="flex:1;padding:8px;border:none;border-left:1px solid var(--border);font-size:12px;font-weight:600;background:${isCustom?'var(--accent)':'var(--card)'};color:${isCustom?'#fff':'var(--text-mid)'};cursor:pointer">Custom</button>
-    </div>
-    <div id="editSplitParticipants">${splitChecks}</div>
-    <label style="${lbl};margin-top:12px">Date</label>
-    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
-    <label style="${lbl}">Note</label>
-    <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
-    <div class="dialog-actions-col">
-      <button class="dialog-btn-save" onclick="doEditGroupEntry(${idx})">Save</button>
-      <button class="dialog-btn-delete" onclick="doDeleteGroupEntry(${idx})">Delete</button>
-      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
-    </div>
-  </div></div>`;
-  
-}
-let editSplitMode='equal';
-function setEditSplitMode(mode){
-  editSplitMode=mode;
-  document.getElementById('editSplitEqBtn').style.background=mode==='equal'?'var(--accent)':'var(--card)';
-  document.getElementById('editSplitEqBtn').style.color=mode==='equal'?'#fff':'var(--text-mid)';
-  document.getElementById('editSplitCustBtn').style.background=mode==='custom'?'var(--accent)':'var(--card)';
-  document.getElementById('editSplitCustBtn').style.color=mode==='custom'?'#fff':'var(--text-mid)';
-  document.querySelectorAll('.edit-custom-amt').forEach(el=>{el.style.display=mode==='custom'?'':'none'});
-}
-
-function doEditGroupEntry(idx){
-  const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  const newAmt=parseFloat(document.getElementById('editAmt').value);
-  if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
-  const diff=newAmt-(h.amount||0);
-  p.balance=rd2((p.balance||0)+diff);
-  h.amount=rd2(newAmt);
-  h.note=document.getElementById('editName').value.trim()||h.note;
-  h.paidBy=document.getElementById('editPaidBy').value;
-  // Save split
-  const cbs=document.querySelectorAll('.edit-split-cb:checked');
-  h.splitAmong=Array.from(cbs).map(cb=>cb.value);
-  const isCustom=editSplitMode==='custom';
-  if(isCustom){
-    h.customSplit={};
-    document.querySelectorAll('.edit-custom-input').forEach(inp=>{
-      const cb=inp.closest('label').querySelector('.edit-split-cb');
-      if(cb&&cb.checked)h.customSplit[inp.dataset.name]=rd2(parseFloat(inp.value)||0);
-    });
-  }else{delete h.customSplit}
-  const newDate=document.getElementById('editDate').value;
-  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
-  h.comment=document.getElementById('editComment').value.trim()||'';
-  save();closeOverlay();renderGroupDetail();showToast('Entry updated');
-}
-
-function doDeleteGroupEntry(idx){
-  const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  if(h.type==='expense')p.balance=rd2((p.balance||0)-h.amount);
-  p.history.splice(idx,1);
-  save();closeOverlay();renderGroupDetail();showToast('Entry deleted');
-}
-
-function showGroupPaymentActions(idx){
-  const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  const c=cur(p);
-  const parts=p.participants||[];
-  const fromOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.from?'selected':''}>${esc(n)}</option>`).join('');
-  const toOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.to?'selected':''}>${esc(n)}</option>`).join('');
-  const dateVal=h.date?h.date.split('T')[0]:new Date().toISOString().split('T')[0];
-  const lbl='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;display:block';
-  document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px;max-height:90vh;overflow-y:auto">
-    <p class="dialog-title" style="text-align:center">Payment</p>
-    <label style="${lbl}">Who paid</label>
-    <select class="dialog-input" id="editGpFrom" style="appearance:auto;-webkit-appearance:auto">${fromOpts}</select>
-    <label style="${lbl}">Paid to</label>
-    <select class="dialog-input" id="editGpTo" style="appearance:auto;-webkit-appearance:auto">${toOpts}</select>
-    <label style="${lbl}">Amount${c?' ('+c+')':''}</label>
-    <input class="dialog-input" id="editAmt" type="number" inputmode="decimal" value="${rd2(h.amount||0)}">
-    <label style="${lbl}">Date</label>
-    <input class="dialog-input" id="editDate" type="date" value="${dateVal}" style="min-width:0;width:100%;box-sizing:border-box">
-    <label style="${lbl}">Note</label>
-    <input class="dialog-input" id="editName" type="text" value="${esc(h.note||'')}">
-    <div class="dialog-actions-col">
-      <button class="dialog-btn-save" onclick="doEditGroupPayment(${idx})">Save</button>
-      <button class="dialog-btn-delete" onclick="doDeleteGroupEntry(${idx})">Delete</button>
-      <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
-    </div>
-  </div></div>`;
-}
-
-function doEditGroupPayment(idx){
-  const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  const newAmt=parseFloat(document.getElementById('editAmt').value);
-  if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
-  h.amount=rd2(newAmt);
-  h.from=document.getElementById('editGpFrom').value;
-  h.to=document.getElementById('editGpTo').value;
-  h.note=document.getElementById('editName').value.trim();
-  const newDate=document.getElementById('editDate').value;
-  if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
-  save();closeOverlay();renderGroupDetail();showToast('Payment updated');
+  return transfers;
 }
 
 // ===== LENDING CIRCLE FORM =====
@@ -2469,9 +2921,19 @@ function saveLendingCircle(){
 }
 
 // ===== LENDING CIRCLE DETAIL =====
+// Returns only the history entries AFTER the most recent settlement divider
+// (i.e. the current unsettled round). If no settlement exists, returns all entries.
+function getEntriesSinceLastSettlement(p){
+  const hist=p.history||[];
+  const lastSettleIdx=hist.findIndex(h=>h.type==='settlement');
+  if(lastSettleIdx<0)return hist; // no settlement found — use all
+  return hist.slice(0,lastSettleIdx); // entries before (newer than) the settlement
+}
+
 function calcLendingSettlement(p){
   const parts=p.participants||[];
-  const hist=(p.history||[]).filter(h=>h.type==='transfer');
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const hist=currentHist.filter(h=>h.type==='transfer');
   const balances={};
   parts.forEach(name=>{balances[name]=0});
   hist.forEach(h=>{
@@ -2496,28 +2958,37 @@ function renderLendingDetail(){
   const even=parts.filter(n=>Math.abs(balances[n])<=0.01);
 
   if(shouldPay.length||shouldReceive.length||even.length){
-    html+='<div class="settle-section">';
-    if(shouldPay.length){
-      html+='<div class="settle-block"><div class="settle-header settle-header-pay">Should Pay</div>';
-      html+=shouldPay.map(name=>{
-        const amt=rd2(Math.abs(balances[name]));
-        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Owes more than they've lent</span></div><span class="settle-amt settle-owes">${c}${amt}</span></div>`;
-      }).join('')+'</div>';
+    const transfers=calcTransfers(balances);
+    if(transfers.length===0){
+      html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px;text-align:center;box-shadow:var(--shadow-sm);margin-bottom:16px"><span style="font-size:15px;font-weight:600;color:var(--text-light)">✅ All settled up!</span></div>';
+    }else{
+      html+='<div class="settle-section">';
+      html+='<div class="settle-block"><div class="settle-header" style="color:var(--text-muted);border-bottom-color:var(--border)">Settle Up</div>';
+      transfers.forEach(t=>{
+        html+=`<div class="settle-row" style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+            <span style="font-size:14px;font-weight:700;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.from)}</span>
+            <span style="font-size:16px;color:var(--text-light);flex-shrink:0">→</span>
+            <span style="font-size:14px;font-weight:700;color:var(--green);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.to)}</span>
+          </div>
+          <span style="font-size:16px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;margin-left:12px;flex-shrink:0">${c}${rd2(t.amount)}</span>
+        </div>`;
+      });
+      html+='</div>';
+
+      // Per-person breakdown
+      html+='<details style="margin-top:4px;margin-bottom:12px"><summary style="font-size:11px;color:var(--text-muted);cursor:pointer;padding:6px 0;font-weight:600;letter-spacing:0.5px">Per-person breakdown</summary><div style="margin-top:4px">';
+      [...shouldPay,...shouldReceive,...even].forEach(name=>{
+        const bal=balances[name];
+        let statusColor=bal<-0.01?'var(--red)':bal>0.01?'var(--green)':'var(--text-light)';
+        html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${esc(name)}</span>
+          <span style="font-size:13px;font-weight:700;color:${statusColor}">${bal<-0.01?'-'+c+rd2(Math.abs(bal)):bal>0.01?'+'+c+rd2(bal):'Even'}</span>
+        </div>`;
+      });
+      html+='</div></details>';
+      html+='</div>';
     }
-    if(shouldReceive.length){
-      html+='<div class="settle-block"><div class="settle-header settle-header-receive">Should Receive</div>';
-      html+=shouldReceive.map(name=>{
-        const amt=rd2(balances[name]);
-        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span><span style="display:block;font-size:12px;color:var(--text-mid)">Has lent more than they owe</span></div><span class="settle-amt settle-gets">${c}${amt}</span></div>`;
-      }).join('')+'</div>';
-    }
-    if(even.length){
-      html+='<div class="settle-block"><div class="settle-header settle-header-even">All Settled</div>';
-      html+=even.map(name=>{
-        return`<div class="settle-row"><div><span class="settle-name">${esc(name)}</span></div><span class="settle-amt settle-even">Even</span></div>`;
-      }).join('')+'</div>';
-    }
-    html+='</div>';
   }
 
   document.getElementById('lendingSummary').innerHTML=html;
@@ -2527,12 +2998,11 @@ function renderLendingDetail(){
   if(!hist.length){hEl.innerHTML='<p class="empty-history">No transactions yet.<br>Add the first one to start tracking.</p>'}
   else{
     const tapHint='<p style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:8px">Tap an entry to edit</p>';
-    hEl.innerHTML=tapHint+hist.filter(h=>h.type==='transfer').map((h,i)=>{
-      const realIdx=hist.indexOf(h);
-      return`<div class="history-row" onclick="showLendingEntryActions(${realIdx})" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge-earn"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(h.note):''}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt" style="color:var(--text);font-weight:700">${c}${rd2(h.amount)}</span></div>`;
-    }).join('')+
-    hist.filter(h=>h.type==='settlement').map(h=>{
-      return`<div class="history-row" style="opacity:0.6"><div class="row-left"><span class="row-dot" style="background:var(--accent)"></span><div><span class="row-note" style="font-weight:500;color:var(--text-mid)">${esc(h.note)}</span><span class="row-date">${formatDate(h.date)}</span></div></div><span class="row-amt" style="color:var(--text-muted)">${c}${rd2(h.amount)}</span></div>`;
+    hEl.innerHTML=tapHint+hist.filter(h=>h.type==='transfer'||h.type==='settlement').map((h,i)=>{
+      if(h.type==='settlement'){
+        return`<div style="display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--border)"><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div><div style="text-align:center;flex-shrink:0"><span style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.5px">✓ ${esc(h.note||'Settlement')}</span><span style="display:block;font-size:11px;color:var(--text-muted);margin-top:2px">${formatDate(h.date)}</span></div><div style="flex:1;height:2px;background:var(--accent);border-radius:1px"></div></div>`;
+      }
+      return`<div class="history-row" onclick="showLendingEntryActions('${h.id}')" style="cursor:pointer"><div class="row-left"><span class="row-dot dot-charge-earn"></span><div><span class="row-note">${esc(h.from)} → ${esc(h.to)}</span><span class="row-date">${formatDate(h.date)}${h.note?' · '+esc(h.note):''}</span>${h.comment?`<span style="display:block;font-size:12px;color:var(--text-mid);margin-top:2px;font-style:italic">${esc(h.comment)}</span>`:''}</div></div><span class="row-amt" style="color:var(--text);font-weight:700">${c}${rd2(h.amount)}</span></div>`;
     }).join('');
   }
 
@@ -2561,15 +3031,13 @@ function confirmLendingTrans(){
   if(from===to){showToast('Pick two different people');return}
   const val=parseFloat(document.getElementById('lendAmt').value);if(!val||val<=0){showToast('Enter an amount');return}
   const note=document.getElementById('lendNote').value.trim();
-  p.history=p.history||[];
-  p.history.unshift({type:'transfer',from,to,amount:rd2(val),note:note||'',date:new Date().toISOString()});
-  p.balance=rd2((p.balance||0)+val);
-  save();document.getElementById('lendingTransInput').innerHTML='';renderLendingDetail();showToast(cur(p)+rd2(val)+' recorded');
+  addEntry(p,{type:'transfer',from,to,amount:rd2(val),note:note||'',date:new Date().toISOString()});
+  document.getElementById('lendingTransInput').innerHTML='';renderLendingDetail();showToast(cur(p)+rd2(val)+' recorded');
 }
 
-function showLendingEntryActions(idx){
+function showLendingEntryActions(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   const c=cur(p);
   const parts=p.participants||[];
   const fromOpts=parts.map(n=>`<option value="${esc(n)}" ${n===h.from?'selected':''}>${esc(n)}</option>`).join('');
@@ -2591,20 +3059,18 @@ function showLendingEntryActions(idx){
     <label style="${lbl}">Note</label>
     <textarea class="dialog-input" id="editComment" rows="2" style="resize:vertical;min-height:44px;font-size:14px">${esc(h.comment||'')}</textarea>
     <div class="dialog-actions-col">
-      <button class="dialog-btn-save" onclick="doEditLendingEntry(${idx})">Save</button>
-      <button class="dialog-btn-delete" onclick="doDeleteLendingEntry(${idx})">Delete</button>
+      <button class="dialog-btn-save" onclick="doEditLendingEntry('${entryId}')">Save</button>
+      <button class="dialog-btn-delete" onclick="doDeleteLendingEntry('${entryId}')">Delete</button>
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
 }
 
-function doEditLendingEntry(idx){
+function doEditLendingEntry(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
+  const{entry:h}=findEntry(p,entryId);if(!h)return;
   const newAmt=parseFloat(document.getElementById('editAmt').value);
   if(!newAmt||newAmt<=0){showToast('Please enter a valid amount');return}
-  const diff=newAmt-(h.amount||0);
-  p.balance=rd2((p.balance||0)+diff);
   h.amount=rd2(newAmt);
   h.from=document.getElementById('editLendFrom').value;
   h.to=document.getElementById('editLendTo').value;
@@ -2612,26 +3078,25 @@ function doEditLendingEntry(idx){
   const newDate=document.getElementById('editDate').value;
   if(newDate){const oldTime=h.date?h.date.split('T')[1]:'12:00:00.000Z';h.date=newDate+'T'+oldTime}
   h.comment=document.getElementById('editComment').value.trim()||'';
-  save();closeOverlay();renderLendingDetail();showToast('Entry updated');
+  syncBalance(p);db.saveProject(p);closeOverlay();renderLendingDetail();showToast('Entry updated');
 }
 
-function doDeleteLendingEntry(idx){
+function doDeleteLendingEntry(entryId){
   const p=getProject(currentProjectId);if(!p)return;
-  const h=p.history[idx];if(!h)return;
-  p.balance=rd2((p.balance||0)-h.amount);
-  p.history.splice(idx,1);
-  save();closeOverlay();renderLendingDetail();showToast('Entry deleted');
+  deleteEntry(p,entryId);
+  closeOverlay();renderLendingDetail();showToast('Entry deleted');
 }
 
 function showLendingSettleConfirm(){
   const p=getProject(currentProjectId);if(!p)return;
-  const transfers=(p.history||[]).filter(h=>h.type==='transfer');
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const transfers=currentHist.filter(h=>h.type==='transfer');
   if(!transfers.length){showToast('No transactions to settle');return}
   const c=cur(p);
   const{totalMoved}=calcLendingSettlement(p);
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()">
     <p class="dialog-title">Settle & Reset?</p>
-    <p class="dialog-text">This marks the current round as settled (${c}${totalMoved} in transactions) and clears everything so you can start fresh.</p>
+    <p class="dialog-text">This marks the current round as settled (${c}${totalMoved} in transactions). A settlement line will be added to the history and balances will reset to zero.</p>
     <div class="dialog-btns">
       <button class="dialog-cancel" onclick="closeOverlay()">Cancel</button>
       <button class="dialog-confirm" style="background:var(--green-btn)" onclick="doLendingSettle()">Settle</button>
@@ -2641,25 +3106,31 @@ function showLendingSettleConfirm(){
 function doLendingSettle(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
-  const{totalMoved}=calcLendingSettlement(p);
+  const{balances,totalMoved}=calcLendingSettlement(p);
   const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  const oldSettlements=(p.history||[]).filter(h=>h.type==='settlement');
-  p.history=[{type:'settlement',amount:totalMoved,note:'Settled on '+dateStr+' — '+c+totalMoved+' in transactions',date:new Date().toISOString()},...oldSettlements];
-  p.balance=0;
-  save();closeOverlay();renderLendingDetail();showToast('Settled! Starting fresh');
+  const now=new Date().toISOString();
+  const transfers=calcTransfers(balances);
+  const settlementEntries=[];
+  transfers.forEach(t=>{
+    settlementEntries.push({id:genId(),type:'settlement',amount:rd2(t.amount),note:'Settlement: '+t.from+' paid '+t.to+' '+c+rd2(t.amount),from:t.from,to:t.to,date:now,createdAt:now});
+  });
+  if(!transfers.length){
+    settlementEntries.push({id:genId(),type:'settlement',amount:0,note:'Settlement: All even — no payments needed',date:now,createdAt:now});
+  }
+  // Keep all old entries, prepend settlement lines
+  p.history=[...settlementEntries,...(p.history||[])];
+  syncBalance(p);
+  db.saveProject(p);closeOverlay();renderLendingDetail();showToast('Settled! History preserved');
 }
 
 function showGroupShareSummary(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
   const{totalExpenses,paid,owes,balances,parts}=calcGroupSettlement(p);
-  let text='📊 *Tally* — '+p.name+'\nTotal: '+c+totalExpenses+'\n\n👥 Settlement:\n';
-  parts.forEach(n=>{
-    const bal=rd2(balances[n]);
-    if(bal<-0.01)text+='🔴 '+n+' should pay '+c+rd2(Math.abs(bal))+'\n';
-    else if(bal>0.01)text+='🟢 '+n+' should receive '+c+rd2(bal)+'\n';
-    else text+='⚪ '+n+' — even\n';
-  });
+  const transfers=calcTransfers(balances);
+  let text='📊 *Tally* — '+p.name+'\nTotal: '+c+totalExpenses+'\n\n👥 Settle Up:\n';
+  if(transfers.length===0)text+='✅ All settled!\n';
+  else transfers.forEach(t=>{text+='💸 '+t.from+' → '+t.to+': '+c+rd2(t.amount)+'\n'});
   text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
   window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
 }
@@ -2668,13 +3139,10 @@ function showLendingShareSummary(){
   const p=getProject(currentProjectId);if(!p)return;
   const c=cur(p);
   const{balances,parts,totalMoved}=calcLendingSettlement(p);
-  let text='📊 *Tally* — '+p.name+'\nTotal Transactions: '+c+totalMoved+'\n\n👥 Settlement:\n';
-  parts.forEach(n=>{
-    const bal=rd2(balances[n]);
-    if(bal<-0.01)text+='🔴 '+n+' should pay '+c+rd2(Math.abs(bal))+'\n';
-    else if(bal>0.01)text+='🟢 '+n+' should receive '+c+rd2(bal)+'\n';
-    else text+='⚪ '+n+' — even\n';
-  });
+  const transfers=calcTransfers(balances);
+  let text='📊 *Tally* — '+p.name+'\nTotal Transactions: '+c+totalMoved+'\n\n👥 Settle Up:\n';
+  if(transfers.length===0)text+='✅ All settled!\n';
+  else transfers.forEach(t=>{text+='💸 '+t.from+' → '+t.to+': '+c+rd2(t.amount)+'\n'});
   text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
   window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
 }
@@ -2686,15 +3154,17 @@ function showActivityShareSummary(){
   const bal=p.balance||0;
   const abs=rd2(Math.abs(bal));
   let text='📊 *Tally* — '+p.name+'\n';
-  const totalCharges=rd2((p.history||[]).filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
-  const totalPayments=rd2((p.history||[]).filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
+  const currentHist=getEntriesSinceLastSettlement(p);
+  const totalCharges=rd2(currentHist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPayments=rd2(currentHist.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
   text+='Total Charges: '+c+totalCharges+'\n';
   text+='Total Payments: '+c+totalPayments+'\n';
+  const me=myName(),them=otherName(p);
   if(bal===0)text+='\n✅ All settled!\n';
   else if(pay){
-    text+=bal>0?'\n🔴 Balance due: '+c+abs+'\n':'\n🟢 Credit (paid ahead): '+c+abs+'\n';
+    text+=bal>0?'\n🔴 '+me+' to pay '+them+': '+c+abs+'\n':'\n🟢 '+me+' paid '+c+abs+' in advance\n';
   }else{
-    text+=bal>0?'\n🟢 They owe: '+c+abs+'\n':'\n🔴 Overpaid: '+c+abs+'\n';
+    text+=bal>0?'\n🟢 '+them+' to pay '+me+': '+c+abs+'\n':'\n🟢 '+them+' paid '+c+abs+' in advance\n';
   }
   text+='\n_Tracked with Tally_ 📊\n_The simple balance tracker — try it free!_';
   window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
@@ -2706,12 +3176,6 @@ function getDefaultTo(){return new Date().toISOString().split('T')[0]}
 
 function showExportDialog(){
   const p=getProject(currentProjectId);if(!p)return;
-  const invoiceBtns=p.invoiceEnabled?`
-      <div style="border-top:1.5px solid var(--border);padding-top:10px;margin-top:4px">
-        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;text-align:center">Invoice</p>
-        <button class="dialog-btn-save" style="background:#2c2418" onclick="doGenerateInvoice('detailed')">Invoice — Detailed Line Items</button>
-        <button class="dialog-btn-save" style="background:#6b5e50;margin-top:6px" onclick="doGenerateInvoice('summary')">Invoice — Summary Only</button>
-      </div>`:'';
   document.getElementById('overlay').innerHTML=`<div class="overlay" onclick="closeOverlay(event)"><div class="dialog" onclick="event.stopPropagation()" style="text-align:left;max-width:340px">
     <p class="dialog-title" style="text-align:center">Export History</p>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;text-align:center">${esc(p.name)}</p>
@@ -2722,7 +3186,6 @@ function showExportDialog(){
     <div class="dialog-actions-col">
       <button class="dialog-btn-save" onclick="doExportCSV()">Export Excel</button>
       <button class="dialog-btn-save" style="background:var(--accent)" onclick="doExportPDF()">Export PDF</button>
-      ${invoiceBtns}
       <button class="dialog-btn-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
   </div></div>`;
@@ -2769,22 +3232,35 @@ function doExportPDF(){
   if(!items.length){showToast('No entries in this period');return}
   const c=cur(p);
   const pay=isPay(p);
-  const totalCharges=items.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0);
-  const totalPayments=items.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0);
-  const net=totalCharges-totalPayments;
+  // Round at accumulation. Without rd2, JS float arithmetic produces
+  // values like 1490.5900000000001 in the totals row.
+  const totalCharges=rd2(items.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0));
+  const totalPayments=rd2(items.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0));
+  const net=rd2(totalCharges-totalPayments);
 
   let rows=items.map(h=>{
     const date=new Date(h.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     const type=h.type==='charge'?(p.type==='project'?'Expense':'Session/Charge'):h.type==='payment'?'Payment':'Skipped';
-    const amt=h.type==='charge'?'+'+c+h.amount:h.type==='payment'?'-'+c+h.amount:'—';
+    // rd2 on per-row display too — defensive against any legacy float values
+    // that slipped in before the rounding contract was enforced.
+    const amt=h.type==='charge'?'+'+c+rd2(h.amount):h.type==='payment'?'-'+c+rd2(h.amount):'—';
     const note=esc(h.note||'');
     const comment=h.comment?'<br><em style="color:#999">'+esc(h.comment)+'</em>':'';
     return'<tr><td>'+date+'</td><td>'+type+'</td><td>'+note+comment+'</td><td style="text-align:right">'+amt+'</td></tr>';
   }).join('');
 
+  const businessName=settings.name||'';
+  // Inline SVG logo — same mark used on the home screen, kept as data so
+  // the PDF prints standalone without needing network access.
+  const logoSvg=`<svg width="36" height="36" viewBox="0 0 48 48" style="flex-shrink:0;vertical-align:middle"><rect width="48" height="48" rx="11" fill="#fff" stroke="#ede8e1" stroke-width="1"/><g transform="translate(6,5)"><rect x="0" y="0" width="28" height="7" rx="1.5" fill="#2c2418"/><rect x="10" y="0" width="8" height="32" rx="1.5" fill="#2c2418"/><rect x="20" y="10" width="13" height="6" rx="1.3" fill="#e67e22"/><rect x="20" y="18" width="10" height="6" rx="1.3" fill="#27ae60" opacity="0.8"/><rect x="20" y="26" width="7" height="6" rx="1.3" fill="#27ae60" opacity="0.5"/></g></svg>`;
+
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(p.name)} — Export</title>
 <style>body{font-family:-apple-system,sans-serif;max-width:700px;margin:40px auto;color:#2c2418;padding:0 20px}
-h1{font-size:22px;margin-bottom:4px}
+.brand{display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1.5px solid #ede8e1;margin-bottom:24px}
+.brand-text{display:flex;flex-direction:column;line-height:1.2}
+.brand-name{font-size:18px;font-weight:700;color:#2c2418}
+.brand-tally{font-size:11px;color:#9e9486;text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+h1{font-size:22px;margin-bottom:4px;margin-top:0}
 .sub{color:#9e9486;font-size:13px;margin-bottom:24px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;padding:10px 8px;border-bottom:2px solid #ede8e1;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#9e9486}
@@ -2796,13 +3272,20 @@ td:last-child{text-align:right;font-weight:600;white-space:nowrap}
 .summary-row.total{font-weight:700;border-top:1px solid #ede8e1;margin-top:8px;padding-top:10px}
 @media print{body{margin:20px}}
 </style></head><body>
+<div class="brand">
+  ${logoSvg}
+  <div class="brand-text">
+    ${businessName?`<span class="brand-name">${esc(businessName)}</span>`:''}
+    <span class="brand-tally">Tracked with Tally</span>
+  </div>
+</div>
 <h1>${esc(p.name)}</h1>
 <div class="sub">${new Date(from).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} — ${new Date(to).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${items.length} entries</div>
 <table><thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>
 <div class="summary">
 <div class="summary-row"><span>Total Charges</span><span>+${c}${totalCharges}</span></div>
 <div class="summary-row"><span>Total Payments</span><span>-${c}${totalPayments}</span></div>
-<div class="summary-row total"><span>${net>=0?(pay?'Balance Owed':'Owed to You'):(pay?'Credit':'Overpaid')}</span><span>${c}${Math.abs(net)}</span></div>
+<div class="summary-row total"><span>${net>=0?(pay?esc(myName())+' To Pay':''+esc(otherName(p))+' To Pay'):(pay?esc(myName())+' Paid in Advance':esc(otherName(p))+' Paid in Advance')}</span><span>${c}${rd2(Math.abs(net))}</span></div>
 </div>
 <script>window.print()<\/script>
 </body></html>`;
@@ -2813,101 +3296,33 @@ td:last-child{text-align:right;font-weight:600;white-space:nowrap}
   closeOverlay();
 }
 
-// ===== INVOICE =====
-function doGenerateInvoice(mode){
-  const{p,items,from,to}=getFilteredHistory();
-  if(!p)return;
-  const charges=items.filter(h=>h.type==='charge');
-  if(!charges.length){showToast('No charges in this period');return}
-  const c=cur(p);
-  const totalCharges=charges.reduce((s,h)=>s+h.amount,0);
-  const totalPayments=items.filter(h=>h.type==='payment').reduce((s,h)=>s+h.amount,0);
-  const amountDue=totalCharges-totalPayments;
-  const invNum='INV-'+Date.now().toString(36).toUpperCase();
-  const fromDate=new Date(from).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  const toDate=new Date(to).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-
-  const fromInfo=[];
-  if(settings.name)fromInfo.push('<strong>'+esc(settings.name)+'</strong>');
-  if(settings.email)fromInfo.push(esc(settings.email));
-  if(settings.phone)fromInfo.push(esc(settings.phone));
-  if(settings.address)fromInfo.push(esc(settings.address));
-  if(settings.invoiceInfo)fromInfo.push('<span style="display:block;margin-top:6px;white-space:pre-line">'+esc(settings.invoiceInfo)+'</span>');
-
-  const toInfo=[];
-  if(p.clientName)toInfo.push('<strong>'+esc(p.clientName)+'</strong>');
-  if(p.clientEmail)toInfo.push(esc(p.clientEmail));
-  if(p.clientAddress)toInfo.push(esc(p.clientAddress));
-
-  let tableHtml='';
-  if(mode==='detailed'){
-    const rows=charges.map(h=>{
-      const date=new Date(h.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      const desc=esc(h.note||'Session')+(h.comment?' — '+esc(h.comment):'');
-      return'<tr><td>'+date+'</td><td>'+desc+'</td><td style="text-align:right">'+c+h.amount+'</td></tr>';
-    }).join('');
-    tableHtml=`<table><thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }else{
-    tableHtml=`<table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
-      <tr><td>${esc(p.name)} — ${fromDate} to ${toDate} (${charges.length} session${charges.length!==1?'s':''})</td><td style="text-align:right">${c}${totalCharges}</td></tr>
-    </tbody></table>`;
-  }
-
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${invNum}</title>
-<style>
-body{font-family:-apple-system,sans-serif;max-width:700px;margin:0 auto;color:#2c2418;padding:40px 24px}
-.inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px;border-bottom:3px solid #2c2418;padding-bottom:24px}
-.inv-title{font-size:32px;font-weight:800;letter-spacing:-1px;color:#2c2418}
-.inv-meta{text-align:right;font-size:13px;color:#6b5e50;line-height:1.7}
-.inv-meta strong{color:#2c2418}
-.parties{display:flex;justify-content:space-between;margin-bottom:32px;gap:40px}
-.party{font-size:13px;line-height:1.7;color:#6b5e50}
-.party-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#9e9486;font-weight:700;margin-bottom:6px}
-.party strong{color:#2c2418}
-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
-th{text-align:left;padding:12px 10px;border-bottom:2px solid #ede8e1;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9e9486}
-th:last-child{text-align:right}
-td{padding:12px 10px;border-bottom:1px solid #f0ebe4}
-td:last-child{text-align:right;font-weight:600;white-space:nowrap}
-.totals{margin-left:auto;width:260px;font-size:14px}
-.total-row{display:flex;justify-content:space-between;padding:6px 0;color:#6b5e50}
-.total-row.due{font-weight:800;font-size:18px;color:#2c2418;border-top:2px solid #2c2418;margin-top:8px;padding-top:12px}
-.footer{margin-top:48px;padding-top:20px;border-top:1px solid #ede8e1;font-size:12px;color:#9e9486;text-align:center}
-.notes{margin-top:32px;padding:16px;background:#faf8f5;border-radius:8px;border:1px solid #ede8e1;font-size:13px;color:#6b5e50;white-space:pre-line;line-height:1.6}
-.notes-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9e9486;font-weight:700;margin-bottom:6px}
-@media print{body{margin:0;padding:20px}}
-</style></head><body>
-<div class="inv-header">
-  <div class="inv-title">INVOICE</div>
-  <div class="inv-meta">
-    <strong>${invNum}</strong><br>
-    Date: ${today}<br>
-    Period: ${fromDate} — ${toDate}
-  </div>
-</div>
-<div class="parties">
-  <div class="party"><div class="party-label">From</div>${fromInfo.length?fromInfo.join('<br>'):'<em style="color:#c4b9ab">Set your details in Settings</em>'}</div>
-  <div class="party" style="text-align:right"><div class="party-label">Bill To</div>${toInfo.length?toInfo.join('<br>'):'—'}</div>
-</div>
-${tableHtml}
-<div class="totals">
-  ${mode==='detailed'?`<div class="total-row"><span>Subtotal</span><span>${c}${totalCharges}</span></div>`:''}
-  ${totalPayments>0?`<div class="total-row"><span>Payments Received</span><span>-${c}${totalPayments}</span></div>`:''}
-  <div class="total-row due"><span>${amountDue>=0?'Amount Due':'Credit'}</span><span>${c}${Math.abs(amountDue)}</span></div>
-</div>
-${p.invoiceNotes?`<div class="notes"><div class="notes-label">Notes</div>${esc(p.invoiceNotes)}</div>`:''}
-<div class="footer">Thank you for your business</div>
-<script>window.print()<\/script>
-</body></html>`;
-
-  const w=window.open('','_blank');
-  if(w){w.document.write(html);w.document.close()}
-  else{showToast('Please allow popups to generate invoice')}
-  closeOverlay();
+// ===== WELCOME =====
+function completeWelcome(){
+  const name=document.getElementById('welcomeName').value.trim();
+  if(!name){showToast('Please enter your name');return}
+  settings.name=name;
+  db.saveSettings();
+  document.getElementById('welcomeView').style.display='none';
+  document.getElementById('homeView').classList.add('active');
+  renderHome();startHomeTick();
+  showToast('Welcome, '+name+'!');
 }
 
-load();renderHome();startHomeTick();
+function startApp(){
+  if(!isFirestoreLoaded)load(); // fallback if auth hasn't loaded data yet
+  if(!settings.name){
+    // Show welcome screen
+    document.getElementById('homeView').classList.remove('active');
+    document.getElementById('welcomeView').style.display='block';
+    document.getElementById('welcomeView').classList.add('active');
+    setTimeout(()=>{const i=document.getElementById('welcomeName');if(i)i.focus()},200);
+  }else{
+    renderHome();startHomeTick();
+  }
+  renderAuthCard();
+  updateSyncBadge();
+}
+// App is started by auth.onAuthStateChanged — not called directly here
 </script>
 </body>
 </html>
