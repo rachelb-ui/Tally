@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Tally">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f7f5f2">
+<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwOCIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjEyNCIgeT0iMTM3IiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiMyYzI0MTgiLz48cmVjdCB4PSIyMDQiIHk9IjEzNyIgd2lkdGg9IjY0IiBoZWlnaHQ9IjIzOCIgcng9IjEwIiBmaWxsPSIjMmMyNDE4Ii8+PHJlY3QgeD0iMjg4IiB5PSIyMTEiIHdpZHRoPSIxMDAiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjZTY3ZTIyIi8+PHJlY3QgeD0iMjg4IiB5PSIyNzEiIHdpZHRoPSI3NiIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9IiMyN2FlNjAiIG9wYWNpdHk9IjAuOCIvPjxyZWN0IHg9IjI4OCIgeT0iMzMxIiB3aWR0aD0iNTIiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjMjdhZTYwIiBvcGFjaXR5PSIwLjUiLz48L3N2Zz4K">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3510,6 +3511,11 @@ function startApp(){
   updateSyncBadge();
 }
 // App is started by auth.onAuthStateChanged — not called directly here
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
