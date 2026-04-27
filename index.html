@@ -42,7 +42,7 @@ summary::-webkit-details-marker{display:none}summary::marker{display:none}
 .home-logo{display:flex;align-items:center;gap:10px;margin-bottom:2px}
 .home-logo-icon{font-size:28px;color:var(--accent)}
 .home-logo-text{font-family:var(--font-display);font-size:38px;color:var(--text)}
-.home-tagline{font-size:11px;color:var(--text-muted);letter-spacing:0.5px;margin-top:-2px;margin-bottom:4px}
+.home-tagline{font-size:11px;color:var(--text);letter-spacing:0.5px;margin-top:-2px;margin-bottom:4px}
 .home-sub{font-size:12px;color:var(--text-muted);letter-spacing:1.8px;text-transform:uppercase;font-weight:500;line-height:1.6}
 
 .pending-banner{background:linear-gradient(135deg,var(--accent-light),#fdf2e3);border:1.5px solid var(--accent-border);border-radius:var(--radius);padding:18px;margin-bottom:24px}
@@ -1332,6 +1332,26 @@ function cardBalClass(p){
   if(isPay(p))return bal>0?'bal-owe':'bal-credit';
   return bal>0?'bal-credit':'bal-owe';
 }
+// Returns each card's value from the user's perspective, with sign:
+//   positive = net credit (would render green on the card)
+//   negative = net debt   (would render red on the card)
+//   zero     = settled
+// Used by the category total so its amount AND color match what's underneath.
+function userSignedValue(p){
+  // Projects and group projects always display gross expenses in red.
+  if(p.type==='project'||p.type==='group'){
+    const hist=getEntriesSinceLastSettlement(p);
+    const totalExp=hist.filter(h=>h.type==='charge').reduce((s,h)=>s+h.amount,0);
+    return -rd2(totalExp);
+  }
+  // Lending circles display gross totals in red (always non-negative balance).
+  if(p.type==='lending')return -(p.balance||0);
+  // Activities (fixed/daily/hourly/customrate): direction decides sign.
+  //   pay  activity (I pay them): bal>0 means I owe   → negative for me
+  //   earn activity (they pay me): bal>0 means they owe me → positive for me
+  const bal=p.balance||0;
+  return isPay(p)?-bal:bal;
+}
 
 function showView(id){const cur=document.querySelector('.view.active');if(cur&&cur.id!==id)navStack.push(cur.id);document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active')}
 function goBack(){chargeOpen=false;payOpen=false;stopTick();if(navStack.length>0){const prev=navStack.pop();document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(prev).classList.add('active');if(prev==='homeView'){renderHome();startHomeTick()}else if(prev==='lendingDetailView'){renderLendingDetail()}else if(prev==='projectDetailView'){renderProjectDetail()}else if(prev==='detailView'){renderDetail();const p=getProject(currentProjectId);if(p&&(p.type==='hourly'||p.type==='customrate')&&timers[currentProjectId])startTick()}}else{goHome()}}
@@ -1444,6 +1464,10 @@ function renderProjects(){
   const el=document.getElementById('projectsList');
   const active=projects.filter(p=>!p.archived);
   const archivedCount=projects.filter(p=>p.archived).length;
+  // Refresh balances upfront so the category total and per-card values are
+  // always consistent (calcBalance is cheap; this also future-proofs against
+  // stale p.balance values loaded from disk).
+  active.forEach(syncBalance);
   if(!active.length&&!groups.length){
     el.innerHTML=`<div class="empty-home">No activities yet.<br>Add your first one to start tracking.</div><div class="home-actions"><button class="add-project-btn" onclick="openNewProject()">＋ Activity<span class="btn-sub">ongoing sessions<br>pilates, tutor, guitar…</span></button><button class="add-project-btn" onclick="openNewProjectForm()">＋ Project<span class="btn-sub">renovation, trip, party…</span></button><button class="add-project-btn" onclick="openNewLendingCircle()">＋ Lending Circle<span class="btn-sub">between family &amp; friends</span></button></div><div class="home-actions" style="margin-top:0"><button class="add-group-btn" onclick="openNewGroup()">◫ Category</button></div>${archivedCount?`<p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-muted)">${archivedCount} archived · <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">View in Settings</button></p>`:''}`;return;
   }
@@ -1455,18 +1479,14 @@ function renderProjects(){
     const sameCur=currencies.length===1&&currencies[0]!=='';
     let totalHtml='';
     if(sameCur){
-      // For projects/groups, the card displays total expenses (charges only).
-      // For activities/lending, it displays the balance (charges - payments).
-      // The category total must follow the same rule so the sum matches what's visible.
-      const totalBal=gp.reduce((s,p)=>{
-        if(p.type==='project'||p.type==='group'){
-          const hist=getEntriesSinceLastSettlement(p);
-          const totalExp=hist.filter(h=>h.type==='charge').reduce((ss,h)=>ss+h.amount,0);
-          return s+totalExp;
-        }
-        return s+(p.balance||0);
-      },0);
-      const abs=Math.round(Math.abs(totalBal)),cls=totalBal>0?'owe':totalBal<0?'credit':'zero';
+      // The category total must match the per-card display in BOTH amount and color.
+      // We sum each card's "user-perspective signed value" (see userSignedValue):
+      //   positive (green) = net credit to the user
+      //   negative (red)   = net debt from the user
+      // This way: green $140 + red $40 = green $100 (and the color matches the sign).
+      const totalSigned=gp.reduce((s,p)=>s+userSignedValue(p),0);
+      const abs=Math.round(Math.abs(totalSigned));
+      const cls=totalSigned>0?'credit':totalSigned<0?'owe':'zero';
       totalHtml=`<span class="group-total ${cls}">${currencies[0]}${abs}</span>`;
     }
     html+=`<div class="group-section"><div class="group-header" onclick="toggleGroup('${g.id}')"><div class="group-header-left"><span class="group-chevron ${collapsed?'':'open'}">›</span><span class="group-name">${esc(g.name)}</span><span class="group-count">(${gp.length})</span></div><div style="display:flex;align-items:center;gap:8px">${totalHtml}<button class="group-edit-btn" onclick="event.stopPropagation();editGroup('${g.id}')">⋯</button></div></div><div class="group-items" style="${collapsed?'max-height:0;overflow:hidden':''}">${gp.map(p=>renderProjectCard(p)).join('')}</div></div>`;
@@ -2293,7 +2313,7 @@ function showAddCharge(){
   const isHourly=p.type==='hourly';
   const isCustomHr=p.type==='customrate'&&(p.customRateUnit||'min')==='hr';
   if(isHourly||isCustomHr){
-    document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Hours…" id="chargeHrs" style="flex:1" autofocus><input class="input-field" type="number" inputmode="decimal" placeholder="Minutes…" id="chargeMins" style="flex:1"><button class="input-confirm" onclick="confirmCharge()">Add</button></div>`;
+    document.getElementById('chargeInput').innerHTML=`<div class="input-row"><input class="input-field" type="number" inputmode="decimal" placeholder="Hours…" id="chargeHrs" style="flex:0 1 90px;min-width:0" autofocus><input class="input-field" type="number" inputmode="decimal" placeholder="Minutes…" id="chargeMins" style="flex:0 1 90px;min-width:0"><button class="input-confirm" onclick="confirmCharge()" style="flex:1">Add</button></div>`;
     document.getElementById('chargeHrs').focus();
   }else{
     const ph=p.type==='customrate'?'Minutes…':'Amount…';
