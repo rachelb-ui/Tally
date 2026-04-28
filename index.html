@@ -3479,7 +3479,19 @@ td:last-child{text-align:right;font-weight:600;white-space:nowrap}
 
   const w=window.open('','_blank');
   if(w){w.document.write(html);w.document.close()}
-  else{showToast('Please allow popups to export PDF')}
+  else{
+    // Fallback: show in-app overlay if popup blocked
+    let overlay=document.getElementById('pdfOverlay');
+    if(!overlay){
+      overlay=document.createElement('div');
+      overlay.id='pdfOverlay';
+      overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#fff;overflow:auto;display:none';
+      document.body.appendChild(overlay);
+    }
+    const toolbar='<div style="position:sticky;top:0;z-index:10;background:#f7f5f2;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ede8e1"><button onclick="document.getElementById(\'pdfOverlay\').style.display=\'none\'" style="background:none;border:none;font-size:16px;font-weight:600;color:#e67e22;cursor:pointer;font-family:inherit">← Back</button><button onclick="window.print()" style="background:#e67e22;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Print / Save PDF</button></div>';
+    overlay.innerHTML=toolbar+'<div style="max-width:700px;margin:0 auto;padding:20px">'+html.replace(/<script>.*?<\/script>/g,'')+'</div>';
+    overlay.style.display='block';
+  }
   closeOverlay();
 }
 
@@ -3498,13 +3510,24 @@ function completeWelcome(){
 
 function startApp(){
   if(!isFirestoreLoaded)load(); // fallback if auth hasn't loaded data yet
+  // If a view is already active (app is already running), don't reset the UI.
+  // Just refresh the current view and update badges.
+  const activeView=document.querySelector('.view.active');
+  if(activeView && activeView.id!=='welcomeView'){
+    refreshCurrentView();
+    renderAuthCard();
+    updateSyncBadge();
+    return;
+  }
   if(!settings.name){
     // Show welcome screen
-    document.getElementById('homeView').classList.remove('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('welcomeView').style.display='block';
     document.getElementById('welcomeView').classList.add('active');
     setTimeout(()=>{const i=document.getElementById('welcomeName');if(i)i.focus()},200);
   }else{
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('homeView').classList.add('active');
     renderHome();startHomeTick();
   }
   renderAuthCard();
